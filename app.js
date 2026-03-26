@@ -310,6 +310,213 @@ function closeSuccess() {
   document.getElementById('successOverlay').classList.remove('open');
 }
 
+// ===== RECEIPT =====
+function printLastReceipt() {
+  const orders = getOrders();
+  if (orders.length === 0) return;
+  printReceipt(orders[0]);
+}
+
+function printReceipt(order) {
+  const payLabel = order.paymentMethod === 'merits' ? '⭐ Merits' : '💵 Cash';
+  const date = new Date(order.date).toLocaleString('en-US', {
+    weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
+    hour: '2-digit', minute: '2-digit'
+  });
+
+  const itemRows = order.items.map(i => `
+    <tr>
+      <td>${i.name}</td>
+      <td style="text-align:center;">${i.qty}</td>
+      <td style="text-align:right;">$${(i.price * i.qty).toFixed(2)}</td>
+    </tr>`).join('');
+
+  const html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Receipt — ${order.id}</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Helvetica Neue', Arial, sans-serif;
+      color: #111;
+      background: #fff;
+      padding: 40px;
+      max-width: 680px;
+      margin: 0 auto;
+    }
+    .receipt-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 3px solid #1a3a6e;
+      padding-bottom: 20px;
+      margin-bottom: 24px;
+    }
+    .receipt-header img {
+      height: 70px;
+      width: auto;
+    }
+    .receipt-header-right {
+      text-align: right;
+    }
+    .receipt-header-right h1 {
+      font-size: 26px;
+      font-weight: 800;
+      color: #1a3a6e;
+      letter-spacing: 1px;
+    }
+    .receipt-header-right .order-id {
+      font-size: 13px;
+      color: #555;
+      margin-top: 4px;
+    }
+    .receipt-header-right .order-date {
+      font-size: 12px;
+      color: #888;
+      margin-top: 2px;
+    }
+    .section-label {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #888;
+      margin-bottom: 6px;
+    }
+    .customer-block {
+      background: #f5f7fa;
+      border-radius: 8px;
+      padding: 16px 20px;
+      margin-bottom: 24px;
+    }
+    .customer-block p {
+      font-size: 14px;
+      line-height: 1.7;
+      color: #222;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 0;
+    }
+    thead tr {
+      background: #1a3a6e;
+      color: #fff;
+    }
+    thead th {
+      padding: 10px 12px;
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    thead th:last-child { text-align: right; }
+    thead th:nth-child(2) { text-align: center; }
+    tbody tr { border-bottom: 1px solid #e8e8e8; }
+    tbody tr:last-child { border-bottom: none; }
+    tbody td {
+      padding: 11px 12px;
+      font-size: 14px;
+      color: #222;
+    }
+    .totals-block {
+      border-top: 2px solid #1a3a6e;
+      margin-top: 0;
+      padding-top: 12px;
+    }
+    .total-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 22px;
+      font-weight: 800;
+      color: #1a3a6e;
+      padding: 4px 12px;
+    }
+    .payment-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 13px;
+      color: #555;
+      padding: 4px 12px;
+    }
+    .notes-block {
+      margin-top: 20px;
+      border-left: 3px solid #1a3a6e;
+      padding: 10px 14px;
+      background: #f5f7fa;
+      font-size: 13px;
+      color: #444;
+      border-radius: 0 6px 6px 0;
+    }
+    .footer-block {
+      margin-top: 36px;
+      padding-top: 16px;
+      border-top: 1px solid #ddd;
+      text-align: center;
+      font-size: 12px;
+      color: #aaa;
+    }
+    @media print {
+      body { padding: 20px; }
+      @page { margin: 0.5in; }
+    }
+  </style>
+</head>
+<body>
+  <div class="receipt-header">
+    <img src="Pro-Fab 3d logo.jpg" alt="Pro-Fab 3D" />
+    <div class="receipt-header-right">
+      <h1>ORDER RECEIPT</h1>
+      <div class="order-id">${order.id}</div>
+      <div class="order-date">${date}</div>
+    </div>
+  </div>
+
+  <div class="section-label">Customer</div>
+  <div class="customer-block">
+    <p>
+      <strong>${order.customer.name}</strong><br/>
+      ${order.customer.email}${order.customer.phone ? '<br/>' + order.customer.phone : ''}<br/>
+      ${order.customer.address}
+    </p>
+  </div>
+
+  <div class="section-label" style="margin-bottom:0;">Items</div>
+  <table>
+    <thead>
+      <tr>
+        <th style="text-align:left;">Product</th>
+        <th style="text-align:center;">Qty</th>
+        <th style="text-align:right;">Amount</th>
+      </tr>
+    </thead>
+    <tbody>
+      ${itemRows}
+    </tbody>
+  </table>
+
+  <div class="totals-block">
+    <div class="payment-row"><span>Payment Method</span><span>${payLabel}</span></div>
+    <div class="total-row"><span>Total</span><span>$${Number(order.total).toFixed(2)}</span></div>
+  </div>
+
+  ${order.notes ? `<div class="notes-block"><strong>Notes:</strong> ${order.notes}</div>` : ''}
+
+  <div class="footer-block">
+    Thank you for your order! Questions? Contact us and reference order <strong>${order.id}</strong>.<br/>
+    Pro-Fab 3D — Custom 3D Printed Products
+  </div>
+</body>
+</html>`;
+
+  const win = window.open('', '_blank', 'width=750,height=900');
+  win.document.documentElement.innerHTML = html;
+  win.focus();
+  win.onload = () => { win.print(); };
+}
+
 // ===== TOAST =====
 function showToast(msg) {
   let toast = document.getElementById('toast');

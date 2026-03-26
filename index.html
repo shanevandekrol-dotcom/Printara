@@ -181,7 +181,10 @@
     <div class="success-icon">✅</div>
     <h2>Order Placed!</h2>
     <p id="successMsg">Thanks! We'll be in touch shortly to confirm your order and arrange payment.</p>
-    <button class="btn-primary" onclick="closeSuccess()">Continue Shopping</button>
+    <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">
+      <button class="btn-primary" onclick="printLastReceipt()">🖨️ Print Receipt</button>
+      <button class="btn-secondary" onclick="closeSuccess()">Continue Shopping</button>
+    </div>
   </div>
 
   <script src="app.js"></script>

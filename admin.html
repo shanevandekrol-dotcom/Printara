@@ -370,6 +370,7 @@
             ${o.notes ? `<div style="font-size:13px;color:var(--text2);margin-bottom:12px;font-style:italic;">Notes: ${o.notes}</div>` : ''}
             <div class="order-items-list">${itemLines}</div>
             <div class="order-total-line">Total: $${Number(o.total).toFixed(2)}</div>
+            <button class="tab-btn" onclick="printReceipt(${JSON.stringify(o).replace(/"/g,'&quot;')})" style="font-size:12px;padding:6px 14px;margin-top:10px;">🖨️ Print Receipt</button>
           </div>`;
       }).join('');
     }
