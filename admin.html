@@ -911,6 +911,68 @@
       }).join('');
     }
 
+    // ===== ORDER NOTIFICATIONS =====
+    let _knownOrderIds = null;
+    let _pollTimer = null;
+
+    async function requestNotifyPermission() {
+      if (!('Notification' in window)) return;
+      if (Notification.permission === 'default') {
+        await Notification.requestPermission();
+      }
+    }
+
+    function fireOrderNotification(order) {
+      const title = `New Order — ${order.id}`;
+      const body  = `${order.customer?.name || 'Customer'} · $${Number(order.total).toFixed(2)} · ${order.paymentMethod === 'merits' ? '⭐ Merits' : '💵 Cash'}`;
+      // Browser notification (works when tab is in background)
+      if (Notification.permission === 'granted') {
+        const n = new Notification(title, {
+          body,
+          icon: 'Pro-Fab 3d logo.jpg',
+          badge: 'Pro-Fab 3d logo.jpg',
+          tag: order.id,
+          requireInteraction: true
+        });
+        n.onclick = () => { window.focus(); switchTab('orders'); n.close(); };
+      }
+      // Always show on-screen toast too
+      showToast(`🛒 New order: ${order.customer?.name || 'Customer'} — $${Number(order.total).toFixed(2)}`);
+    }
+
+    async function pollForNewOrders() {
+      if (!isAuthenticated()) { clearInterval(_pollTimer); _pollTimer = null; return; }
+      await cloudPull();
+      const current = getOrders().filter(o => o.type !== 'custom').map(o => o.id);
+      if (_knownOrderIds === null) {
+        // First poll after init — just record baseline, no notification
+        _knownOrderIds = new Set(current);
+        return;
+      }
+      const allOrders = getOrders().filter(o => o.type !== 'custom');
+      let hasNew = false;
+      for (const o of allOrders) {
+        if (!_knownOrderIds.has(o.id)) {
+          fireOrderNotification(o);
+          _knownOrderIds.add(o.id);
+          hasNew = true;
+        }
+      }
+      if (hasNew) {
+        initAdmin(); // refresh badges
+        // If orders tab is open, re-render it
+        const panel = document.getElementById('tab-orders');
+        if (panel && panel.classList.contains('active')) renderOrders();
+      }
+    }
+
+    function startOrderPolling() {
+      if (_pollTimer) return; // already running
+      _knownOrderIds = null;
+      pollForNewOrders(); // set baseline immediately
+      _pollTimer = setInterval(pollForNewOrders, 30000); // check every 30 seconds
+    }
+
     // ===== INIT =====
     function initAdmin() {
       const all = getOrders();
@@ -926,6 +988,9 @@
       updateSyncBadge();
       // Resume clock-in timer if currently clocked in
       if (getCIActive()) renderClockIn();
+      // Start order polling & request notification permission
+      requestNotifyPermission();
+      startOrderPolling();
     }
 
     // On load — check session IMMEDIATELY (no cloud delay)
