@@ -18,8 +18,7 @@
       </a>
       <nav class="nav">
         <a href="index.html" class="nav-link active">Shop</a>
-        <a href="#about" class="nav-link">About</a>
-        <a href="admin.html" class="nav-link nav-link--admin">Admin</a>
+<a href="admin.html" class="nav-link nav-link--admin">Admin</a>
       </nav>
       <button class="cart-btn" id="cartBtn" onclick="toggleCart()">
         <span class="cart-icon">🛒</span>
@@ -74,30 +73,6 @@
         <div class="empty-icon">📦</div>
         <h3>No products yet</h3>
         <p>Head to the <a href="admin.html">Admin panel</a> to add your first product.</p>
-      </div>
-    </div>
-  </section>
-
-  <!-- ABOUT -->
-  <section class="section section--dark" id="about">
-    <div class="container">
-      <div class="about-grid">
-        <div>
-          <h2 class="section-title">Why Pro-Fab 3D?</h2>
-          <p class="about-text">Every product is printed on-demand using high-quality filament. No inventory, no waste — just precision parts made when you need them.</p>
-          <ul class="feature-list">
-            <li><span class="feat-icon">⚡</span> Fast turnaround — most orders ship within 3–5 days</li>
-            <li><span class="feat-icon">🎨</span> Multiple color options available</li>
-            <li><span class="feat-icon">🔩</span> Strong, durable PLA & PETG materials</li>
-            <li><span class="feat-icon">📐</span> Tight tolerances and clean layer lines</li>
-          </ul>
-        </div>
-        <div class="stats-grid">
-          <div class="stat-card"><div class="stat-num">100+</div><div class="stat-label">Products Made</div></div>
-          <div class="stat-card"><div class="stat-num">5★</div><div class="stat-label">Avg. Rating</div></div>
-          <div class="stat-card"><div class="stat-num">3–5</div><div class="stat-label">Day Shipping</div></div>
-          <div class="stat-card"><div class="stat-num">FDM</div><div class="stat-label">Technology</div></div>
-        </div>
       </div>
     </div>
   </section>
@@ -181,6 +156,19 @@
       <div class="form-group">
         <label>Notes / Special Requests</label>
         <textarea name="notes" rows="3" placeholder="Color preferences, custom text, etc."></textarea>
+      </div>
+      <div class="form-group">
+        <label>Payment Method *</label>
+        <div class="payment-options">
+          <label class="payment-option">
+            <input type="radio" name="paymentMethod" value="cash" required />
+            <span class="payment-option-inner">💵 Cash</span>
+          </label>
+          <label class="payment-option">
+            <input type="radio" name="paymentMethod" value="merits" required />
+            <span class="payment-option-inner">⭐ Merits</span>
+          </label>
+        </div>
       </div>
       <div class="order-summary" id="orderSummary"></div>
       <button type="submit" class="btn-primary btn-full">Place Order →</button>

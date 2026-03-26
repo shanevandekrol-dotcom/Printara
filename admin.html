@@ -362,7 +362,7 @@
               <span class="order-id">${o.id}</span>
               <span class="order-date">${date}</span>
             </div>
-            <div class="order-customer">${o.customer.name}</div>
+            <div class="order-customer">${o.customer.name} <span class="order-payment-badge order-payment-badge--${o.paymentMethod || 'cash'}">${o.paymentMethod === 'merits' ? '⭐ Merits' : '💵 Cash'}</span></div>
             <div class="order-customer-detail">
               ${o.customer.email}${o.customer.phone ? ' · ' + o.customer.phone : ''}<br/>
               ${o.customer.address}

@@ -282,6 +282,7 @@ function submitOrder(e) {
       address: `${data.address}, ${data.city}, ${data.state} ${data.zip}`
     },
     notes: data.notes || '',
+    paymentMethod: data.paymentMethod || 'cash',
     items: cart.map(item => {
       const p = products.find(p => p.id === item.productId);
       return { name: p ? p.name : item.productId, qty: item.qty, price: p ? p.price : 0 };
@@ -296,8 +297,9 @@ function submitOrder(e) {
   updateCartUI();
 
   closeOrder();
+  const payLabel = data.paymentMethod === 'merits' ? 'Merits' : 'Cash';
   document.getElementById('successMsg').textContent =
-    `Thanks, ${data.firstName}! Order ${order.id} has been placed. We'll reach out to ${data.email} to confirm and arrange payment.`;
+    `Thanks, ${data.firstName}! Order ${order.id} has been placed. Payment: ${payLabel}. We'll reach out to ${data.email} to confirm.`;
   document.getElementById('successModal').classList.add('open');
   document.getElementById('successOverlay').classList.add('open');
   form.reset();
