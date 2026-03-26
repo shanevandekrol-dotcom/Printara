@@ -18,8 +18,15 @@
       </a>
       <nav class="nav">
         <a href="index.html" class="nav-link active">Shop</a>
-<a href="admin.html" class="nav-link nav-link--admin">Admin</a>
+        <a href="admin.html" class="nav-link nav-link--admin">Admin</a>
       </nav>
+      <div class="nav-user">
+        <button class="nav-login-btn" id="navLoginBtn" onclick="openAuth('login')">Login / Sign Up</button>
+        <div class="nav-user-menu" id="navUserBtn" style="display:none;">
+          <button class="nav-account-btn" onclick="openMyOrders()">👤 <span id="navUserName"></span></button>
+          <button class="nav-logout-btn" onclick="logoutUser()" title="Log out">↩</button>
+        </div>
+      </div>
       <button class="cart-btn" id="cartBtn" onclick="toggleCart()">
         <span class="cart-icon">🛒</span>
         <span class="cart-count" id="cartCount">0</span>
@@ -185,6 +192,62 @@
       <button class="btn-primary" onclick="printLastReceipt()">🖨️ Print Receipt</button>
       <button class="btn-secondary" onclick="closeSuccess()">Continue Shopping</button>
     </div>
+  </div>
+
+  <!-- AUTH MODAL -->
+  <div class="modal-overlay" id="authOverlay" onclick="closeAuth()"></div>
+  <div class="modal modal--auth" id="authModal">
+    <button class="close-btn modal-close" onclick="closeAuth()">✕</button>
+    <div class="auth-tabs">
+      <button class="auth-tab active" id="authTabLogin" onclick="switchAuthTab('login')">Login</button>
+      <button class="auth-tab" id="authTabSignup" onclick="switchAuthTab('signup')">Sign Up</button>
+    </div>
+
+    <div id="authLoginPanel">
+      <h2 class="auth-title">Welcome back</h2>
+      <form onsubmit="loginUser(event)">
+        <div class="form-group">
+          <label>Email</label>
+          <input type="email" name="loginEmail" required placeholder="you@example.com" autocomplete="email" />
+        </div>
+        <div class="form-group">
+          <label>Password</label>
+          <input type="password" name="loginPwd" required placeholder="Your password" autocomplete="current-password" />
+        </div>
+        <div class="login-error" id="loginUserError"></div>
+        <button type="submit" class="btn-primary btn-full">Login →</button>
+      </form>
+      <p class="auth-switch">No account? <a href="#" onclick="switchAuthTab('signup'); return false;">Sign up free</a></p>
+    </div>
+
+    <div id="authSignupPanel" style="display:none;">
+      <h2 class="auth-title">Create an account</h2>
+      <form onsubmit="registerUser(event)">
+        <div class="form-group">
+          <label>Name</label>
+          <input type="text" name="regName" required placeholder="Jane Smith" autocomplete="name" />
+        </div>
+        <div class="form-group">
+          <label>Email</label>
+          <input type="email" name="regEmail" required placeholder="you@example.com" autocomplete="email" />
+        </div>
+        <div class="form-group">
+          <label>Password</label>
+          <input type="password" name="regPwd" required placeholder="Min 6 characters" minlength="6" autocomplete="new-password" />
+        </div>
+        <div class="login-error" id="regError"></div>
+        <button type="submit" class="btn-primary btn-full">Create Account →</button>
+      </form>
+      <p class="auth-switch">Have an account? <a href="#" onclick="switchAuthTab('login'); return false;">Login</a></p>
+    </div>
+  </div>
+
+  <!-- MY ORDERS MODAL -->
+  <div class="modal-overlay" id="myOrdersOverlay" onclick="closeMyOrders()"></div>
+  <div class="modal modal--myorders" id="myOrdersModal">
+    <button class="close-btn modal-close" onclick="closeMyOrders()">✕</button>
+    <h2 class="modal-title">My Orders</h2>
+    <div id="myOrdersList"></div>
   </div>
 
   <script src="app.js"></script>

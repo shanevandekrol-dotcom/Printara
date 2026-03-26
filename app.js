@@ -1,3 +1,144 @@
+// ===== USER AUTH =====
+function getUsers() {
+  return JSON.parse(localStorage.getItem('profab_users') || '[]');
+}
+function saveUsers(u) { localStorage.setItem('profab_users', JSON.stringify(u)); }
+function getUserSession() {
+  return JSON.parse(localStorage.getItem('profab_user_session') || 'null');
+}
+function saveUserSession(u) { localStorage.setItem('profab_user_session', JSON.stringify(u)); }
+function clearUserSession() { localStorage.removeItem('profab_user_session'); }
+
+function hashPwd(pwd) { return btoa(encodeURIComponent(pwd)); }
+
+function registerUser(e) {
+  e.preventDefault();
+  const form = e.target;
+  const name = form.regName.value.trim();
+  const email = form.regEmail.value.trim().toLowerCase();
+  const pwd = form.regPwd.value;
+  const err = document.getElementById('regError');
+
+  const users = getUsers();
+  if (users.find(u => u.email === email)) {
+    err.textContent = 'An account with that email already exists.';
+    err.classList.add('visible');
+    return;
+  }
+  const user = { id: 'usr-' + Date.now().toString(36), name, email, pwHash: hashPwd(pwd) };
+  users.push(user);
+  saveUsers(users);
+  const session = { id: user.id, name: user.name, email: user.email };
+  saveUserSession(session);
+  err.classList.remove('visible');
+  closeAuth();
+  updateUserNav();
+  showToast(`Welcome, ${name}! ✓`);
+}
+
+function loginUser(e) {
+  e.preventDefault();
+  const form = e.target;
+  const email = form.loginEmail.value.trim().toLowerCase();
+  const pwd = form.loginPwd.value;
+  const err = document.getElementById('loginUserError');
+
+  const user = getUsers().find(u => u.email === email && u.pwHash === hashPwd(pwd));
+  if (!user) {
+    err.textContent = 'Incorrect email or password.';
+    err.classList.add('visible');
+    setTimeout(() => err.classList.remove('visible'), 3000);
+    return;
+  }
+  const session = { id: user.id, name: user.name, email: user.email };
+  saveUserSession(session);
+  err.classList.remove('visible');
+  closeAuth();
+  updateUserNav();
+  showToast(`Welcome back, ${user.name}! ✓`);
+}
+
+function logoutUser() {
+  clearUserSession();
+  updateUserNav();
+  showToast('Logged out.');
+}
+
+function updateUserNav() {
+  const session = getUserSession();
+  const loginBtn = document.getElementById('navLoginBtn');
+  const userBtn = document.getElementById('navUserBtn');
+  const userNameEl = document.getElementById('navUserName');
+  if (!loginBtn) return;
+  if (session) {
+    loginBtn.style.display = 'none';
+    userBtn.style.display = 'flex';
+    if (userNameEl) userNameEl.textContent = session.name;
+  } else {
+    loginBtn.style.display = 'flex';
+    userBtn.style.display = 'none';
+  }
+}
+
+function openAuth(tab = 'login') {
+  switchAuthTab(tab);
+  document.getElementById('authModal').classList.add('open');
+  document.getElementById('authOverlay').classList.add('open');
+}
+function closeAuth() {
+  document.getElementById('authModal').classList.remove('open');
+  document.getElementById('authOverlay').classList.remove('open');
+}
+function switchAuthTab(tab) {
+  document.getElementById('authLoginPanel').style.display = tab === 'login' ? 'block' : 'none';
+  document.getElementById('authSignupPanel').style.display = tab === 'signup' ? 'block' : 'none';
+  document.getElementById('authTabLogin').classList.toggle('active', tab === 'login');
+  document.getElementById('authTabSignup').classList.toggle('active', tab === 'signup');
+}
+
+function openMyOrders() {
+  const session = getUserSession();
+  if (!session) { openAuth('login'); return; }
+  renderMyOrders();
+  document.getElementById('myOrdersModal').classList.add('open');
+  document.getElementById('myOrdersOverlay').classList.add('open');
+}
+function closeMyOrders() {
+  document.getElementById('myOrdersModal').classList.remove('open');
+  document.getElementById('myOrdersOverlay').classList.remove('open');
+}
+
+function renderMyOrders() {
+  const session = getUserSession();
+  const el = document.getElementById('myOrdersList');
+  if (!el || !session) return;
+  const orders = getOrders().filter(o => o.userId === session.id);
+  if (orders.length === 0) {
+    el.innerHTML = '<div class="empty-state" style="padding:40px 0;"><div class="empty-icon">📋</div><h3>No orders yet</h3><p>Your orders will appear here once you place one.</p></div>';
+    return;
+  }
+  el.innerHTML = orders.map(o => {
+    const date = new Date(o.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    const isMerits = o.paymentMethod === 'merits';
+    const totalDisplay = isMerits ? `${(o.meritsTotal || Math.round(o.total * 100)).toLocaleString()} merits` : `$${Number(o.total).toFixed(2)}`;
+    const statusClass = o.status === 'Complete' ? 'status--complete' : 'status--new';
+    const itemSummary = o.items.map(i => `${i.name} ×${i.qty}`).join(', ');
+    return `
+      <div class="my-order-card">
+        <div class="my-order-header">
+          <span class="my-order-id">${o.id}</span>
+          <span class="order-status-badge ${statusClass}">${o.status}</span>
+        </div>
+        <div class="my-order-date">${date}</div>
+        <div class="my-order-items">${itemSummary}</div>
+        <div class="my-order-footer">
+          <span class="my-order-total">${totalDisplay}</span>
+          <span class="my-order-pay">${isMerits ? '⭐ Merits' : '💵 Cash'}</span>
+        </div>
+      </div>`;
+  }).join('');
+}
+
 // ===== DATA LAYER =====
 function getProducts() {
   return JSON.parse(localStorage.getItem('profab_products') || '[]');
@@ -247,16 +388,29 @@ function buildOrderSummary() {
   const el = document.getElementById('orderSummary');
   if (!el) return;
 
+  const isMerits = document.querySelector('input[name="paymentMethod"]:checked')?.value === 'merits';
+  const total = cartTotal();
+  const meritsTotal = Math.round(total * 100);
+
   const lines = cart.map(item => {
     const p = products.find(p => p.id === item.productId);
     if (!p) return '';
-    return `<div class="order-line"><span>${p.name} × ${item.qty}</span><span>$${(p.price * item.qty).toFixed(2)}</span></div>`;
+    const lineTotal = p.price * item.qty;
+    const amountDisplay = isMerits
+      ? `${Math.round(lineTotal * 100).toLocaleString()} merits`
+      : `$${lineTotal.toFixed(2)}`;
+    return `<div class="order-line"><span>${p.name} × ${item.qty}</span><span>${amountDisplay}</span></div>`;
   }).join('');
+
+  const totalDisplay = isMerits
+    ? `${meritsTotal.toLocaleString()} merits`
+    : `$${total.toFixed(2)}`;
 
   el.innerHTML = `
     <div class="order-summary-title">Order Summary</div>
     ${lines}
-    <div class="order-line order-line-total"><span>Total</span><span>$${cartTotal().toFixed(2)}</span></div>`;
+    ${isMerits ? `<div class="order-line merits-rate-note"><span>Rate</span><span>$1.00 = 100 merits</span></div>` : ''}
+    <div class="order-line order-line-total"><span>Total</span><span>${totalDisplay}</span></div>`;
 }
 
 function closeOrder() {
@@ -281,8 +435,10 @@ function submitOrder(e) {
       phone: data.phone || '',
       address: `${data.address}, ${data.city}, ${data.state} ${data.zip}`
     },
+    userId: getUserSession()?.id || null,
     notes: data.notes || '',
     paymentMethod: data.paymentMethod || 'cash',
+    meritsTotal: Math.round(cartTotal() * 100),
     items: cart.map(item => {
       const p = products.find(p => p.id === item.productId);
       return { name: p ? p.name : item.productId, qty: item.qty, price: p ? p.price : 0 };
@@ -297,9 +453,11 @@ function submitOrder(e) {
   updateCartUI();
 
   closeOrder();
-  const payLabel = data.paymentMethod === 'merits' ? 'Merits' : 'Cash';
+  const payLabel = data.paymentMethod === 'merits'
+    ? `Merits (${order.meritsTotal.toLocaleString()} merits)`
+    : 'Cash';
   document.getElementById('successMsg').textContent =
-    `Thanks, ${data.firstName}! Order ${order.id} has been placed. Payment: ${payLabel}. We'll reach out to ${data.email} to confirm.`;
+    `Thanks, ${data.firstName}! Order ${order.id} placed. Payment: ${payLabel}. We'll reach out to ${data.email} to confirm.`;
   document.getElementById('successModal').classList.add('open');
   document.getElementById('successOverlay').classList.add('open');
   form.reset();
@@ -318,18 +476,32 @@ function printLastReceipt() {
 }
 
 function printReceipt(order) {
-  const payLabel = order.paymentMethod === 'merits' ? '⭐ Merits' : '💵 Cash';
+  const isMerits = order.paymentMethod === 'merits';
+  const payLabel = isMerits ? 'Merits' : 'Cash';
+  const meritsTotal = order.meritsTotal || Math.round(order.total * 100);
+  const logoUrl = new URL('Pro-Fab 3d logo.jpg', window.location.href).href;
+
   const date = new Date(order.date).toLocaleString('en-US', {
     weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
     hour: '2-digit', minute: '2-digit'
   });
 
-  const itemRows = order.items.map(i => `
+  const itemRows = order.items.map(i => {
+    const lineTotal = i.price * i.qty;
+    const amountDisplay = isMerits
+      ? `${Math.round(lineTotal * 100).toLocaleString()} merits`
+      : `$${lineTotal.toFixed(2)}`;
+    return `
     <tr>
       <td>${i.name}</td>
       <td style="text-align:center;">${i.qty}</td>
-      <td style="text-align:right;">$${(i.price * i.qty).toFixed(2)}</td>
-    </tr>`).join('');
+      <td style="text-align:right;">${amountDisplay}</td>
+    </tr>`;
+  }).join('');
+
+  const totalDisplay = isMerits
+    ? `${meritsTotal.toLocaleString()} merits`
+    : `$${Number(order.total).toFixed(2)}`;
 
   const html = `<!DOCTYPE html>
 <html lang="en">
@@ -354,119 +526,70 @@ function printReceipt(order) {
       padding-bottom: 20px;
       margin-bottom: 24px;
     }
-    .receipt-header img {
-      height: 70px;
-      width: auto;
-    }
-    .receipt-header-right {
-      text-align: right;
-    }
+    .receipt-header img { height: 70px; width: auto; }
+    .receipt-header-right { text-align: right; }
     .receipt-header-right h1 {
-      font-size: 26px;
-      font-weight: 800;
-      color: #1a3a6e;
-      letter-spacing: 1px;
+      font-size: 26px; font-weight: 800; color: #1a3a6e; letter-spacing: 1px;
     }
-    .receipt-header-right .order-id {
-      font-size: 13px;
-      color: #555;
-      margin-top: 4px;
-    }
-    .receipt-header-right .order-date {
-      font-size: 12px;
-      color: #888;
-      margin-top: 2px;
-    }
+    .receipt-header-right .order-id { font-size: 13px; color: #555; margin-top: 4px; }
+    .receipt-header-right .order-date { font-size: 12px; color: #888; margin-top: 2px; }
     .section-label {
-      font-size: 11px;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      color: #888;
-      margin-bottom: 6px;
+      font-size: 11px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 1px; color: #888; margin-bottom: 6px;
     }
     .customer-block {
-      background: #f5f7fa;
-      border-radius: 8px;
-      padding: 16px 20px;
-      margin-bottom: 24px;
+      background: #f5f7fa; border-radius: 8px;
+      padding: 16px 20px; margin-bottom: 24px;
     }
-    .customer-block p {
-      font-size: 14px;
-      line-height: 1.7;
-      color: #222;
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-bottom: 0;
-    }
-    thead tr {
-      background: #1a3a6e;
-      color: #fff;
-    }
+    .customer-block p { font-size: 14px; line-height: 1.7; color: #222; }
+    table { width: 100%; border-collapse: collapse; margin-bottom: 0; }
+    thead tr { background: #1a3a6e; color: #fff; }
     thead th {
-      padding: 10px 12px;
-      font-size: 12px;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
+      padding: 10px 12px; font-size: 12px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.5px;
     }
     thead th:last-child { text-align: right; }
     thead th:nth-child(2) { text-align: center; }
     tbody tr { border-bottom: 1px solid #e8e8e8; }
     tbody tr:last-child { border-bottom: none; }
-    tbody td {
-      padding: 11px 12px;
-      font-size: 14px;
-      color: #222;
+    tbody td { padding: 11px 12px; font-size: 14px; color: #222; }
+    .totals-block { border-top: 2px solid #1a3a6e; margin-top: 0; padding-top: 12px; }
+    .payment-row {
+      display: flex; justify-content: space-between;
+      font-size: 13px; color: #555; padding: 4px 12px;
     }
-    .totals-block {
-      border-top: 2px solid #1a3a6e;
-      margin-top: 0;
-      padding-top: 12px;
+    .rate-row {
+      display: flex; justify-content: space-between;
+      font-size: 12px; color: #999; padding: 2px 12px; font-style: italic;
     }
     .total-row {
-      display: flex;
-      justify-content: space-between;
-      font-size: 22px;
-      font-weight: 800;
-      color: #1a3a6e;
-      padding: 4px 12px;
+      display: flex; justify-content: space-between;
+      font-size: 22px; font-weight: 800; color: #1a3a6e; padding: 8px 12px 4px;
     }
-    .payment-row {
-      display: flex;
-      justify-content: space-between;
-      font-size: 13px;
-      color: #555;
-      padding: 4px 12px;
+    .merits-badge {
+      display: inline-block; background: #fff8e1; color: #b8860b;
+      border: 1px solid #f0c030; border-radius: 4px;
+      padding: 1px 8px; font-size: 12px; font-weight: 700; margin-left: 6px;
     }
     .notes-block {
-      margin-top: 20px;
-      border-left: 3px solid #1a3a6e;
-      padding: 10px 14px;
-      background: #f5f7fa;
-      font-size: 13px;
-      color: #444;
-      border-radius: 0 6px 6px 0;
+      margin-top: 20px; border-left: 3px solid #1a3a6e;
+      padding: 10px 14px; background: #f5f7fa;
+      font-size: 13px; color: #444; border-radius: 0 6px 6px 0;
     }
     .footer-block {
-      margin-top: 36px;
-      padding-top: 16px;
-      border-top: 1px solid #ddd;
-      text-align: center;
-      font-size: 12px;
-      color: #aaa;
+      margin-top: 36px; padding-top: 16px;
+      border-top: 1px solid #ddd; text-align: center;
+      font-size: 12px; color: #aaa;
     }
     @media print {
       body { padding: 20px; }
-      @page { margin: 0.5in; }
+      @page { size: letter; margin: 0.6in; }
     }
   </style>
 </head>
 <body>
   <div class="receipt-header">
-    <img src="Pro-Fab 3d logo.jpg" alt="Pro-Fab 3D" />
+    <img src="${logoUrl}" alt="Pro-Fab 3D" />
     <div class="receipt-header-right">
       <h1>ORDER RECEIPT</h1>
       <div class="order-id">${order.id}</div>
@@ -489,32 +612,37 @@ function printReceipt(order) {
       <tr>
         <th style="text-align:left;">Product</th>
         <th style="text-align:center;">Qty</th>
-        <th style="text-align:right;">Amount</th>
+        <th style="text-align:right;">${isMerits ? 'Merits' : 'Amount'}</th>
       </tr>
     </thead>
-    <tbody>
-      ${itemRows}
-    </tbody>
+    <tbody>${itemRows}</tbody>
   </table>
 
   <div class="totals-block">
-    <div class="payment-row"><span>Payment Method</span><span>${payLabel}</span></div>
-    <div class="total-row"><span>Total</span><span>$${Number(order.total).toFixed(2)}</span></div>
+    <div class="payment-row">
+      <span>Payment Method</span>
+      <span>${payLabel}${isMerits ? '<span class="merits-badge">1 USD = 100 merits</span>' : ''}</span>
+    </div>
+    ${isMerits ? `<div class="rate-row"><span>Dollar equivalent</span><span>$${Number(order.total).toFixed(2)}</span></div>` : ''}
+    <div class="total-row"><span>Total</span><span>${totalDisplay}</span></div>
   </div>
 
   ${order.notes ? `<div class="notes-block"><strong>Notes:</strong> ${order.notes}</div>` : ''}
 
   <div class="footer-block">
-    Thank you for your order! Questions? Contact us and reference order <strong>${order.id}</strong>.<br/>
+    Thank you for your order! Reference order <strong>${order.id}</strong> for any questions.<br/>
     Pro-Fab 3D — Custom 3D Printed Products
   </div>
 </body>
 </html>`;
 
-  const win = window.open('', '_blank', 'width=750,height=900');
-  win.document.documentElement.innerHTML = html;
-  win.focus();
-  win.onload = () => { win.print(); };
+  const blob = new Blob([html], { type: 'text/html' });
+  const url = URL.createObjectURL(blob);
+  const win = window.open(url, '_blank', 'width=780,height=960');
+  win.addEventListener('load', () => {
+    win.print();
+    URL.revokeObjectURL(url);
+  });
 }
 
 // ===== TOAST =====
@@ -540,4 +668,5 @@ function showToast(msg) {
 document.addEventListener('DOMContentLoaded', () => {
   renderProducts();
   updateCartUI();
+  updateUserNav();
 });

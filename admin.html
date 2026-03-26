@@ -370,9 +370,24 @@
             ${o.notes ? `<div style="font-size:13px;color:var(--text2);margin-bottom:12px;font-style:italic;">Notes: ${o.notes}</div>` : ''}
             <div class="order-items-list">${itemLines}</div>
             <div class="order-total-line">Total: $${Number(o.total).toFixed(2)}</div>
-            <button class="tab-btn" onclick="printReceipt(${JSON.stringify(o).replace(/"/g,'&quot;')})" style="font-size:12px;padding:6px 14px;margin-top:10px;">🖨️ Print Receipt</button>
+            <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;">
+              ${o.status !== 'Complete' ? `<button class="complete-btn" onclick="completeOrder('${o.id}')">✓ Mark Complete</button>` : '<span class="order-complete-label">✓ Completed</span>'}
+              <button class="tab-btn" onclick="printReceipt(${JSON.stringify(o).replace(/"/g,'&quot;')})" style="font-size:12px;padding:6px 14px;">🖨️ Print Receipt</button>
+            </div>
           </div>`;
       }).join('');
+    }
+
+    // ===== COMPLETE ORDER =====
+    function completeOrder(id) {
+      const orders = getOrders();
+      const o = orders.find(o => o.id === id);
+      if (o) {
+        o.status = 'Complete';
+        saveOrders(orders);
+        renderOrders();
+        showToast('Order marked as complete ✓');
+      }
     }
 
     // ===== INIT =====

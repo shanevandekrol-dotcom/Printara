@@ -904,6 +904,164 @@ a:hover { color: var(--accent2); }
   .login-box { padding: 32px 20px; }
 }
 
+/* ===== USER NAV ===== */
+.nav-user { display: flex; align-items: center; gap: 8px; }
+.nav-login-btn {
+  padding: 7px 16px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--accent);
+  background: rgba(124,106,247,0.1);
+  border: 1px solid rgba(124,106,247,0.3);
+  cursor: pointer;
+  transition: all .2s;
+  white-space: nowrap;
+}
+.nav-login-btn:hover { background: rgba(124,106,247,0.2); }
+.nav-user-menu { display: flex; align-items: center; gap: 6px; }
+.nav-account-btn {
+  padding: 7px 14px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  cursor: pointer;
+  transition: all .2s;
+  max-width: 160px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.nav-account-btn:hover { border-color: var(--accent); color: var(--accent); }
+.nav-logout-btn {
+  padding: 7px 10px;
+  border-radius: 8px;
+  font-size: 14px;
+  color: var(--text3);
+  background: transparent;
+  border: 1px solid var(--border);
+  cursor: pointer;
+  transition: all .2s;
+}
+.nav-logout-btn:hover { color: var(--accent3); border-color: var(--accent3); }
+
+/* ===== AUTH MODAL ===== */
+.modal--auth {
+  max-width: 420px;
+  padding: 36px 32px;
+}
+.auth-tabs {
+  display: flex;
+  gap: 0;
+  background: var(--surface2);
+  border-radius: 10px;
+  padding: 4px;
+  margin-bottom: 24px;
+}
+.auth-tab {
+  flex: 1;
+  padding: 8px;
+  border-radius: 7px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text2);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: all .2s;
+}
+.auth-tab.active {
+  background: var(--accent);
+  color: #fff;
+}
+.auth-title {
+  font-size: 20px;
+  font-weight: 700;
+  margin-bottom: 20px;
+}
+.auth-switch {
+  text-align: center;
+  font-size: 13px;
+  color: var(--text2);
+  margin-top: 16px;
+}
+
+/* ===== MY ORDERS MODAL ===== */
+.modal--myorders {
+  max-width: 560px;
+  max-height: 85vh;
+  overflow-y: auto;
+  padding: 32px 28px;
+}
+.my-order-card {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px 18px;
+  margin-bottom: 12px;
+}
+.my-order-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 4px;
+}
+.my-order-id { font-size: 13px; font-weight: 700; color: var(--text2); }
+.my-order-date { font-size: 12px; color: var(--text3); margin-bottom: 8px; }
+.my-order-items { font-size: 13px; color: var(--text2); margin-bottom: 10px; }
+.my-order-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-top: 1px solid var(--border);
+  padding-top: 10px;
+}
+.my-order-total { font-size: 15px; font-weight: 700; color: var(--text); }
+.my-order-pay { font-size: 12px; color: var(--text3); }
+
+/* Order status badges */
+.order-status-badge {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 20px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.status--new {
+  background: rgba(124,106,247,0.15);
+  color: var(--accent);
+  border: 1px solid rgba(124,106,247,0.3);
+}
+.status--complete {
+  background: rgba(76,175,130,0.15);
+  color: var(--green);
+  border: 1px solid rgba(76,175,130,0.3);
+}
+
+/* Admin complete button */
+.complete-btn {
+  background: rgba(76,175,130,0.15);
+  color: var(--green);
+  border: 1px solid rgba(76,175,130,0.35);
+  border-radius: 8px;
+  padding: 6px 14px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all .2s;
+}
+.complete-btn:hover { background: rgba(76,175,130,0.3); }
+.order-complete-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--green);
+  padding: 6px 0;
+}
+
 /* ===== PAYMENT METHOD ===== */
 .payment-options {
   display: flex;
