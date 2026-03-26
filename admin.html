@@ -923,23 +923,28 @@
       if (getCIActive()) renderClockIn();
     }
 
-    // On load — check session
+    // On load — check session IMMEDIATELY (no cloud delay)
     document.addEventListener('DOMContentLoaded', async () => {
-      await cloudPull();
+      // Auth gate runs first — never wait for network before deciding access
       if (isAuthenticated()) {
         document.getElementById('loginGate').style.display = 'none';
         document.querySelectorAll('.admin-content').forEach(el => el.classList.add('unlocked'));
+        await cloudPull();
         initAdmin();
         updateConfigDisplay();
-      } else if (!getStoredHash()) {
-        showSetupMode();
-      } else if (isLockedOut()) {
-        const err = document.getElementById('loginError');
-        err.textContent = `Too many failed attempts. Try again in ${lockoutMins()} min.`;
-        err.classList.add('visible');
-        document.getElementById('loginInput').disabled = true;
       } else {
-        document.getElementById('loginInput').focus();
+        // Not authenticated — show login gate right away, sync in background
+        sessionStorage.removeItem('profab_admin_auth');
+        sessionStorage.removeItem('profab_admin_ts');
+        if (isLockedOut()) {
+          const err = document.getElementById('loginError');
+          err.textContent = `Too many failed attempts. Try again in ${lockoutMins()} min.`;
+          err.classList.add('visible');
+          document.getElementById('loginInput').disabled = true;
+        } else {
+          document.getElementById('loginInput').focus();
+        }
+        cloudPull(); // pull in background without blocking the gate
       }
     });
   </script>
