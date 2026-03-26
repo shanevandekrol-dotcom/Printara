@@ -10,21 +10,40 @@
 </head>
 <body>
 
-  <!-- HEADER -->
-  <header class="header">
+  <!-- ===== LOGIN GATE ===== -->
+  <div class="login-gate" id="loginGate">
+    <div class="login-box">
+      <div class="login-logo">◈</div>
+      <h2>Pro-Fab 3D Admin</h2>
+      <p>Enter your password to access the dashboard.</p>
+      <form onsubmit="tryLogin(event)">
+        <div class="form-group">
+          <label>Password</label>
+          <input type="password" id="loginInput" placeholder="Enter password" autocomplete="current-password" required />
+        </div>
+        <div class="login-error" id="loginError">Incorrect password. Try again.</div>
+        <button type="submit" class="btn-primary">Unlock →</button>
+      </form>
+      <div class="login-footer">Default password: <strong>profab3d</strong></div>
+    </div>
+  </div>
+
+  <!-- ===== HEADER ===== -->
+  <header class="header admin-content" id="adminHeader">
     <div class="header-inner">
       <a href="index.html" class="logo">
         <span class="logo-icon">◈</span>
         <span class="logo-text">Pro-Fab <span class="logo-accent">3D</span></span>
       </a>
       <nav class="nav">
-        <a href="index.html" class="nav-link">← Back to Shop</a>
+        <a href="index.html" class="nav-link">← Shop</a>
       </nav>
-      <span style="margin-left:auto; background:rgba(124,106,247,0.15); border:1px solid rgba(124,106,247,0.4); color:var(--accent); padding:5px 14px; border-radius:20px; font-size:13px; font-weight:600;">Admin Panel</span>
+      <span style="margin-left:auto; background:rgba(124,106,247,0.15); border:1px solid rgba(124,106,247,0.4); color:var(--accent); padding:5px 14px; border-radius:20px; font-size:13px; font-weight:600;">Admin</span>
     </div>
   </header>
 
-  <div class="admin-wrap">
+  <!-- ===== ADMIN CONTENT ===== -->
+  <div class="admin-wrap admin-content" id="adminContent">
     <div class="admin-header">
       <h1>Admin Dashboard</h1>
       <p>Manage your products and view incoming orders.</p>
@@ -34,6 +53,7 @@
       <button class="tab-btn active" onclick="switchTab('add')">+ Add Product</button>
       <button class="tab-btn" onclick="switchTab('manage')">Manage Products</button>
       <button class="tab-btn" onclick="switchTab('orders')">Orders <span id="orderBadge"></span></button>
+      <button class="tab-btn" onclick="switchTab('settings')">Settings</button>
     </div>
 
     <!-- ADD PRODUCT TAB -->
@@ -142,13 +162,104 @@
         <p>Orders will appear here once customers check out.</p>
       </div>
     </div>
+
+    <!-- SETTINGS TAB -->
+    <div class="tab-panel" id="tab-settings">
+      <div class="pwd-section">
+        <h3>Change Admin Password</h3>
+        <p>Update the password required to access this admin panel.</p>
+        <form onsubmit="changePassword(event)" style="display:flex;flex-direction:column;gap:14px;max-width:380px;">
+          <div class="form-group">
+            <label>Current Password *</label>
+            <input type="password" id="currentPwd" required placeholder="Current password" />
+          </div>
+          <div class="form-group">
+            <label>New Password *</label>
+            <input type="password" id="newPwd" required placeholder="New password (min 6 chars)" minlength="6" />
+          </div>
+          <div class="form-group">
+            <label>Confirm New Password *</label>
+            <input type="password" id="confirmPwd" required placeholder="Repeat new password" />
+          </div>
+          <div class="login-error" id="pwdError"></div>
+          <button type="submit" class="btn-primary" style="align-self:flex-start;">Update Password</button>
+        </form>
+      </div>
+
+      <div class="pwd-section" style="margin-top:20px;">
+        <h3>Session</h3>
+        <p>Logging out will require the password to access admin again.</p>
+        <button class="logout-btn" onclick="logout()">Log Out</button>
+      </div>
+    </div>
   </div>
 
   <script src="app.js"></script>
   <script>
+    // ===== PASSWORD AUTH =====
+    const DEFAULT_PWD = 'profab3d';
+
+    function getStoredHash() {
+      return localStorage.getItem('profab_admin_pwd') || btoa(DEFAULT_PWD);
+    }
+
+    function hashPwd(pwd) {
+      return btoa(pwd); // simple obfuscation for local-only use
+    }
+
+    function isAuthenticated() {
+      return sessionStorage.getItem('profab_admin_auth') === 'true';
+    }
+
+    function tryLogin(e) {
+      e.preventDefault();
+      const input = document.getElementById('loginInput').value;
+      const err = document.getElementById('loginError');
+      if (hashPwd(input) === getStoredHash()) {
+        sessionStorage.setItem('profab_admin_auth', 'true');
+        document.getElementById('loginGate').style.display = 'none';
+        document.querySelectorAll('.admin-content').forEach(el => el.classList.add('unlocked'));
+        initAdmin();
+      } else {
+        err.classList.add('visible');
+        document.getElementById('loginInput').value = '';
+        document.getElementById('loginInput').focus();
+        setTimeout(() => err.classList.remove('visible'), 3000);
+      }
+    }
+
+    function logout() {
+      sessionStorage.removeItem('profab_admin_auth');
+      location.reload();
+    }
+
+    function changePassword(e) {
+      e.preventDefault();
+      const cur = document.getElementById('currentPwd').value;
+      const nw = document.getElementById('newPwd').value;
+      const confirm = document.getElementById('confirmPwd').value;
+      const err = document.getElementById('pwdError');
+
+      if (hashPwd(cur) !== getStoredHash()) {
+        err.textContent = 'Current password is incorrect.';
+        err.classList.add('visible');
+        return;
+      }
+      if (nw !== confirm) {
+        err.textContent = 'New passwords do not match.';
+        err.classList.add('visible');
+        return;
+      }
+      localStorage.setItem('profab_admin_pwd', hashPwd(nw));
+      err.classList.remove('visible');
+      e.target.reset();
+      showToast('Password updated ✓');
+    }
+
+    // ===== TABS =====
     function switchTab(tab) {
       document.querySelectorAll('.tab-btn').forEach((b, i) => {
-        const tabs = ['add', 'manage', 'orders'];
+        const tabs = ['add', 'manage', 'orders', 'settings'];
         b.classList.toggle('active', tabs[i] === tab);
       });
       document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
@@ -157,6 +268,7 @@
       if (tab === 'orders') renderOrders();
     }
 
+    // ===== PRODUCTS =====
     function addProduct(e) {
       e.preventDefault();
       const form = e.target;
@@ -216,7 +328,7 @@
             ${imgHtml}
             <div class="manage-item-info">
               <div class="manage-item-name">${p.name}</div>
-              <div class="manage-item-meta">${p.category} • ${p.material || 'No material set'} • ${p.inStock ? '✅ In Stock' : '🔴 Hidden'}</div>
+              <div class="manage-item-meta">${p.category} · ${p.material || 'No material'} · ${p.inStock ? '✅ Visible' : '🔴 Hidden'}</div>
             </div>
             <span class="manage-item-price">$${Number(p.price).toFixed(2)}</span>
             <button class="tab-btn" onclick="toggleStock('${p.id}')" style="font-size:12px;padding:6px 12px;">${p.inStock ? 'Hide' : 'Show'}</button>
@@ -225,6 +337,7 @@
       }).join('');
     }
 
+    // ===== ORDERS =====
     function renderOrders() {
       const list = document.getElementById('ordersList');
       const empty = document.getElementById('ordersEmpty');
@@ -262,12 +375,23 @@
       }).join('');
     }
 
-    // Update order badge on load
-    (function() {
+    // ===== INIT =====
+    function initAdmin() {
       const orders = getOrders();
       const badge = document.getElementById('orderBadge');
       if (badge && orders.length > 0) badge.textContent = `(${orders.length})`;
-    })();
+    }
+
+    // On load — check session
+    document.addEventListener('DOMContentLoaded', () => {
+      if (isAuthenticated()) {
+        document.getElementById('loginGate').style.display = 'none';
+        document.querySelectorAll('.admin-content').forEach(el => el.classList.add('unlocked'));
+        initAdmin();
+      } else {
+        document.getElementById('loginInput').focus();
+      }
+    });
   </script>
 </body>
 </html>
