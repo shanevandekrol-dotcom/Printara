@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin — Pro-Fab 3D</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+  <!-- HEADER -->
+  <header class="header">
+    <div class="header-inner">
+      <a href="index.html" class="logo">
+        <span class="logo-icon">◈</span>
+        <span class="logo-text">Pro-Fab <span class="logo-accent">3D</span></span>
+      </a>
+      <nav class="nav">
+        <a href="index.html" class="nav-link">← Back to Shop</a>
+      </nav>
+      <span style="margin-left:auto; background:rgba(124,106,247,0.15); border:1px solid rgba(124,106,247,0.4); color:var(--accent); padding:5px 14px; border-radius:20px; font-size:13px; font-weight:600;">Admin Panel</span>
+    </div>
+  </header>
+
+  <div class="admin-wrap">
+    <div class="admin-header">
+      <h1>Admin Dashboard</h1>
+      <p>Manage your products and view incoming orders.</p>
+    </div>
+
+    <div class="admin-tabs">
+      <button class="tab-btn active" onclick="switchTab('add')">+ Add Product</button>
+      <button class="tab-btn" onclick="switchTab('manage')">Manage Products</button>
+      <button class="tab-btn" onclick="switchTab('orders')">Orders <span id="orderBadge"></span></button>
+    </div>
+
+    <!-- ADD PRODUCT TAB -->
+    <div class="tab-panel active" id="tab-add">
+      <form class="add-form" id="addProductForm" onsubmit="addProduct(event)">
+        <div>
+          <h2>Add New Product</h2>
+          <p style="color:var(--text2);font-size:14px;margin-top:4px;">Fill in the details below to list a new item in the shop.</p>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Product Name *</label>
+            <input type="text" name="name" required placeholder="e.g. Hex Planter Pot" />
+          </div>
+          <div class="form-group">
+            <label>Category *</label>
+            <input type="text" name="category" required placeholder="e.g. Home Decor" list="categoryList" />
+            <datalist id="categoryList">
+              <option value="Home Decor" />
+              <option value="Organization" />
+              <option value="Desk Accessories" />
+              <option value="Tools & Hardware" />
+              <option value="Toys & Games" />
+              <option value="Art & Gifts" />
+              <option value="Functional Parts" />
+            </datalist>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Description *</label>
+          <textarea name="description" rows="4" required placeholder="Describe the product — size, use case, what makes it cool..."></textarea>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Price (USD) *</label>
+            <input type="number" name="price" required min="0.01" step="0.01" placeholder="9.99" />
+          </div>
+          <div class="form-group">
+            <label>Material</label>
+            <input type="text" name="material" placeholder="PLA, PETG, ASA..." list="materialList" />
+            <datalist id="materialList">
+              <option value="PLA" />
+              <option value="PETG" />
+              <option value="ASA" />
+              <option value="ABS" />
+              <option value="TPU" />
+              <option value="Resin" />
+            </datalist>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Print Time</label>
+            <input type="text" name="printTime" placeholder="~2 hrs" />
+          </div>
+          <div class="form-group">
+            <label>Dimensions</label>
+            <input type="text" name="dimensions" placeholder="50 × 50 × 80 mm" />
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Product Image URL (optional)</label>
+          <input type="url" name="image" placeholder="https://..." />
+          <span style="font-size:12px;color:var(--text3);margin-top:4px;">Paste a direct image link, or leave blank to use an emoji icon.</span>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Emoji Icon (if no image)</label>
+            <input type="text" name="emoji" placeholder="🖨️" maxlength="4" />
+          </div>
+          <div class="form-group">
+            <label>In Stock?</label>
+            <select name="inStock">
+              <option value="true">Yes — visible in shop</option>
+              <option value="false">No — hidden from shop</option>
+            </select>
+          </div>
+        </div>
+
+        <button type="submit" class="btn-primary">Add Product to Shop</button>
+      </form>
+    </div>
+
+    <!-- MANAGE PRODUCTS TAB -->
+    <div class="tab-panel" id="tab-manage">
+      <div class="manage-list" id="manageList"></div>
+      <div id="manageEmpty" style="display:none;" class="empty-state">
+        <div class="empty-icon">📦</div>
+        <h3>No products yet</h3>
+        <p>Add your first product using the "Add Product" tab.</p>
+      </div>
+    </div>
+
+    <!-- ORDERS TAB -->
+    <div class="tab-panel" id="tab-orders">
+      <div class="orders-list" id="ordersList"></div>
+      <div id="ordersEmpty" style="display:none;" class="empty-state">
+        <div class="empty-icon">📋</div>
+        <h3>No orders yet</h3>
+        <p>Orders will appear here once customers check out.</p>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+  <script>
+    function switchTab(tab) {
+      document.querySelectorAll('.tab-btn').forEach((b, i) => {
+        const tabs = ['add', 'manage', 'orders'];
+        b.classList.toggle('active', tabs[i] === tab);
+      });
+      document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+      document.getElementById('tab-' + tab).classList.add('active');
+      if (tab === 'manage') renderManage();
+      if (tab === 'orders') renderOrders();
+    }
+
+    function addProduct(e) {
+      e.preventDefault();
+      const form = e.target;
+      const data = Object.fromEntries(new FormData(form));
+      const product = {
+        id: 'prod-' + Date.now().toString(36),
+        name: data.name,
+        category: data.category,
+        description: data.description,
+        price: parseFloat(data.price),
+        material: data.material || '',
+        printTime: data.printTime || '',
+        dimensions: data.dimensions || '',
+        image: data.image || '',
+        emoji: data.emoji || '📦',
+        inStock: data.inStock === 'true'
+      };
+      const products = getProducts();
+      products.push(product);
+      saveProducts(products);
+      form.reset();
+      showToast('Product added! ✓');
+      switchTab('manage');
+    }
+
+    function deleteProduct(id) {
+      if (!confirm('Delete this product? This cannot be undone.')) return;
+      saveProducts(getProducts().filter(p => p.id !== id));
+      renderManage();
+      showToast('Product deleted.');
+    }
+
+    function toggleStock(id) {
+      const products = getProducts();
+      const p = products.find(p => p.id === id);
+      if (p) p.inStock = !p.inStock;
+      saveProducts(products);
+      renderManage();
+    }
+
+    function renderManage() {
+      const list = document.getElementById('manageList');
+      const empty = document.getElementById('manageEmpty');
+      const products = getProducts();
+      if (products.length === 0) {
+        list.innerHTML = '';
+        empty.style.display = 'block';
+        return;
+      }
+      empty.style.display = 'none';
+      list.innerHTML = products.map(p => {
+        const imgHtml = p.image
+          ? `<img src="${p.image}" class="manage-item-img" alt="${p.name}" />`
+          : `<div class="manage-item-img">${p.emoji || '📦'}</div>`;
+        return `
+          <div class="manage-item">
+            ${imgHtml}
+            <div class="manage-item-info">
+              <div class="manage-item-name">${p.name}</div>
+              <div class="manage-item-meta">${p.category} • ${p.material || 'No material set'} • ${p.inStock ? '✅ In Stock' : '🔴 Hidden'}</div>
+            </div>
+            <span class="manage-item-price">$${Number(p.price).toFixed(2)}</span>
+            <button class="tab-btn" onclick="toggleStock('${p.id}')" style="font-size:12px;padding:6px 12px;">${p.inStock ? 'Hide' : 'Show'}</button>
+            <button class="delete-btn" onclick="deleteProduct('${p.id}')">Delete</button>
+          </div>`;
+      }).join('');
+    }
+
+    function renderOrders() {
+      const list = document.getElementById('ordersList');
+      const empty = document.getElementById('ordersEmpty');
+      const orders = getOrders();
+      const badge = document.getElementById('orderBadge');
+      if (badge) badge.textContent = orders.length > 0 ? `(${orders.length})` : '';
+
+      if (orders.length === 0) {
+        list.innerHTML = '';
+        empty.style.display = 'block';
+        return;
+      }
+      empty.style.display = 'none';
+      list.innerHTML = orders.map(o => {
+        const date = new Date(o.date).toLocaleString();
+        const itemLines = o.items.map(i =>
+          `<div>• ${i.name} × ${i.qty} — $${(i.price * i.qty).toFixed(2)}</div>`
+        ).join('');
+        return `
+          <div class="order-card">
+            <div class="order-card-header">
+              <span class="order-status">${o.status}</span>
+              <span class="order-id">${o.id}</span>
+              <span class="order-date">${date}</span>
+            </div>
+            <div class="order-customer">${o.customer.name}</div>
+            <div class="order-customer-detail">
+              ${o.customer.email}${o.customer.phone ? ' · ' + o.customer.phone : ''}<br/>
+              ${o.customer.address}
+            </div>
+            ${o.notes ? `<div style="font-size:13px;color:var(--text2);margin-bottom:12px;font-style:italic;">Notes: ${o.notes}</div>` : ''}
+            <div class="order-items-list">${itemLines}</div>
+            <div class="order-total-line">Total: $${Number(o.total).toFixed(2)}</div>
+          </div>`;
+      }).join('');
+    }
+
+    // Update order badge on load
+    (function() {
+      const orders = getOrders();
+      const badge = document.getElementById('orderBadge');
+      if (badge && orders.length > 0) badge.textContent = `(${orders.length})`;
+    })();
+  </script>
+</body>
+</html>
