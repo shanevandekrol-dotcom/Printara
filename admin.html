@@ -194,6 +194,13 @@
           <div class="login-error" id="pwdError"></div>
           <button type="submit" class="btn-primary" style="align-self:flex-start;">Update Password</button>
         </form>
+
+        <div id="configCredentials" class="config-credentials" style="display:none;">
+          <p><strong>Paste these into <code>config.js</code></strong> to lock this password across all devices:</p>
+          <div class="config-cred-row"><span>adminSalt:</span> <code id="configSaltVal"></code></div>
+          <div class="config-cred-row"><span>adminHash:</span> <code id="configHashVal"></code></div>
+          <p style="font-size:12px;color:var(--text3);margin-top:8px;">Until you update config.js, only this device uses the new password.</p>
+        </div>
       </div>
 
       <div class="pwd-section" style="margin-top:20px;">
@@ -241,44 +248,48 @@
   <script src="config.js"></script>
   <script src="app.js"></script>
   <script>
-    // Migrate away from old insecure btoa hash (no salt key means old format)
-    (function migrateOldHash() {
-      if (localStorage.getItem('profab_admin_pwd') && !localStorage.getItem('profab_admin_salt')) {
-        localStorage.removeItem('profab_admin_pwd');
-      }
-    })();
-
     // ===== SECURE PASSWORD AUTH =====
     const LOCKOUT_LIMIT    = 5;
-    const LOCKOUT_DURATION = 15 * 60 * 1000; // 15 minutes
+    const LOCKOUT_DURATION = 15 * 60 * 1000; // 15 min
+    const SESSION_TTL      = 8  * 60 * 60 * 1000; // 8 hrs
 
+    // Salt & hash come from config.js (shared across all devices).
+    // Fall back to localStorage only during initial setup before config.js is updated.
     function getAdminSalt() {
-      let salt = localStorage.getItem('profab_admin_salt');
-      if (!salt) {
-        salt = Array.from(crypto.getRandomValues(new Uint8Array(16)))
-          .map(b => b.toString(16).padStart(2, '0')).join('');
-        localStorage.setItem('profab_admin_salt', salt);
-      }
-      return salt;
+      return (window.PROFAB_CONFIG?.adminSalt) || localStorage.getItem('profab_admin_salt') || null;
+    }
+    function getStoredHash() {
+      return (window.PROFAB_CONFIG?.adminHash) || localStorage.getItem('profab_admin_pwd') || null;
     }
 
     async function adminHash(pwd) {
-      const salt = getAdminSalt();
+      const salt = getAdminSalt() || '';
       const buf  = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(salt + pwd));
-      return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+      return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
     }
 
-    function getStoredHash()  { return localStorage.getItem('profab_admin_pwd') || null; }
-    function isAuthenticated() { return sessionStorage.getItem('profab_admin_auth') === 'true'; }
+    // Session — stored in sessionStorage with a timestamp; expires after SESSION_TTL
+    function isAuthenticated() {
+      const ts = sessionStorage.getItem('profab_admin_ts');
+      if (!ts) return false;
+      if (Date.now() - parseInt(ts) > SESSION_TTL) {
+        sessionStorage.removeItem('profab_admin_auth');
+        sessionStorage.removeItem('profab_admin_ts');
+        return false;
+      }
+      return sessionStorage.getItem('profab_admin_auth') === 'true';
+    }
+    function startSession() {
+      sessionStorage.setItem('profab_admin_auth', 'true');
+      sessionStorage.setItem('profab_admin_ts', Date.now().toString());
+    }
 
-    // ---- Rate limiting ----
+    // Rate limiting
     function getAttempts() {
       return JSON.parse(localStorage.getItem('profab_login_attempts') || '{"count":0,"last":0}');
     }
     function recordFail() {
-      const a = getAttempts();
-      a.count++;
-      a.last = Date.now();
+      const a = getAttempts(); a.count++; a.last = Date.now();
       localStorage.setItem('profab_login_attempts', JSON.stringify(a));
       return a.count;
     }
@@ -291,26 +302,23 @@
       }
       return false;
     }
-    function lockoutRemaining() {
-      const a = getAttempts();
-      return Math.ceil((LOCKOUT_DURATION - (Date.now() - a.last)) / 60000);
+    function lockoutMins() {
+      return Math.ceil((LOCKOUT_DURATION - (Date.now() - getAttempts().last)) / 60000);
     }
 
-    // ---- First-run setup ----
+    // First-run: no credentials in config.js yet
     function showSetupMode() {
       document.getElementById('loginGate').innerHTML = `
         <div class="login-box">
           <div class="login-logo"><img src="Pro-Fab 3d logo.jpg" alt="Pro-Fab 3D" class="logo-img logo-img--login" /></div>
           <h2>Set Up Admin Access</h2>
-          <p>No password has been set yet. Create one to secure your admin panel.</p>
+          <p>Create a password for this admin panel.</p>
           <form onsubmit="setupPassword(event)">
-            <div class="form-group">
-              <label>New Password</label>
-              <input type="password" id="setupPwd" placeholder="Min 8 characters" minlength="8" required autocomplete="new-password" />
+            <div class="form-group"><label>Password (min 8 chars)</label>
+              <input type="password" id="setupPwd" minlength="8" required autocomplete="new-password" placeholder="Create a strong password" />
             </div>
-            <div class="form-group">
-              <label>Confirm Password</label>
-              <input type="password" id="setupPwd2" placeholder="Repeat password" required autocomplete="new-password" />
+            <div class="form-group"><label>Confirm Password</label>
+              <input type="password" id="setupPwd2" required autocomplete="new-password" placeholder="Repeat password" />
             </div>
             <div class="login-error" id="setupError"></div>
             <button type="submit" class="btn-primary" style="width:100%;justify-content:center;margin-top:8px;">Create Password →</button>
@@ -323,37 +331,38 @@
       const pwd  = document.getElementById('setupPwd').value;
       const pwd2 = document.getElementById('setupPwd2').value;
       const err  = document.getElementById('setupError');
-      if (pwd !== pwd2) {
-        err.textContent = 'Passwords do not match.'; err.classList.add('visible'); return;
-      }
-      if (pwd.length < 8) {
-        err.textContent = 'Password must be at least 8 characters.'; err.classList.add('visible'); return;
-      }
-      localStorage.setItem('profab_admin_pwd', await adminHash(pwd));
-      sessionStorage.setItem('profab_admin_auth', 'true');
+      if (pwd !== pwd2)    { err.textContent = 'Passwords do not match.';              err.classList.add('visible'); return; }
+      if (pwd.length < 8)  { err.textContent = 'Password must be at least 8 chars.';  err.classList.add('visible'); return; }
+      // Generate a fresh salt, hash the password, store temporarily in localStorage
+      const salt = Array.from(crypto.getRandomValues(new Uint8Array(16))).map(b=>b.toString(16).padStart(2,'0')).join('');
+      localStorage.setItem('profab_admin_salt', salt);
+      const hash = await adminHash(pwd);
+      localStorage.setItem('profab_admin_pwd', hash);
+      showConfigInstructions(salt, hash);
+      startSession();
       document.getElementById('loginGate').style.display = 'none';
       document.querySelectorAll('.admin-content').forEach(el => el.classList.add('unlocked'));
       initAdmin();
-      showToast('Admin password set ✓');
     }
 
-    // ---- Login ----
+    function showConfigInstructions(salt, hash) {
+      showToast('Password set! See Settings → Admin Password for config.js values.');
+      // Store so the settings tab can display them
+      sessionStorage.setItem('pending_salt', salt);
+      sessionStorage.setItem('pending_hash', hash);
+    }
+
     async function tryLogin(e) {
       e.preventDefault();
       const err = document.getElementById('loginError');
-
       if (isLockedOut()) {
-        err.textContent = `Too many attempts. Try again in ${lockoutRemaining()} min.`;
-        err.classList.add('visible');
-        return;
+        err.textContent = `Too many attempts. Try again in ${lockoutMins()} min.`;
+        err.classList.add('visible'); return;
       }
-
       const input = document.getElementById('loginInput').value;
-      const hash  = await adminHash(input);
-
-      if (hash === getStoredHash()) {
+      if (await adminHash(input) === getStoredHash()) {
         clearAttempts();
-        sessionStorage.setItem('profab_admin_auth', 'true');
+        startSession();
         document.getElementById('loginGate').style.display = 'none';
         document.querySelectorAll('.admin-content').forEach(el => el.classList.add('unlocked'));
         initAdmin();
@@ -361,8 +370,8 @@
         const count = recordFail();
         const left  = LOCKOUT_LIMIT - count;
         err.textContent = left > 0
-          ? `Incorrect password. ${left} attempt${left === 1 ? '' : 's'} remaining.`
-          : `Too many attempts. Locked for ${lockoutRemaining()} min.`;
+          ? `Incorrect password. ${left} attempt${left===1?'':'s'} remaining.`
+          : `Too many attempts. Locked for ${lockoutMins()} min.`;
         err.classList.add('visible');
         document.getElementById('loginInput').value = '';
         document.getElementById('loginInput').focus();
@@ -372,6 +381,7 @@
 
     function logout() {
       sessionStorage.removeItem('profab_admin_auth');
+      sessionStorage.removeItem('profab_admin_ts');
       location.reload();
     }
 
@@ -381,25 +391,36 @@
       const nw      = document.getElementById('newPwd').value;
       const confirm = document.getElementById('confirmPwd').value;
       const err     = document.getElementById('pwdError');
-
       if (await adminHash(cur) !== getStoredHash()) {
-        err.textContent = 'Current password is incorrect.';
-        err.classList.add('visible'); return;
+        err.textContent = 'Current password is incorrect.'; err.classList.add('visible'); return;
       }
       if (nw.length < 8) {
-        err.textContent = 'New password must be at least 8 characters.';
-        err.classList.add('visible'); return;
+        err.textContent = 'New password must be at least 8 characters.'; err.classList.add('visible'); return;
       }
       if (nw !== confirm) {
-        err.textContent = 'New passwords do not match.';
-        err.classList.add('visible'); return;
+        err.textContent = 'New passwords do not match.'; err.classList.add('visible'); return;
       }
-      // Rotate salt on password change for extra security
-      localStorage.removeItem('profab_admin_salt');
-      localStorage.setItem('profab_admin_pwd', await adminHash(nw));
+      // Rotate salt
+      const salt = Array.from(crypto.getRandomValues(new Uint8Array(16))).map(b=>b.toString(16).padStart(2,'0')).join('');
+      localStorage.setItem('profab_admin_salt', salt);
+      const hash = await adminHash(nw);
+      localStorage.setItem('profab_admin_pwd', hash);
+      sessionStorage.setItem('pending_salt', salt);
+      sessionStorage.setItem('pending_hash', hash);
       err.classList.remove('visible');
       e.target.reset();
-      showToast('Password updated ✓');
+      updateConfigDisplay();
+      showToast('Password updated ✓ — copy values to config.js below');
+    }
+
+    function updateConfigDisplay() {
+      const salt = sessionStorage.getItem('pending_salt') || '';
+      const hash = sessionStorage.getItem('pending_hash') || '';
+      const el   = document.getElementById('configCredentials');
+      if (!el || !salt) return;
+      el.style.display = 'block';
+      document.getElementById('configSaltVal').textContent = salt;
+      document.getElementById('configHashVal').textContent = hash;
     }
 
     // ===== TABS =====
@@ -445,7 +466,6 @@
             </div>
             <div class="order-customer-detail">
               ${r.customer.email}${r.customer.phone ? ' · ' + r.customer.phone : ''}
-              ${r.customer.address ? '<br/>' + r.customer.address : ''}
             </div>
             <div class="custom-description">${r.description}</div>
             <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;">
@@ -560,8 +580,7 @@
             </div>
             <div class="order-customer">${o.customer.name} <span class="order-payment-badge order-payment-badge--${o.paymentMethod || 'cash'}">${o.paymentMethod === 'merits' ? '⭐ Merits' : '💵 Cash'}</span></div>
             <div class="order-customer-detail">
-              ${o.customer.email}${o.customer.phone ? ' · ' + o.customer.phone : ''}<br/>
-              ${o.customer.address}
+              ${o.customer.email}${o.customer.phone ? ' · ' + o.customer.phone : ''}
             </div>
             ${o.notes ? `<div style="font-size:13px;color:var(--text2);margin-bottom:12px;font-style:italic;">Notes: ${o.notes}</div>` : ''}
             <div class="order-items-list">${itemLines}</div>
@@ -605,13 +624,14 @@
         document.getElementById('loginGate').style.display = 'none';
         document.querySelectorAll('.admin-content').forEach(el => el.classList.add('unlocked'));
         initAdmin();
+        updateConfigDisplay();
       } else if (!getStoredHash()) {
-        // No password set — first run or old insecure hash was cleared
         showSetupMode();
       } else if (isLockedOut()) {
         const err = document.getElementById('loginError');
-        err.textContent = `Too many failed attempts. Try again in ${lockoutRemaining()} min.`;
+        err.textContent = `Too many failed attempts. Try again in ${lockoutMins()} min.`;
         err.classList.add('visible');
+        document.getElementById('loginInput').disabled = true;
       } else {
         document.getElementById('loginInput').focus();
       }

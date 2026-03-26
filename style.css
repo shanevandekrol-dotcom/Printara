@@ -981,6 +981,33 @@ a:hover { color: var(--accent2); }
   font-size: 13px;
   color: var(--green);
 }
+.config-credentials {
+  margin-top: 20px;
+  padding: 16px 18px;
+  background: rgba(124,106,247,0.08);
+  border: 1px solid rgba(124,106,247,0.3);
+  border-radius: 10px;
+  font-size: 13px;
+}
+.config-credentials p { color: var(--text2); margin-bottom: 10px; }
+.config-cred-row {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin-bottom: 8px;
+  font-size: 13px;
+  color: var(--text2);
+}
+.config-cred-row code {
+  background: var(--surface2);
+  color: var(--accent2);
+  padding: 3px 8px;
+  border-radius: 5px;
+  font-size: 12px;
+  word-break: break-all;
+  flex: 1;
+  user-select: all;
+}
 .config-steps {
   margin-top: 12px;
   padding: 12px 16px;

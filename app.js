@@ -28,11 +28,7 @@ function registerUser(e) {
   }
   const profile = {
     firstName, lastName, email,
-    phone:   form.regPhone?.value.trim()   || '',
-    address: form.regAddress?.value.trim() || '',
-    city:    form.regCity?.value.trim()    || '',
-    state:   form.regState?.value.trim()   || '',
-    zip:     form.regZip?.value.trim()     || ''
+    phone: form.regPhone?.value.trim() || ''
   };
   const user = {
     id: 'usr-' + Date.now().toString(36),
@@ -542,16 +538,13 @@ function checkout() {
   const pro = user?.profile || {};
   const addrEl = document.getElementById('confirmAddress');
   if (addrEl) {
-    const hasAddr = pro.address && pro.city && pro.state;
     addrEl.innerHTML = `
       <div class="confirm-ship-block">
-        <div class="confirm-ship-label">Shipping to</div>
+        <div class="confirm-ship-label">Ordering as</div>
         <div class="confirm-ship-info">
           <strong>${pro.firstName || session.name} ${pro.lastName || ''}</strong><br/>
-          ${hasAddr
-            ? `${pro.address}, ${pro.city}, ${pro.state} ${pro.zip}`
-            : `<span style="color:var(--accent3)">No address on file — <a href="#" onclick="closeOrder();openAuth('login');return false;">update your account</a></span>`}
-          ${pro.phone ? `<br/>${pro.phone}` : ''}
+          ${pro.email || session.email}
+          ${pro.phone ? ` · ${pro.phone}` : ''}
         </div>
       </div>`;
   }
@@ -613,10 +606,9 @@ function submitOrder(e) {
     date: new Date().toISOString(),
     status: 'New',
     customer: {
-      name:    pro.firstName ? `${pro.firstName} ${pro.lastName}` : session.name,
-      email:   pro.email    || session.email,
-      phone:   pro.phone    || '',
-      address: pro.address  ? `${pro.address}, ${pro.city}, ${pro.state} ${pro.zip}` : ''
+      name:  pro.firstName ? `${pro.firstName} ${pro.lastName}` : session.name,
+      email: pro.email || session.email,
+      phone: pro.phone || ''
     },
     userId: session.id,
     notes: data.notes || '',
@@ -685,8 +677,7 @@ function submitCustomOrder(e) {
     customer: {
       name:  pro.firstName ? `${pro.firstName} ${pro.lastName}` : session.name,
       email: pro.email || session.email,
-      phone: pro.phone || '',
-      address: pro.address ? `${pro.address}, ${pro.city}, ${pro.state} ${pro.zip}` : ''
+      phone: pro.phone || ''
     },
     userId: session.id,
     description: data.description,
@@ -838,8 +829,7 @@ function printReceipt(order) {
   <div class="customer-block">
     <p>
       <strong>${order.customer.name}</strong><br/>
-      ${order.customer.email}${order.customer.phone ? '<br/>' + order.customer.phone : ''}<br/>
-      ${order.customer.address}
+      ${order.customer.email}${order.customer.phone ? '<br/>' + order.customer.phone : ''}
     </p>
   </div>
 
