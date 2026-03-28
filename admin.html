@@ -128,6 +128,16 @@
         <div style="background:rgba(124,106,247,0.07);border:1px solid rgba(124,106,247,0.25);border-radius:var(--radius);padding:18px 20px;display:flex;flex-direction:column;gap:12px;">
           <div style="font-size:13px;font-weight:700;color:var(--accent);">✨ AI Auto-Fill from Photo</div>
           <p style="font-size:13px;color:var(--text2);margin:0;">Take or upload a photo of your 3D print — AI will generate the name, description, size, and more.</p>
+
+          <!-- Key input — hidden once saved -->
+          <div id="aiKeySection" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+            <input type="password" id="aiGeminiKeyInput" placeholder="Paste your free Google Gemini API key (AIza...)" autocomplete="off"
+              style="flex:1;min-width:220px;padding:9px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;" />
+            <button type="button" onclick="saveGeminiKeyInline()" class="btn-primary" style="white-space:nowrap;">Save Key</button>
+            <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener" style="font-size:12px;color:var(--accent);white-space:nowrap;">Get free key →</a>
+          </div>
+          <div id="aiKeyStatus" style="font-size:12px;color:var(--green);display:none;">API key saved ✓ — you can now take a photo.</div>
+
           <div class="photo-upload-area" id="aiPhotoArea" onclick="document.getElementById('aiPhotoInput').click()" style="min-height:90px;">
             <div class="photo-upload-placeholder" id="aiPhotoPlaceholder">
               <div class="photo-upload-icon">📷</div>
@@ -138,7 +148,7 @@
           </div>
           <input type="file" id="aiPhotoInput" accept="image/*" capture="environment" style="display:none;" onchange="handleAiPhoto(event)" />
           <button type="button" class="btn-primary" id="aiAnalyzeBtn" onclick="analyzeProductPhoto()" style="display:none;align-self:flex-start;">✨ Generate Details</button>
-          <div id="aiStatus" style="font-size:13px;color:var(--text2);display:none;"></div>
+          <div id="aiStatus" style="font-size:13px;display:none;"></div>
         </div>
 
         <div class="form-row">
@@ -1147,6 +1157,27 @@
       setTimeout(() => { document.getElementById('anthropicKeyStatus').textContent = ''; }, 2500);
     }
 
+    function saveGeminiKeyInline() {
+      const val = document.getElementById('aiGeminiKeyInput')?.value.trim();
+      if (!val) return;
+      localStorage.setItem('profab_gemini_key', val);
+      // Also sync to settings input
+      const settingsEl = document.getElementById('anthropicKeyInput');
+      if (settingsEl) settingsEl.value = val;
+      document.getElementById('aiKeySection').style.display = 'none';
+      document.getElementById('aiKeyStatus').style.display = 'block';
+      setTimeout(() => { document.getElementById('aiKeyStatus').style.display = 'none'; }, 3000);
+    }
+
+    function initAiKeySection() {
+      const key = getGeminiKey();
+      if (key) {
+        document.getElementById('aiKeySection').style.display = 'none';
+        const el = document.getElementById('aiGeminiKeyInput');
+        if (el) el.value = key;
+      }
+    }
+
     function handleAiPhoto(e) {
       const file = e.target.files[0];
       if (!file) return;
@@ -1190,11 +1221,17 @@
 
     async function analyzeProductPhoto() {
       if (!_aiPhotoData) return;
-      const key = getGeminiKey();
+      let key = getGeminiKey();
       if (!key) {
-        showToast('Add your Google Gemini API key in Settings first.');
-        switchTab('settings');
-        return;
+        // Key not saved yet — check the inline input
+        key = document.getElementById('aiGeminiKeyInput')?.value.trim();
+        if (!key) {
+          document.getElementById('aiKeySection').style.display = 'flex';
+          document.getElementById('aiGeminiKeyInput')?.focus();
+          showToast('Enter your Gemini API key first.');
+          return;
+        }
+        localStorage.setItem('profab_gemini_key', key);
       }
       const btn = document.getElementById('aiAnalyzeBtn');
       const status = document.getElementById('aiStatus');
@@ -1220,7 +1257,7 @@ Return ONLY the JSON object, no markdown, no explanation.`;
 
       try {
         const res = await fetch(
-          `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${key}`,
+          `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${key}`,
           {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -1238,7 +1275,11 @@ Return ONLY the JSON object, no markdown, no explanation.`;
 
         if (!res.ok) {
           const err = await res.json().catch(() => ({}));
-          throw new Error(err?.error?.message || `API error ${res.status}`);
+          const msg = err?.error?.message || `API error ${res.status}`;
+          if (res.status === 400) throw new Error('Bad request — check your API key format.');
+          if (res.status === 403) throw new Error('Invalid or expired API key. Get a new one at aistudio.google.com');
+          if (res.status === 429) throw new Error('Rate limit hit — wait a moment and try again.');
+          throw new Error(msg);
         }
 
         const data = await res.json();
@@ -1272,11 +1313,14 @@ Return ONLY the JSON object, no markdown, no explanation.`;
       }
     }
 
-    // Pre-fill Gemini key input from storage on load
+    // Pre-fill key inputs from storage on load
     document.addEventListener('DOMContentLoaded', () => {
       const saved = localStorage.getItem('profab_gemini_key') || window.PROFAB_CONFIG?.geminiKey || '';
-      const el = document.getElementById('anthropicKeyInput');
-      if (el && saved) el.value = saved;
+      const settingsEl = document.getElementById('anthropicKeyInput');
+      if (settingsEl && saved) settingsEl.value = saved;
+      const inlineEl = document.getElementById('aiGeminiKeyInput');
+      if (inlineEl && saved) inlineEl.value = saved;
+      initAiKeySection();
     });
   </script>
 </body>
