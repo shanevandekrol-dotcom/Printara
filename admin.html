@@ -47,6 +47,57 @@
     </div>
   </header>
 
+  <!-- ===== SIDEBAR ===== -->
+  <aside class="sidebar admin-content" id="adminSidebar">
+    <div class="sidebar-group">
+      <div class="sidebar-group-label">Products</div>
+      <button class="sidebar-item active" id="sbi-add" onclick="switchTab('add')">
+        <span class="sidebar-item-icon">📦</span> Add Product
+      </button>
+      <button class="sidebar-item" id="sbi-manage" onclick="switchTab('manage')">
+        <span class="sidebar-item-icon">🗂️</span> Manage Products
+      </button>
+    </div>
+    <div class="sidebar-group">
+      <div class="sidebar-group-label">Orders</div>
+      <button class="sidebar-item" id="sbi-orders" onclick="switchTab('orders')">
+        <span class="sidebar-item-icon">🛒</span> Orders
+      </button>
+      <button class="sidebar-item" id="sbi-custom" onclick="switchTab('custom')">
+        <span class="sidebar-item-icon">✏️</span> Custom Requests
+      </button>
+    </div>
+    <div class="sidebar-group">
+      <div class="sidebar-group-label">People</div>
+      <button class="sidebar-item" id="sbi-users" onclick="switchTab('users')">
+        <span class="sidebar-item-icon">👥</span> Accounts
+      </button>
+    </div>
+    <div class="sidebar-group">
+      <div class="sidebar-group-label">Finance</div>
+      <button class="sidebar-item" id="sbi-sales" onclick="switchTab('sales')">
+        <span class="sidebar-item-icon">🏷️</span> Sales
+      </button>
+    </div>
+    <div class="sidebar-group">
+      <div class="sidebar-group-label">Time</div>
+      <button class="sidebar-item" id="sbi-clockin" onclick="switchTab('clockin')">
+        <span class="sidebar-item-icon">⏱️</span> Hours
+      </button>
+    </div>
+    <div class="sidebar-group">
+      <div class="sidebar-group-label">System</div>
+      <button class="sidebar-item" id="sbi-settings" onclick="switchTab('settings')">
+        <span class="sidebar-item-icon">⚙️</span> Settings
+      </button>
+    </div>
+    <div class="sidebar-bottom">
+      <a href="index.html" class="sidebar-item">
+        <span class="sidebar-item-icon">←</span> Back to Shop
+      </a>
+    </div>
+  </aside>
+
   <!-- ===== ADMIN CONTENT ===== -->
   <div class="admin-wrap admin-content" id="adminContent">
     <div class="admin-header">
@@ -71,6 +122,23 @@
         <div>
           <h2>Add New Product</h2>
           <p style="color:var(--text2);font-size:14px;margin-top:4px;">Fill in the details below to list a new item in the shop.</p>
+        </div>
+
+        <!-- AI PHOTO CAPTURE -->
+        <div style="background:rgba(124,106,247,0.07);border:1px solid rgba(124,106,247,0.25);border-radius:var(--radius);padding:18px 20px;display:flex;flex-direction:column;gap:12px;">
+          <div style="font-size:13px;font-weight:700;color:var(--accent);">✨ AI Auto-Fill from Photo</div>
+          <p style="font-size:13px;color:var(--text2);margin:0;">Take or upload a photo of your 3D print — AI will generate the name, description, size, and more.</p>
+          <div class="photo-upload-area" id="aiPhotoArea" onclick="document.getElementById('aiPhotoInput').click()" style="min-height:90px;">
+            <div class="photo-upload-placeholder" id="aiPhotoPlaceholder">
+              <div class="photo-upload-icon">📷</div>
+              <div class="photo-upload-text">Tap to take a photo or upload one</div>
+            </div>
+            <img id="aiPhotoPreview" class="photo-preview-img" style="display:none;" alt="Product photo" />
+            <button type="button" class="photo-remove-btn" id="aiPhotoRemoveBtn" style="display:none;" onclick="removeAiPhoto(event)">✕ Remove</button>
+          </div>
+          <input type="file" id="aiPhotoInput" accept="image/*" capture="environment" style="display:none;" onchange="handleAiPhoto(event)" />
+          <button type="button" class="btn-primary" id="aiAnalyzeBtn" onclick="analyzeProductPhoto()" style="display:none;align-self:flex-start;">✨ Generate Details</button>
+          <div id="aiStatus" style="font-size:13px;color:var(--text2);display:none;"></div>
         </div>
 
         <div class="form-row">
@@ -273,6 +341,21 @@
         <h3>Session</h3>
         <p>Logging out will require the password to access admin again.</p>
         <button class="logout-btn" onclick="logout()">Log Out</button>
+      </div>
+
+      <div class="pwd-section" style="margin-top:20px;">
+        <h3>✨ AI Photo Auto-Fill</h3>
+        <p>Enter your free Google Gemini API key to enable photo-to-product AI generation. <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener">Get a free key →</a></p>
+        <div style="display:flex;flex-direction:column;gap:12px;max-width:480px;margin-top:14px;">
+          <div class="form-group">
+            <label>Google Gemini API Key</label>
+            <input type="password" id="anthropicKeyInput" placeholder="AIza..." autocomplete="off" />
+          </div>
+          <div style="display:flex;gap:10px;">
+            <button class="btn-primary" style="align-self:flex-start;" onclick="saveAnthropicKey()">Save Key</button>
+          </div>
+          <div id="anthropicKeyStatus" style="font-size:13px;color:var(--text3);"></div>
+        </div>
       </div>
 
       <div class="pwd-section" style="margin-top:20px;">
@@ -495,6 +578,9 @@
         const tabs = ['add', 'manage', 'orders', 'custom', 'users', 'sales', 'clockin', 'settings'];
         b.classList.toggle('active', tabs[i] === tab);
       });
+      document.querySelectorAll('[id^="sbi-"]').forEach(el => {
+        el.classList.toggle('active', el.id === 'sbi-' + tab);
+      });
       document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
       document.getElementById('tab-' + tab).classList.add('active');
       if (tab === 'manage') renderManage();
@@ -640,14 +726,26 @@
     function completeCustom(id) {
       const orders = getOrders();
       const r = orders.find(o => o.id === id);
-      if (r) { r.status = 'Complete'; saveOrders(orders); renderCustom(); showToast('Marked complete ✓'); }
+      if (r) {
+        r.status = 'Complete';
+        saveOrders(orders);
+        addNotification(r.userId, 'custom_complete', r.id, `Your custom request ${r.id} is complete! We'll be in touch. ✓`);
+        renderCustom();
+        showToast('Marked complete ✓');
+      }
     }
 
     function rejectCustom(id) {
       if (!confirm('Reject this custom request?')) return;
       const orders = getOrders();
       const r = orders.find(o => o.id === id);
-      if (r) { r.status = 'Rejected'; saveOrders(orders); renderCustom(); showToast('Request rejected.'); }
+      if (r) {
+        r.status = 'Rejected';
+        saveOrders(orders);
+        addNotification(r.userId, 'custom_rejected', r.id, `Your custom request ${r.id} was not accepted. Contact us for more info.`);
+        renderCustom();
+        showToast('Request rejected.');
+      }
     }
 
     // ===== PRODUCTS =====
@@ -767,6 +865,7 @@
       if (o) {
         o.status = 'Complete';
         saveOrders(orders);
+        addNotification(o.userId, 'order_complete', o.id, `Your order ${o.id} is ready! 🎉`);
         renderOrders();
         showToast('Order marked as complete ✓');
       }
@@ -1030,6 +1129,154 @@
         }
         cloudPull(); // pull in background without blocking the gate
       }
+    });
+
+    // ===== AI PHOTO AUTO-FILL =====
+    let _aiPhotoData = null;
+
+    function getGeminiKey() {
+      return (window.PROFAB_CONFIG?.geminiKey || '').trim()
+          || (localStorage.getItem('profab_gemini_key') || '').trim();
+    }
+
+    function saveAnthropicKey() {
+      const val = document.getElementById('anthropicKeyInput')?.value.trim();
+      if (!val) { document.getElementById('anthropicKeyStatus').textContent = 'Please enter a key.'; return; }
+      localStorage.setItem('profab_gemini_key', val);
+      document.getElementById('anthropicKeyStatus').textContent = 'Key saved ✓';
+      setTimeout(() => { document.getElementById('anthropicKeyStatus').textContent = ''; }, 2500);
+    }
+
+    function handleAiPhoto(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      // Resize to reduce payload size
+      const reader = new FileReader();
+      reader.onload = ev => {
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          const MAX = 1024;
+          let w = img.width, h = img.height;
+          if (w > MAX || h > MAX) {
+            if (w > h) { h = Math.round(h * MAX / w); w = MAX; }
+            else       { w = Math.round(w * MAX / h); h = MAX; }
+          }
+          canvas.width = w; canvas.height = h;
+          canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+          _aiPhotoData = canvas.toDataURL('image/jpeg', 0.85);
+          document.getElementById('aiPhotoPreview').src = _aiPhotoData;
+          document.getElementById('aiPhotoPreview').style.display = 'block';
+          document.getElementById('aiPhotoPlaceholder').style.display = 'none';
+          document.getElementById('aiPhotoRemoveBtn').style.display = 'block';
+          document.getElementById('aiAnalyzeBtn').style.display = 'inline-flex';
+        };
+        img.src = ev.target.result;
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function removeAiPhoto(e) {
+      e.stopPropagation();
+      _aiPhotoData = null;
+      document.getElementById('aiPhotoInput').value = '';
+      document.getElementById('aiPhotoPreview').style.display = 'none';
+      document.getElementById('aiPhotoPreview').src = '';
+      document.getElementById('aiPhotoPlaceholder').style.display = 'block';
+      document.getElementById('aiPhotoRemoveBtn').style.display = 'none';
+      document.getElementById('aiAnalyzeBtn').style.display = 'none';
+      document.getElementById('aiStatus').style.display = 'none';
+    }
+
+    async function analyzeProductPhoto() {
+      if (!_aiPhotoData) return;
+      const key = getGeminiKey();
+      if (!key) {
+        showToast('Add your Google Gemini API key in Settings first.');
+        switchTab('settings');
+        return;
+      }
+      const btn = document.getElementById('aiAnalyzeBtn');
+      const status = document.getElementById('aiStatus');
+      btn.disabled = true;
+      btn.textContent = '⏳ Analyzing…';
+      status.style.display = 'block';
+      status.style.color = 'var(--text2)';
+      status.textContent = 'Sending photo to AI…';
+
+      const base64 = _aiPhotoData.split(',')[1];
+      const mimeType = _aiPhotoData.startsWith('data:image/png') ? 'image/png' : 'image/jpeg';
+      const prompt = `You are a product listing assistant for a 3D printing shop called Pro-Fab 3D. Analyze this photo of a 3D printed item and return ONLY valid JSON with these fields:
+{
+  "name": "short product name (3-5 words)",
+  "category": "one of: Home Decor, Organization, Desk Accessories, Tools & Hardware, Toys & Games, Art & Gifts, Functional Parts",
+  "description": "2-3 sentence product description covering what it is, its use case, and any notable features",
+  "dimensions": "estimated dimensions in mm (e.g. 80 × 60 × 40 mm) — estimate from visual cues",
+  "printTime": "estimated print time (e.g. ~2 hrs)",
+  "material": "most likely material: PLA, PETG, ASA, ABS, TPU, or Resin",
+  "emoji": "single emoji that best represents this product"
+}
+Return ONLY the JSON object, no markdown, no explanation.`;
+
+      try {
+        const res = await fetch(
+          `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${key}`,
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              contents: [{
+                parts: [
+                  { inline_data: { mime_type: mimeType, data: base64 } },
+                  { text: prompt }
+                ]
+              }],
+              generationConfig: { maxOutputTokens: 512, temperature: 0.2 }
+            })
+          }
+        );
+
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}));
+          throw new Error(err?.error?.message || `API error ${res.status}`);
+        }
+
+        const data = await res.json();
+        let text = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || '';
+        // Strip markdown code fences if present
+        text = text.replace(/^```[a-z]*\n?/, '').replace(/\n?```$/, '').trim();
+        let product;
+        try { product = JSON.parse(text); }
+        catch { throw new Error('Could not parse AI response. Try again.'); }
+
+        const form = document.getElementById('addProductForm');
+        const set = (name, val) => { const el = form.elements[name]; if (el && val) el.value = val; };
+        set('name', product.name);
+        set('category', product.category);
+        set('description', product.description);
+        set('dimensions', product.dimensions);
+        set('printTime', product.printTime);
+        set('material', product.material);
+        set('emoji', product.emoji);
+
+        status.textContent = '✓ Fields filled! Review and adjust, then set a price.';
+        status.style.color = 'var(--green)';
+        btn.textContent = '✨ Re-Analyze';
+        btn.disabled = false;
+
+      } catch (err) {
+        status.textContent = '✕ ' + err.message;
+        status.style.color = '#ef5350';
+        btn.textContent = '✨ Generate Details';
+        btn.disabled = false;
+      }
+    }
+
+    // Pre-fill Gemini key input from storage on load
+    document.addEventListener('DOMContentLoaded', () => {
+      const saved = localStorage.getItem('profab_gemini_key') || window.PROFAB_CONFIG?.geminiKey || '';
+      const el = document.getElementById('anthropicKeyInput');
+      if (el && saved) el.value = saved;
     });
   </script>
 </body>
