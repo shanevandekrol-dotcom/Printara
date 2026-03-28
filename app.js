@@ -201,7 +201,13 @@ function cloudPush() {
       await fetch(`https://api.jsonbin.io/v3/b/${bin}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json', 'X-Master-Key': key },
-        body: JSON.stringify({ orders: getOrders(), products: getProducts(), users: getUsers() })
+        body: JSON.stringify({
+          orders: getOrders(),
+          products: getProducts(),
+          users: getUsers(),
+          ci_sessions: JSON.parse(localStorage.getItem('profab_ci_sessions') || '[]'),
+          ci_active: JSON.parse(localStorage.getItem('profab_ci_active') || 'null')
+        })
       });
       setSyncStatus('Synced ✓', 'ok');
     } catch {
@@ -219,9 +225,14 @@ async function cloudPull() {
     });
     if (!res.ok) return false;
     const { record } = await res.json();
-    if (record.orders)   localStorage.setItem('profab_orders',   JSON.stringify(record.orders));
-    if (record.products) localStorage.setItem('profab_products', JSON.stringify(record.products));
-    if (record.users)    localStorage.setItem('profab_users',    JSON.stringify(record.users));
+    if (record.orders)      localStorage.setItem('profab_orders',      JSON.stringify(record.orders));
+    if (record.products)    localStorage.setItem('profab_products',    JSON.stringify(record.products));
+    if (record.users)       localStorage.setItem('profab_users',       JSON.stringify(record.users));
+    if (record.ci_sessions) localStorage.setItem('profab_ci_sessions', JSON.stringify(record.ci_sessions));
+    if (record.ci_active !== undefined) {
+      if (record.ci_active) localStorage.setItem('profab_ci_active', JSON.stringify(record.ci_active));
+      else localStorage.removeItem('profab_ci_active');
+    }
     setSyncStatus('Synced ✓', 'ok');
     return true;
   } catch {
@@ -243,7 +254,13 @@ async function createNewBin() {
         'X-Bin-Name': 'Pro-Fab 3D',
         'X-Bin-Private': 'true'
       },
-      body: JSON.stringify({ orders: getOrders(), products: getProducts() })
+      body: JSON.stringify({
+          orders: getOrders(),
+          products: getProducts(),
+          users: getUsers(),
+          ci_sessions: JSON.parse(localStorage.getItem('profab_ci_sessions') || '[]'),
+          ci_active: JSON.parse(localStorage.getItem('profab_ci_active') || 'null')
+        })
     });
     if (!res.ok) { setSyncStatus('Invalid API key.', 'err'); return; }
     const { metadata } = await res.json();

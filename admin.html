@@ -798,6 +798,7 @@
       if (getCIActive()) return;
       saveCIActive({ start: new Date().toISOString() });
       renderClockIn();
+      cloudPush();
       showToast('Clocked in ✓');
     }
 
@@ -814,6 +815,7 @@
       clearInterval(ciTimer);
       ciTimer = null;
       renderClockIn();
+      cloudPush();
       showToast(`Clocked out — ${fmtDuration(ms)} logged ✓`);
     }
 
@@ -821,6 +823,7 @@
       if (!confirm('Clear entire time log? This cannot be undone.')) return;
       saveCISessions([]);
       renderClockIn();
+      cloudPush();
       showToast('Time log cleared.');
     }
 
