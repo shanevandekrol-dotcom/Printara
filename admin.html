@@ -169,6 +169,11 @@
           <input type="file" id="aiPhotoInput" accept="image/*" capture="environment" style="display:none;" onchange="handleAiPhoto(event)" />
         </div>
 
+        <div class="form-group">
+          <label>Image URL (optional — use instead of photo upload)</label>
+          <input type="url" name="imageUrl" placeholder="https://example.com/product.jpg" />
+        </div>
+
         <div class="form-row">
           <div class="form-group">
             <label>Product Name *</label>
@@ -823,7 +828,7 @@
         material: data.material || '',
         printTime: data.printTime || '',
         dimensions: data.dimensions || '',
-        image: _aiPhotoData || '',
+        image: _aiPhotoData || data.imageUrl || '',
         emoji: data.emoji || '📦',
         inStock: data.inStock === 'true'
       };

@@ -1213,12 +1213,32 @@ function openShopSettings() {
   });
   // sync account state
   const session = getUserSession();
-  const loginBtn  = document.getElementById('shopSettingsLoginBtn');
-  const logoutBtn = document.getElementById('shopSettingsLogoutBtn');
-  const userEl    = document.getElementById('shopSettingsUser');
+  const loginBtn     = document.getElementById('shopSettingsLoginBtn');
+  const logoutBtn    = document.getElementById('shopSettingsLogoutBtn');
+  const userEl       = document.getElementById('shopSettingsUser');
+  const ordersBtn    = document.getElementById('shopSettingsOrdersBtn');
+  const notifBtn     = document.getElementById('settingsNotifBtn');
   if (loginBtn)  loginBtn.style.display  = session ? 'none'  : 'block';
   if (logoutBtn) logoutBtn.style.display = session ? 'block' : 'none';
   if (userEl)    { userEl.textContent = session ? `Signed in as ${session.name}` : ''; userEl.style.display = session ? 'block' : 'none'; }
+  if (ordersBtn) ordersBtn.style.display = session ? 'block' : 'none';
+  if (notifBtn)  notifBtn.style.display  = session ? 'flex'  : 'none';
+
+  // populate cart count badge
+  const cartCountEl = document.getElementById('settingsCartCount');
+  if (cartCountEl) {
+    const c = cartCount();
+    cartCountEl.textContent = c > 0 ? `(${c})` : '';
+  }
+
+  // populate notification unread count
+  const notifCountEl = document.getElementById('settingsNotifCount');
+  if (notifCountEl && session) {
+    const unread = getNotifications().filter(n => n.userId === session.id && !n.read).length;
+    notifCountEl.textContent = unread > 0 ? `(${unread})` : '';
+  } else if (notifCountEl) {
+    notifCountEl.textContent = '';
+  }
 }
 function closeShopSettings() {
   const panel   = document.getElementById('shopSettingsPanel');

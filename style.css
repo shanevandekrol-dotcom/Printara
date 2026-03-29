@@ -997,11 +997,18 @@ a:hover { color: var(--accent2); }
 
 /* --- Mobile (≤640px) --- */
 @media (max-width: 640px) {
-  /* Header */
-  .header-inner { padding: 0 16px; gap: 12px; }
-  .nav-link--admin { display: none; } /* hide Admin link; use direct URL */
-  .nav .nav-link:not(.nav-link--admin) { padding: 6px 10px; font-size: 13px; }
-  .cart-btn { padding: 8px 12px; font-size: 14px; }
+  /* Header — logo left, action icons right only */
+  .header-inner { padding: 0 14px; gap: 8px; height: 56px; }
+
+  /* Hide nav links and login button — moved into settings panel */
+  .nav { display: none; }
+  .nav-user { display: none; }
+  .notif-bell-btn { display: none !important; } /* bell goes into settings panel */
+
+  /* Cart and settings gear stay visible, compact */
+  .cart-btn { padding: 7px 11px; font-size: 14px; gap: 5px; }
+  .cart-count { font-size: 11px; min-width: 18px; height: 18px; }
+  .theme-toggle { width: 34px; height: 34px; font-size: 16px; }
 
   /* Hero */
   .hero { padding: 80px 16px 48px; min-height: auto; }
