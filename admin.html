@@ -21,14 +21,18 @@
     <div class="login-box">
       <div class="login-logo"><img src="Pro-Fab 3d logo.jpg" alt="Pro-Fab 3D" class="logo-img logo-img--login" /></div>
       <h2>Pro-Fab 3D Admin</h2>
-      <p>Enter your password to access the dashboard.</p>
+      <p>Sign in to your admin account.</p>
       <form onsubmit="tryLogin(event)">
+        <div class="form-group">
+          <label>Username</label>
+          <input type="text" id="loginUsername" placeholder="Enter username" autocomplete="username" required />
+        </div>
         <div class="form-group">
           <label>Password</label>
           <input type="password" id="loginInput" placeholder="Enter password" autocomplete="current-password" required />
         </div>
-        <div class="login-error" id="loginError">Incorrect password. Try again.</div>
-        <button type="submit" class="btn-primary">Unlock →</button>
+        <div class="login-error" id="loginError"></div>
+        <button type="submit" class="btn-primary">Sign In →</button>
       </form>
       <div class="login-footer" id="loginFooter"></div>
     </div>
@@ -43,7 +47,7 @@
       <nav class="nav">
         <a href="index.html" class="nav-link">← Shop</a>
       </nav>
-      <span style="margin-left:auto; background:rgba(124,106,247,0.15); border:1px solid rgba(124,106,247,0.4); color:var(--accent); padding:5px 14px; border-radius:20px; font-size:13px; font-weight:600;">Admin</span>
+      <span id="adminUserBadge" style="margin-left:auto; background:rgba(124,106,247,0.15); border:1px solid rgba(124,106,247,0.4); color:var(--accent); padding:5px 14px; border-radius:20px; font-size:13px; font-weight:600;">Admin</span>
       <button class="theme-toggle" id="themeToggleBtn" onclick="toggleTheme()" title="Toggle light/dark mode">🌙</button>
     </div>
   </header>
@@ -359,8 +363,8 @@
     <!-- SETTINGS TAB -->
     <div class="tab-panel" id="tab-settings">
       <div class="pwd-section">
-        <h3>Change Admin Password</h3>
-        <p>Update the password required to access this admin panel.</p>
+        <h3>Your Account</h3>
+        <p>Change your own password.</p>
         <form onsubmit="changePassword(event)" style="display:flex;flex-direction:column;gap:14px;max-width:380px;">
           <div class="form-group">
             <label>Current Password *</label>
@@ -368,7 +372,7 @@
           </div>
           <div class="form-group">
             <label>New Password *</label>
-            <input type="password" id="newPwd" required placeholder="New password (min 6 chars)" minlength="6" />
+            <input type="password" id="newPwd" required placeholder="New password (min 8 chars)" minlength="8" />
           </div>
           <div class="form-group">
             <label>Confirm New Password *</label>
@@ -377,13 +381,50 @@
           <div class="login-error" id="pwdError"></div>
           <button type="submit" class="btn-primary" style="align-self:flex-start;">Update Password</button>
         </form>
+      </div>
 
-        <div id="configCredentials" class="config-credentials" style="display:none;">
-          <p><strong>Paste these into <code>config.js</code></strong> to lock this password across all devices:</p>
-          <div class="config-cred-row"><span>adminSalt:</span> <code id="configSaltVal"></code></div>
-          <div class="config-cred-row"><span>adminHash:</span> <code id="configHashVal"></code></div>
-          <p style="font-size:12px;color:var(--text3);margin-top:8px;">Until you update config.js, only this device uses the new password.</p>
-        </div>
+      <!-- Admin Accounts (owner only — shown/hidden by JS) -->
+      <div class="pwd-section" id="adminAccountsSection" style="display:none;margin-top:20px;">
+        <h3>Admin Accounts</h3>
+        <p>Add staff accounts and control which pages they can access.</p>
+        <div id="adminAccountsList" style="margin-top:16px;"></div>
+
+        <h4 style="margin-top:24px;margin-bottom:14px;font-size:15px;">Add New Account</h4>
+        <form onsubmit="addAdminAccount(event)" style="display:flex;flex-direction:column;gap:12px;max-width:420px;">
+          <div class="form-row">
+            <div class="form-group">
+              <label>Username *</label>
+              <input type="text" id="newAcctUsername" required placeholder="e.g. staff1" autocomplete="off" />
+            </div>
+            <div class="form-group">
+              <label>Password *</label>
+              <input type="password" id="newAcctPwd" required placeholder="Min 6 chars" minlength="6" autocomplete="new-password" />
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Role</label>
+            <select id="newAcctRole" onchange="toggleNewAcctPerms()" style="padding:9px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:14px;">
+              <option value="staff">Staff (limited access)</option>
+              <option value="owner">Owner (full access)</option>
+            </select>
+          </div>
+          <div id="newAcctPerms" style="display:block;">
+            <label style="font-size:12px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;display:block;">Page Permissions</label>
+            <div style="display:flex;flex-wrap:wrap;gap:8px;">
+              <label style="display:flex;align-items:center;gap:5px;font-size:13px;cursor:pointer;"><input type="checkbox" value="add" checked /> Add Product</label>
+              <label style="display:flex;align-items:center;gap:5px;font-size:13px;cursor:pointer;"><input type="checkbox" value="manage" checked /> Manage Products</label>
+              <label style="display:flex;align-items:center;gap:5px;font-size:13px;cursor:pointer;"><input type="checkbox" value="orders" checked /> Orders</label>
+              <label style="display:flex;align-items:center;gap:5px;font-size:13px;cursor:pointer;"><input type="checkbox" value="custom" /> Custom Requests</label>
+              <label style="display:flex;align-items:center;gap:5px;font-size:13px;cursor:pointer;"><input type="checkbox" value="users" /> Accounts</label>
+              <label style="display:flex;align-items:center;gap:5px;font-size:13px;cursor:pointer;"><input type="checkbox" value="sales" /> Sales</label>
+              <label style="display:flex;align-items:center;gap:5px;font-size:13px;cursor:pointer;"><input type="checkbox" value="revenue" /> Revenue</label>
+              <label style="display:flex;align-items:center;gap:5px;font-size:13px;cursor:pointer;"><input type="checkbox" value="clockin" /> Hours</label>
+              <label style="display:flex;align-items:center;gap:5px;font-size:13px;cursor:pointer;"><input type="checkbox" value="settings" /> Settings</label>
+            </div>
+          </div>
+          <div class="login-error" id="newAcctError"></div>
+          <button type="submit" class="btn-primary" style="align-self:flex-start;">Create Account →</button>
+        </form>
       </div>
 
       <div class="pwd-section" style="margin-top:20px;">
@@ -480,40 +521,53 @@
   <script src="config.js"></script>
   <script src="app.js"></script>
   <script>
-    // ===== SECURE PASSWORD AUTH =====
+    // ===== MULTI-ACCOUNT ADMIN AUTH =====
     const LOCKOUT_LIMIT    = 5;
-    const LOCKOUT_DURATION = 15 * 60 * 1000; // 15 min
-    const SESSION_TTL      = 8  * 60 * 60 * 1000; // 8 hrs
+    const LOCKOUT_DURATION = 15 * 60 * 1000;
+    const SESSION_TTL      = 8  * 60 * 60 * 1000;
+    const ALL_TABS = ['add','manage','orders','custom','users','sales','revenue','clockin','settings'];
+    const TAB_LABELS = { add:'Add Product', manage:'Manage Products', orders:'Orders', custom:'Custom Requests', users:'Accounts', sales:'Sales', revenue:'Revenue', clockin:'Hours', settings:'Settings' };
 
-    // Salt & hash come from config.js (shared across all devices).
-    // Fall back to localStorage only during initial setup before config.js is updated.
-    function getAdminSalt() {
-      return (window.PROFAB_CONFIG?.adminSalt) || localStorage.getItem('profab_admin_salt') || null;
-    }
-    function getStoredHash() {
-      return (window.PROFAB_CONFIG?.adminHash) || localStorage.getItem('profab_admin_pwd') || null;
-    }
-
-    async function adminHash(pwd) {
-      const salt = getAdminSalt() || '';
-      const buf  = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(salt + pwd));
+    async function hashPwd(salt, pwd) {
+      const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(salt + pwd));
       return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
     }
 
-    // Session — stored in sessionStorage with a timestamp; expires after SESSION_TTL
-    function isAuthenticated() {
-      const ts = sessionStorage.getItem('profab_admin_ts');
-      if (!ts) return false;
-      if (Date.now() - parseInt(ts) > SESSION_TTL) {
-        sessionStorage.removeItem('profab_admin_auth');
-        sessionStorage.removeItem('profab_admin_ts');
-        return false;
+    function getAdminAccounts() {
+      const raw = localStorage.getItem('profab_admin_accounts');
+      if (raw) return JSON.parse(raw);
+      // Migrate legacy single-password from config.js on first load
+      const cfgSalt = window.PROFAB_CONFIG?.adminSalt;
+      const cfgHash = window.PROFAB_CONFIG?.adminHash;
+      if (cfgSalt && cfgHash) {
+        const owner = { id: 'owner', username: 'owner', salt: cfgSalt, hash: cfgHash, role: 'owner', permissions: [...ALL_TABS] };
+        saveAdminAccounts([owner]);
+        return [owner];
       }
-      return sessionStorage.getItem('profab_admin_auth') === 'true';
+      return [];
     }
-    function startSession() {
-      sessionStorage.setItem('profab_admin_auth', 'true');
-      sessionStorage.setItem('profab_admin_ts', Date.now().toString());
+    function saveAdminAccounts(accounts) {
+      localStorage.setItem('profab_admin_accounts', JSON.stringify(accounts));
+    }
+
+    // Session
+    function getAdminSession() {
+      const raw = sessionStorage.getItem('profab_admin_session');
+      if (!raw) return null;
+      const s = JSON.parse(raw);
+      if (Date.now() - s.ts > SESSION_TTL) { sessionStorage.removeItem('profab_admin_session'); return null; }
+      return s;
+    }
+    function isAuthenticated() { return !!getAdminSession(); }
+    function startSession(account) {
+      sessionStorage.setItem('profab_admin_session', JSON.stringify({
+        id: account.id, username: account.username, role: account.role,
+        permissions: account.permissions, ts: Date.now()
+      }));
+    }
+    function hasPermission(tab) {
+      const s = getAdminSession();
+      return s && s.permissions.includes(tab);
     }
 
     // Rate limiting
@@ -538,14 +592,17 @@
       return Math.ceil((LOCKOUT_DURATION - (Date.now() - getAttempts().last)) / 60000);
     }
 
-    // First-run: no credentials in config.js yet
+    // First-run: no accounts yet — create owner account
     function showSetupMode() {
       document.getElementById('loginGate').innerHTML = `
         <div class="login-box">
           <div class="login-logo"><img src="Pro-Fab 3d logo.jpg" alt="Pro-Fab 3D" class="logo-img logo-img--login" /></div>
           <h2>Set Up Admin Access</h2>
-          <p>Create a password for this admin panel.</p>
-          <form onsubmit="setupPassword(event)">
+          <p>Create the owner account for this admin panel.</p>
+          <form onsubmit="setupOwner(event)">
+            <div class="form-group"><label>Username</label>
+              <input type="text" id="setupUsername" required autocomplete="username" placeholder="e.g. owner" />
+            </div>
             <div class="form-group"><label>Password (min 8 chars)</label>
               <input type="password" id="setupPwd" minlength="8" required autocomplete="new-password" placeholder="Create a strong password" />
             </div>
@@ -553,35 +610,28 @@
               <input type="password" id="setupPwd2" required autocomplete="new-password" placeholder="Repeat password" />
             </div>
             <div class="login-error" id="setupError"></div>
-            <button type="submit" class="btn-primary" style="width:100%;justify-content:center;margin-top:8px;">Create Password →</button>
+            <button type="submit" class="btn-primary" style="width:100%;justify-content:center;margin-top:8px;">Create Owner Account →</button>
           </form>
         </div>`;
     }
 
-    async function setupPassword(e) {
+    async function setupOwner(e) {
       e.preventDefault();
-      const pwd  = document.getElementById('setupPwd').value;
-      const pwd2 = document.getElementById('setupPwd2').value;
-      const err  = document.getElementById('setupError');
-      if (pwd !== pwd2)    { err.textContent = 'Passwords do not match.';              err.classList.add('visible'); return; }
-      if (pwd.length < 8)  { err.textContent = 'Password must be at least 8 chars.';  err.classList.add('visible'); return; }
-      // Generate a fresh salt, hash the password, store temporarily in localStorage
-      const salt = Array.from(crypto.getRandomValues(new Uint8Array(16))).map(b=>b.toString(16).padStart(2,'0')).join('');
-      localStorage.setItem('profab_admin_salt', salt);
-      const hash = await adminHash(pwd);
-      localStorage.setItem('profab_admin_pwd', hash);
-      showConfigInstructions(salt, hash);
-      startSession();
+      const username = document.getElementById('setupUsername').value.trim();
+      const pwd      = document.getElementById('setupPwd').value;
+      const pwd2     = document.getElementById('setupPwd2').value;
+      const err      = document.getElementById('setupError');
+      if (!username)     { err.textContent = 'Username is required.';              err.classList.add('visible'); return; }
+      if (pwd !== pwd2)  { err.textContent = 'Passwords do not match.';            err.classList.add('visible'); return; }
+      if (pwd.length < 8){ err.textContent = 'Password must be at least 8 chars.'; err.classList.add('visible'); return; }
+      const salt  = Array.from(crypto.getRandomValues(new Uint8Array(16))).map(b=>b.toString(16).padStart(2,'0')).join('');
+      const hash  = await hashPwd(salt, pwd);
+      const owner = { id: 'acct-' + Date.now().toString(36), username, salt, hash, role: 'owner', permissions: [...ALL_TABS] };
+      saveAdminAccounts([owner]);
+      startSession(owner);
       document.getElementById('loginGate').style.display = 'none';
       document.querySelectorAll('.admin-content').forEach(el => el.classList.add('unlocked'));
       initAdmin();
-    }
-
-    function showConfigInstructions(salt, hash) {
-      showToast('Password set! See Settings → Admin Password for config.js values.');
-      // Store so the settings tab can display them
-      sessionStorage.setItem('pending_salt', salt);
-      sessionStorage.setItem('pending_hash', hash);
     }
 
     async function tryLogin(e) {
@@ -591,39 +641,50 @@
         err.textContent = `Too many attempts. Try again in ${lockoutMins()} min.`;
         err.classList.add('visible'); return;
       }
-      const input = document.getElementById('loginInput').value;
-      if (await adminHash(input) === getStoredHash()) {
-        clearAttempts();
-        startSession();
-        document.getElementById('loginGate').style.display = 'none';
-        document.querySelectorAll('.admin-content').forEach(el => el.classList.add('unlocked'));
-        initAdmin();
-      } else {
-        const count = recordFail();
-        const left  = LOCKOUT_LIMIT - count;
-        err.textContent = left > 0
-          ? `Incorrect password. ${left} attempt${left===1?'':'s'} remaining.`
-          : `Too many attempts. Locked for ${lockoutMins()} min.`;
-        err.classList.add('visible');
-        document.getElementById('loginInput').value = '';
-        document.getElementById('loginInput').focus();
-        setTimeout(() => err.classList.remove('visible'), 4000);
+      const username = document.getElementById('loginUsername').value.trim().toLowerCase();
+      const password = document.getElementById('loginInput').value;
+      const accounts = getAdminAccounts();
+      const account  = accounts.find(a => a.username.toLowerCase() === username);
+      if (account) {
+        const h = await hashPwd(account.salt, password);
+        if (h === account.hash) {
+          clearAttempts();
+          startSession(account);
+          document.getElementById('loginGate').style.display = 'none';
+          document.querySelectorAll('.admin-content').forEach(el => el.classList.add('unlocked'));
+          initAdmin();
+          return;
+        }
       }
+      const count = recordFail();
+      const left  = LOCKOUT_LIMIT - count;
+      err.textContent = left > 0
+        ? `Incorrect username or password. ${left} attempt${left===1?'':'s'} remaining.`
+        : `Too many attempts. Locked for ${lockoutMins()} min.`;
+      err.classList.add('visible');
+      document.getElementById('loginInput').value = '';
+      document.getElementById('loginInput').focus();
+      setTimeout(() => err.classList.remove('visible'), 4000);
     }
 
     function logout() {
-      sessionStorage.removeItem('profab_admin_auth');
-      sessionStorage.removeItem('profab_admin_ts');
+      sessionStorage.removeItem('profab_admin_session');
       location.reload();
     }
 
+    // Change own password
     async function changePassword(e) {
       e.preventDefault();
       const cur     = document.getElementById('currentPwd').value;
       const nw      = document.getElementById('newPwd').value;
       const confirm = document.getElementById('confirmPwd').value;
       const err     = document.getElementById('pwdError');
-      if (await adminHash(cur) !== getStoredHash()) {
+      const session  = getAdminSession();
+      if (!session) return;
+      const accounts = getAdminAccounts();
+      const account  = accounts.find(a => a.id === session.id);
+      if (!account) return;
+      if (await hashPwd(account.salt, cur) !== account.hash) {
         err.textContent = 'Current password is incorrect.'; err.classList.add('visible'); return;
       }
       if (nw.length < 8) {
@@ -632,31 +693,104 @@
       if (nw !== confirm) {
         err.textContent = 'New passwords do not match.'; err.classList.add('visible'); return;
       }
-      // Rotate salt
       const salt = Array.from(crypto.getRandomValues(new Uint8Array(16))).map(b=>b.toString(16).padStart(2,'0')).join('');
-      localStorage.setItem('profab_admin_salt', salt);
-      const hash = await adminHash(nw);
-      localStorage.setItem('profab_admin_pwd', hash);
-      sessionStorage.setItem('pending_salt', salt);
-      sessionStorage.setItem('pending_hash', hash);
+      account.salt = salt;
+      account.hash = await hashPwd(salt, nw);
+      saveAdminAccounts(accounts);
       err.classList.remove('visible');
       e.target.reset();
-      updateConfigDisplay();
-      showToast('Password updated ✓ — copy values to config.js below');
+      showToast('Password updated ✓');
     }
 
-    function updateConfigDisplay() {
-      const salt = sessionStorage.getItem('pending_salt') || '';
-      const hash = sessionStorage.getItem('pending_hash') || '';
-      const el   = document.getElementById('configCredentials');
-      if (!el || !salt) return;
-      el.style.display = 'block';
-      document.getElementById('configSaltVal').textContent = salt;
-      document.getElementById('configHashVal').textContent = hash;
+    // ===== ADMIN ACCOUNTS MANAGEMENT (owner only) =====
+    function renderAdminAccounts() {
+      const session  = getAdminSession();
+      const section  = document.getElementById('adminAccountsSection');
+      if (!section) return;
+      if (!session || session.role !== 'owner') { section.style.display = 'none'; return; }
+      section.style.display = 'block';
+      const accounts = getAdminAccounts();
+      section.querySelector('#adminAccountsList').innerHTML = accounts.map(a => `
+        <div style="background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:14px 16px;margin-bottom:10px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+            <div>
+              <span style="font-weight:700;font-size:15px;color:var(--text);">${a.username}</span>
+              <span style="margin-left:8px;font-size:11px;padding:2px 8px;border-radius:10px;font-weight:700;background:${a.role==='owner'?'rgba(124,106,247,0.2)':'rgba(76,175,80,0.15)'};color:${a.role==='owner'?'var(--accent)':'#66bb6a'}">${a.role}</span>
+            </div>
+            ${a.id !== session.id ? `<button class="delete-btn" onclick="deleteAdminAccount('${a.id}')">Remove</button>` : '<span style="font-size:12px;color:var(--text3);">(you)</span>'}
+          </div>
+          <div style="font-size:12px;color:var(--text3);margin-bottom:8px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;">Permissions</div>
+          <div style="display:flex;flex-wrap:wrap;gap:6px;">
+            ${ALL_TABS.map(tab => {
+              const has = (a.permissions||[]).includes(tab);
+              const locked = a.role === 'owner'; // owner always has all
+              return `<label style="display:flex;align-items:center;gap:4px;font-size:13px;cursor:${locked?'default':'pointer'};opacity:${locked?'0.5':'1'};">
+                <input type="checkbox" ${has?'checked':''} ${locked?'disabled':''} onchange="toggleAccountPerm('${a.id}','${tab}',this.checked)" />
+                ${TAB_LABELS[tab]}
+              </label>`;
+            }).join('')}
+          </div>
+        </div>`).join('');
+    }
+
+    function toggleAccountPerm(accountId, tab, checked) {
+      const accounts = getAdminAccounts();
+      const account  = accounts.find(a => a.id === accountId);
+      if (!account || account.role === 'owner') return;
+      if (checked) { if (!account.permissions.includes(tab)) account.permissions.push(tab); }
+      else { account.permissions = account.permissions.filter(t => t !== tab); }
+      saveAdminAccounts(accounts);
+      showToast('Permissions updated ✓');
+    }
+
+    function deleteAdminAccount(accountId) {
+      const session = getAdminSession();
+      if (!session || session.role !== 'owner') return;
+      if (accountId === session.id) { showToast("Can't delete your own account."); return; }
+      if (!confirm('Remove this admin account? This cannot be undone.')) return;
+      saveAdminAccounts(getAdminAccounts().filter(a => a.id !== accountId));
+      renderAdminAccounts();
+      showToast('Account removed ✓');
+    }
+
+    async function addAdminAccount(e) {
+      e.preventDefault();
+      const username = document.getElementById('newAcctUsername').value.trim();
+      const pwd      = document.getElementById('newAcctPwd').value;
+      const role     = document.getElementById('newAcctRole').value;
+      const err      = document.getElementById('newAcctError');
+      const accounts = getAdminAccounts();
+      if (!username) { err.textContent = 'Username is required.'; err.classList.add('visible'); return; }
+      if (pwd.length < 6) { err.textContent = 'Password must be at least 6 characters.'; err.classList.add('visible'); return; }
+      if (accounts.find(a => a.username.toLowerCase() === username.toLowerCase())) {
+        err.textContent = 'That username already exists.'; err.classList.add('visible'); return;
+      }
+      const perms = role === 'owner' ? [...ALL_TABS] :
+        Array.from(document.querySelectorAll('#newAcctPerms input[type=checkbox]:checked')).map(cb => cb.value);
+      const salt = Array.from(crypto.getRandomValues(new Uint8Array(16))).map(b=>b.toString(16).padStart(2,'0')).join('');
+      const hash = await hashPwd(salt, pwd);
+      accounts.push({ id: 'acct-' + Date.now().toString(36), username, salt, hash, role, permissions: perms });
+      saveAdminAccounts(accounts);
+      e.target.reset();
+      toggleNewAcctPerms();
+      err.classList.remove('visible');
+      renderAdminAccounts();
+      showToast(`Account "${username}" created ✓`);
+    }
+
+    function toggleNewAcctPerms() {
+      const role  = document.getElementById('newAcctRole')?.value;
+      const perms = document.getElementById('newAcctPerms');
+      if (perms) perms.style.display = role === 'owner' ? 'none' : 'block';
     }
 
     // ===== TABS =====
     function switchTab(tab) {
+      // Permission guard — redirect to first allowed tab if blocked
+      if (isAuthenticated() && !hasPermission(tab)) {
+        const fallback = ALL_TABS.find(t => hasPermission(t));
+        if (fallback && fallback !== tab) { switchTab(fallback); return; }
+      }
       document.querySelectorAll('.tab-btn').forEach((b, i) => {
         const tabs = ['add', 'manage', 'orders', 'custom', 'users', 'sales', 'revenue', 'clockin', 'settings'];
         b.classList.toggle('active', tabs[i] === tab);
@@ -677,7 +811,7 @@
       if (tab === 'sales')    renderSales();
       if (tab === 'revenue')  renderRevenue();
       if (tab === 'clockin')  renderClockIn();
-      if (tab === 'settings') initColorPickers();
+      if (tab === 'settings') { initColorPickers(); renderAdminAccounts(); }
     }
 
     // ===== SALES =====
@@ -1259,6 +1393,35 @@
 
     // ===== INIT =====
     function initAdmin() {
+      const session = getAdminSession();
+
+      // Show current user in header badge
+      const badge = document.getElementById('adminUserBadge');
+      if (badge && session) badge.textContent = session.username;
+
+      // Hide tabs/nav items the user doesn't have permission for
+      const allTabNames = ['add','manage','orders','custom','users','sales','revenue','clockin','settings'];
+      allTabNames.forEach(tab => {
+        const visible = hasPermission(tab);
+        // top tab bar button (index matches allTabNames order)
+        document.querySelectorAll('.tab-btn').forEach((b, i) => {
+          if (allTabNames[i] === tab) b.style.display = visible ? '' : 'none';
+        });
+        // sidebar item
+        const sbi = document.getElementById('sbi-' + tab);
+        if (sbi) sbi.style.display = visible ? '' : 'none';
+        // bottom nav
+        const mni = document.getElementById('mni-' + tab);
+        if (mni) mni.style.display = visible ? '' : 'none';
+      });
+
+      // Show/render admin accounts section in settings if owner
+      renderAdminAccounts();
+
+      // Navigate to first permitted tab
+      const firstTab = allTabNames.find(t => hasPermission(t)) || 'add';
+      switchTab(firstTab);
+
       const all = getOrders();
       const orders  = all.filter(o => o.type !== 'custom');
       const customs = all.filter(o => o.type === 'custom');
@@ -1280,26 +1443,26 @@
 
     // On load — check session IMMEDIATELY (no cloud delay)
     document.addEventListener('DOMContentLoaded', async () => {
-      // Auth gate runs first — never wait for network before deciding access
       if (isAuthenticated()) {
         document.getElementById('loginGate').style.display = 'none';
         document.querySelectorAll('.admin-content').forEach(el => el.classList.add('unlocked'));
         await cloudPull();
         initAdmin();
-        updateConfigDisplay();
       } else {
-        // Not authenticated — show login gate right away, sync in background
-        sessionStorage.removeItem('profab_admin_auth');
-        sessionStorage.removeItem('profab_admin_ts');
-        if (isLockedOut()) {
-          const err = document.getElementById('loginError');
-          err.textContent = `Too many failed attempts. Try again in ${lockoutMins()} min.`;
-          err.classList.add('visible');
-          document.getElementById('loginInput').disabled = true;
+        // Check if any accounts exist; if not, show first-run setup
+        if (getAdminAccounts().length === 0) {
+          showSetupMode();
         } else {
-          document.getElementById('loginInput').focus();
+          if (isLockedOut()) {
+            const err = document.getElementById('loginError');
+            err.textContent = `Too many failed attempts. Try again in ${lockoutMins()} min.`;
+            err.classList.add('visible');
+            document.getElementById('loginInput').disabled = true;
+          } else {
+            document.getElementById('loginUsername').focus();
+          }
         }
-        cloudPull(); // pull in background without blocking the gate
+        cloudPull();
       }
     });
 
