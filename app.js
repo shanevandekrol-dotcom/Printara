@@ -301,7 +301,8 @@ function cloudPush() {
   }, 200);
 }
 
-async function cloudPull() {
+// syncProducts=true only on initial page load — never overwrite products mid-session
+async function cloudPull(syncProducts = false) {
   const { key, bin } = getCloudConfig();
   if (!key || !bin) return false;
   try {
@@ -311,9 +312,8 @@ async function cloudPull() {
     if (!res.ok) return false;
     const { record } = await res.json();
     if (record.orders)   localStorage.setItem('profab_orders', JSON.stringify(record.orders));
-    // Only overwrite local products if the cloud has at least as many as we do locally,
-    // preventing a stale cloud snapshot from wiping products added since the last push.
-    if (record.products && record.products.length >= getProducts().length)
+    // Products only synced on initial page load — mid-session pulls must never overwrite them
+    if (syncProducts && record.products && record.products.length > 0)
       localStorage.setItem('profab_products', JSON.stringify(record.products));
     if (record.users)    localStorage.setItem('profab_users',   JSON.stringify(record.users));
     if (record.ci_sessions) localStorage.setItem('profab_ci_sessions', JSON.stringify(record.ci_sessions));
@@ -1391,7 +1391,7 @@ async function processCardPayment(order) {
 // ===== INIT =====
 document.addEventListener('DOMContentLoaded', async () => {
   initTheme(); // re-apply after DOM ready so UI buttons sync
-  await cloudPull();
+  await cloudPull(true); // syncProducts=true on initial load only
   renderProducts();
   updateCartUI();
   updateUserNav();

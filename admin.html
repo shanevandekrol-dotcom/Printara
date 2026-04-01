@@ -1572,7 +1572,7 @@
       if (isAuthenticated()) {
         document.getElementById('loginGate').style.display = 'none';
         document.querySelectorAll('.admin-content').forEach(el => el.classList.add('unlocked'));
-        await cloudPull();
+        await cloudPull(true); // syncProducts=true on initial load only
         initAdmin();
       } else {
         // Check if any accounts exist; if not, show first-run setup
