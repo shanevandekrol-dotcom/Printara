@@ -11,6 +11,7 @@
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="theme-color" content="#0a0a0f" />
   <link rel="stylesheet" href="style.css" />
+  <script src="https://js.stripe.com/v3/"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
@@ -189,21 +190,30 @@
         <label>Payment Method *</label>
         <div class="payment-options">
           <label class="payment-option">
-            <input type="radio" name="paymentMethod" value="cash" required />
+            <input type="radio" name="paymentMethod" value="cash" required onchange="onPaymentMethodChange()" />
             <span class="payment-option-inner">💵 Cash</span>
           </label>
           <label class="payment-option">
-            <input type="radio" name="paymentMethod" value="merits" required />
+            <input type="radio" name="paymentMethod" value="merits" onchange="onPaymentMethodChange()" />
             <span class="payment-option-inner">⭐ Merits</span>
           </label>
+          <label class="payment-option" id="cardPaymentOption" style="display:none;">
+            <input type="radio" name="paymentMethod" value="card" onchange="onPaymentMethodChange()" />
+            <span class="payment-option-inner">💳 Card</span>
+          </label>
         </div>
+      </div>
+      <!-- Stripe card element — shown only when Card is selected -->
+      <div id="stripeCardSection" style="display:none;">
+        <div id="stripeCardElement" class="stripe-card-element"></div>
+        <div id="stripeCardError" class="stripe-card-error"></div>
       </div>
       <div class="form-group">
         <label>Notes / Special Requests</label>
         <textarea name="notes" rows="2" placeholder="Color preferences, custom text, etc."></textarea>
       </div>
       <div class="order-summary" id="orderSummary"></div>
-      <button type="submit" class="btn-primary btn-full">Place Order →</button>
+      <button type="submit" class="btn-primary btn-full" id="placeOrderBtn">Place Order →</button>
     </form>
   </div>
 

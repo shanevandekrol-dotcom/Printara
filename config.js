@@ -12,4 +12,8 @@ window.PROFAB_CONFIG = {
   adminSalt: 'c72dde47002c655a8c60c5369b162319',
   adminHash: 'd7a18117ad2ec65284ff76e884233e3eeb69ff0404ccb617939a0544a5691a54',
 
+  // Stripe publishable key — starts with pk_live_ or pk_test_
+  // Get it from dashboard.stripe.com → Developers → API Keys
+  stripeKey: '',
+
 };

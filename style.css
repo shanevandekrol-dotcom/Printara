@@ -1575,6 +1575,21 @@ a:hover { color: var(--accent2); }
   border-color: var(--accent);
 }
 
+/* Stripe card element */
+.stripe-card-element {
+  padding: 12px 14px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  margin-bottom: 6px;
+}
+.stripe-card-error {
+  color: #ef5350;
+  font-size: 13px;
+  min-height: 18px;
+  margin-bottom: 4px;
+}
+
 /* Admin payment badge */
 .order-payment-badge {
   display: inline-block;

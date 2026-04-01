@@ -359,6 +359,17 @@ async function createNewBin() {
   }
 }
 
+function saveStripeKey() {
+  const key = document.getElementById('stripeKeyInput')?.value.trim();
+  if (!key || (!key.startsWith('pk_live_') && !key.startsWith('pk_test_'))) {
+    showToast('Enter a valid Stripe publishable key (starts with pk_live_ or pk_test_).');
+    return;
+  }
+  localStorage.setItem('profab_stripe_key', key);
+  const saved = document.getElementById('stripeKeySaved');
+  if (saved) { saved.style.display = 'block'; setTimeout(() => saved.style.display = 'none', 4000); }
+}
+
 async function saveCloudSettings() {
   const key = document.getElementById('cloudKeyInput')?.value.trim();
   const bin = document.getElementById('cloudBinInput')?.value.trim();
@@ -732,7 +743,7 @@ function closeOrder() {
   document.getElementById('orderOverlay').classList.remove('open');
 }
 
-function submitOrder(e) {
+async function submitOrder(e) {
   e.preventDefault();
   const form = e.target;
   const data = Object.fromEntries(new FormData(form));
@@ -764,16 +775,28 @@ function submitOrder(e) {
     total: cartTotal()
   };
 
+  // Card payment — run Stripe charge before saving the order
+  if (data.paymentMethod === 'card') {
+    const ok = await processCardPayment(order);
+    if (!ok) return; // error already shown in card element
+  }
+
   const orders = getOrders();
   orders.unshift(order);
   saveOrders(orders);
   saveCart([]);
   updateCartUI();
 
+  // Reset card element for next use
+  if (_stripeCard) { _stripeCard.clear(); _stripeCardMounted = false; _stripeCard = null; }
+  document.getElementById('stripeCardSection').style.display = 'none';
+  const btn = document.getElementById('placeOrderBtn');
+  if (btn) { btn.disabled = false; btn.textContent = 'Place Order →'; }
+
   closeOrder();
   const payLabel = data.paymentMethod === 'merits'
     ? `Merits (${order.meritsTotal.toLocaleString()} merits)`
-    : 'Cash';
+    : data.paymentMethod === 'card' ? 'Card (paid ✓)' : 'Cash';
   document.getElementById('successMsg').textContent =
     `Order ${order.id} placed! Payment: ${payLabel}. We'll reach out to ${order.customer.email} to confirm.`;
   document.getElementById('successModal').classList.add('open');
@@ -1252,6 +1275,112 @@ function closeShopSettings() {
   setTimeout(() => { overlay.style.display = 'none'; }, 280);
 }
 
+// ===== STRIPE PAYMENTS =====
+let _stripe = null;
+let _stripeCard = null;
+let _stripeCardMounted = false;
+
+function getStripeKey() {
+  return window.PROFAB_CONFIG?.stripeKey || localStorage.getItem('profab_stripe_key') || '';
+}
+
+function initStripe() {
+  const key = getStripeKey();
+  if (!key || !window.Stripe) return;
+  _stripe = window.Stripe(key);
+  // Show card option in payment methods
+  const cardOption = document.getElementById('cardPaymentOption');
+  if (cardOption) cardOption.style.display = '';
+}
+
+function onPaymentMethodChange() {
+  const val = document.querySelector('input[name="paymentMethod"]:checked')?.value;
+  const cardSection = document.getElementById('stripeCardSection');
+  if (!cardSection) return;
+
+  if (val === 'card') {
+    cardSection.style.display = 'block';
+    if (!_stripeCardMounted && _stripe) {
+      const elements = _stripe.elements({
+        appearance: {
+          theme: 'night',
+          variables: {
+            colorPrimary: getComputedStyle(document.documentElement).getPropertyValue('--accent').trim() || '#7c6af7',
+            colorBackground: getComputedStyle(document.documentElement).getPropertyValue('--surface2').trim() || '#1a1a26',
+            colorText: getComputedStyle(document.documentElement).getPropertyValue('--text').trim() || '#f0f0f8',
+            borderRadius: '8px',
+          }
+        }
+      });
+      _stripeCard = elements.create('card', { hidePostalCode: true });
+      _stripeCard.mount('#stripeCardElement');
+      _stripeCard.on('change', e => {
+        const errEl = document.getElementById('stripeCardError');
+        if (errEl) errEl.textContent = e.error ? e.error.message : '';
+      });
+      _stripeCardMounted = true;
+    }
+  } else {
+    cardSection.style.display = 'none';
+  }
+  buildOrderSummary();
+}
+
+async function processCardPayment(order) {
+  const btn = document.getElementById('placeOrderBtn');
+  const errEl = document.getElementById('stripeCardError');
+  btn.disabled = true;
+  btn.textContent = 'Processing…';
+
+  try {
+    // Call serverless function to create PaymentIntent
+    const res = await fetch('/.netlify/functions/create-payment-intent', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        amount: Math.round(order.total * 100), // cents
+        currency: 'usd',
+        orderId: order.id,
+        customerName: order.customer.name,
+        customerEmail: order.customer.email,
+      })
+    });
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error || 'Payment setup failed. Check your Stripe configuration.');
+    }
+
+    const { clientSecret } = await res.json();
+
+    const result = await _stripe.confirmCardPayment(clientSecret, {
+      payment_method: {
+        card: _stripeCard,
+        billing_details: { name: order.customer.name, email: order.customer.email }
+      }
+    });
+
+    if (result.error) {
+      if (errEl) errEl.textContent = result.error.message;
+      btn.disabled = false;
+      btn.textContent = 'Place Order →';
+      return false;
+    }
+
+    // Payment succeeded
+    order.paymentMethod = 'card';
+    order.stripePaymentId = result.paymentIntent.id;
+    order.status = 'Paid';
+    return true;
+
+  } catch (err) {
+    if (errEl) errEl.textContent = err.message;
+    btn.disabled = false;
+    btn.textContent = 'Place Order →';
+    return false;
+  }
+}
+
 // ===== INIT =====
 document.addEventListener('DOMContentLoaded', async () => {
   initTheme(); // re-apply after DOM ready so UI buttons sync
@@ -1259,4 +1388,5 @@ document.addEventListener('DOMContentLoaded', async () => {
   renderProducts();
   updateCartUI();
   updateUserNav();
+  initStripe();
 });

@@ -492,6 +492,25 @@
       </div>
 
       <div class="pwd-section" style="margin-top:20px;">
+        <h3>💳 Stripe Payments</h3>
+        <p>Accept card payments online. Requires a free <a href="https://dashboard.stripe.com/register" target="_blank" rel="noopener">Stripe account</a> and deployment on Netlify.</p>
+        <div style="display:flex;flex-direction:column;gap:12px;max-width:480px;margin-top:14px;">
+          <div class="form-group">
+            <label>Stripe Publishable Key</label>
+            <input type="text" id="stripeKeyInput" placeholder="pk_live_... or pk_test_..." autocomplete="off" />
+            <span style="font-size:12px;color:var(--text3);margin-top:4px;">Found in Stripe Dashboard → Developers → API Keys. Also add this to config.js as <code>stripeKey</code>.</span>
+          </div>
+          <div class="form-group">
+            <label>Stripe Secret Key</label>
+            <input type="password" id="stripeSecretNote" placeholder="sk_live_... (Netlify env var only)" autocomplete="off" disabled style="opacity:0.5;cursor:not-allowed;" />
+            <span style="font-size:12px;color:var(--text3);margin-top:4px;">⚠️ Never paste here. Add <code>STRIPE_SECRET_KEY</code> in Netlify → Site → Environment Variables.</span>
+          </div>
+          <button class="btn-primary" style="align-self:flex-start;" onclick="saveStripeKey()">Save Publishable Key</button>
+          <div id="stripeKeySaved" style="font-size:13px;color:var(--green);display:none;">Key saved ✓ — refresh the shop page to activate card payments.</div>
+        </div>
+      </div>
+
+      <div class="pwd-section" style="margin-top:20px;">
         <h3>Cloud Sync <span class="sync-badge" id="syncBadge" style="display:none;">● Live</span></h3>
         <p>Sync orders and products across <strong>every device automatically</strong> using JSONBin.io (free). <a href="https://jsonbin.io" target="_blank" rel="noopener">Create a free account →</a></p>
         <div class="config-hint" id="configHint" style="display:none;">
