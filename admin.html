@@ -511,37 +511,9 @@
       </div>
 
       <div class="pwd-section" style="margin-top:20px;">
-        <h3>Cloud Sync <span class="sync-badge" id="syncBadge" style="display:none;">● Live</span></h3>
-        <p>Sync orders and products across <strong>every device automatically</strong> using JSONBin.io (free). <a href="https://jsonbin.io" target="_blank" rel="noopener">Create a free account →</a></p>
-        <div class="config-hint" id="configHint" style="display:none;">
-          ✅ Credentials are hardcoded in <strong>config.js</strong> — all devices sync automatically.
-        </div>
-        <div class="config-steps" id="configSteps">
-          <strong>One-time setup:</strong>
-          <ol style="margin:8px 0 0 18px;font-size:13px;line-height:2;">
-            <li>Get your <strong>Master API Key</strong> from <a href="https://jsonbin.io" target="_blank">jsonbin.io → Account → API Keys</a></li>
-            <li>Paste it below and click <strong>"+ Create New Bin"</strong></li>
-            <li>Copy both values into <strong>config.js</strong> in your project folder</li>
-          </ol>
-        </div>
-        <div style="display:flex;flex-direction:column;gap:14px;max-width:480px;margin-top:16px;">
-          <div class="form-group">
-            <label>Master API Key</label>
-            <input type="password" id="cloudKeyInput" placeholder="$2b$10$..." autocomplete="off" />
-            <span style="font-size:12px;color:var(--text3);margin-top:4px;">Found in JSONBin → Account → API Keys</span>
-          </div>
-          <div class="form-group">
-            <label>Bin ID</label>
-            <input type="text" id="cloudBinInput" placeholder="64a3f..." autocomplete="off" />
-            <span style="font-size:12px;color:var(--text3);margin-top:4px;">Leave blank and click "Create New Bin" to generate one automatically.</span>
-          </div>
-          <div class="login-error" id="syncStatus" style="position:static;"></div>
-          <div style="display:flex;gap:10px;flex-wrap:wrap;">
-            <button class="btn-primary" style="align-self:flex-start;" onclick="saveCloudSettings()">Save &amp; Connect</button>
-            <button class="tab-btn" onclick="createNewBin()">+ Create New Bin</button>
-            <button class="tab-btn" onclick="manualSync()">↺ Sync Now</button>
-          </div>
-        </div>
+        <h3>Database Sync</h3>
+        <p>All data syncs automatically to MySQL. Click below to manually pull the latest from the database.</p>
+        <button class="tab-btn" onclick="manualSync()">↺ Sync Now</button>
       </div>
     </div>
   </div>
@@ -549,6 +521,43 @@
   <script src="config.js"></script>
   <script src="app.js"></script>
   <script>
+    // ===== DB HELPERS (admin panel → Netlify Functions → MySQL) ==============
+    async function _dbPost(path, body) {
+      try { await fetch(path, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }); } catch {}
+    }
+    async function _dbPut(path, body) {
+      try { await fetch(path, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }); } catch {}
+    }
+    async function _dbDelete(path) {
+      try { await fetch(path, { method: 'DELETE' }); } catch {}
+    }
+
+    // Pull all entities from MySQL on admin page load
+    async function syncAllFromDB() {
+      try {
+        const [adminAccounts, orders, users, notifications, products] = await Promise.all([
+          fetch('/.netlify/functions/admin-accounts').then(r => r.ok ? r.json() : null),
+          fetch('/.netlify/functions/orders').then(r => r.ok ? r.json() : null),
+          fetch('/.netlify/functions/accounts').then(r => r.ok ? r.json() : null),
+          fetch('/.netlify/functions/notifications').then(r => r.ok ? r.json() : null),
+          fetch('/.netlify/functions/listings').then(r => r.ok ? r.json() : null),
+        ]);
+        if (Array.isArray(adminAccounts) && adminAccounts.length) localStorage.setItem('profab_admin_accounts', JSON.stringify(adminAccounts));
+        if (Array.isArray(orders)        && orders.length)        localStorage.setItem('profab_orders',         JSON.stringify(orders));
+        if (Array.isArray(users)         && users.length)         localStorage.setItem('profab_users',          JSON.stringify(users));
+        if (Array.isArray(notifications) && notifications.length) localStorage.setItem('profab_notifications',  JSON.stringify(notifications));
+        if (Array.isArray(products)      && products.length)      localStorage.setItem('profab_products',       JSON.stringify(products));
+
+        // Clock-in active map
+        const ciActive = await fetch('/.netlify/functions/clock-sessions?active=1').then(r => r.ok ? r.json() : null);
+        if (ciActive && Object.keys(ciActive).length) localStorage.setItem('profab_ci_active', JSON.stringify(ciActive));
+
+        // Clock-in sessions
+        const ciSessions = await fetch('/.netlify/functions/clock-sessions').then(r => r.ok ? r.json() : null);
+        if (Array.isArray(ciSessions) && ciSessions.length) localStorage.setItem('profab_ci_sessions', JSON.stringify(ciSessions));
+      } catch {}
+    }
+
     // ===== MULTI-ACCOUNT ADMIN AUTH =====
     const LOCKOUT_LIMIT    = 5;
     const LOCKOUT_DURATION = 15 * 60 * 1000;
@@ -576,7 +585,6 @@
     }
     function saveAdminAccounts(accounts) {
       localStorage.setItem('profab_admin_accounts', JSON.stringify(accounts));
-      cloudPush();
     }
 
     // Session
@@ -657,6 +665,7 @@
       const hash  = await hashPwd(salt, pwd);
       const owner = { id: 'acct-' + Date.now().toString(36), username, salt, hash, role: 'owner', permissions: [...ALL_TABS] };
       saveAdminAccounts([owner]);
+      _dbPost('/.netlify/functions/admin-accounts', owner);
       startSession(owner);
       document.getElementById('loginGate').style.display = 'none';
       document.querySelectorAll('.admin-content').forEach(el => el.classList.add('unlocked'));
@@ -726,6 +735,7 @@
       account.salt = salt;
       account.hash = await hashPwd(salt, nw);
       saveAdminAccounts(accounts);
+      _dbPut('/.netlify/functions/admin-accounts', { id: account.id, salt: account.salt, hash: account.hash });
       err.classList.remove('visible');
       e.target.reset();
       showToast('Password updated ✓');
@@ -769,6 +779,7 @@
       if (checked) { if (!account.permissions.includes(tab)) account.permissions.push(tab); }
       else { account.permissions = account.permissions.filter(t => t !== tab); }
       saveAdminAccounts(accounts);
+      _dbPut('/.netlify/functions/admin-accounts', { id: accountId, permissions: account.permissions });
       showToast('Permissions updated ✓');
     }
 
@@ -778,6 +789,7 @@
       if (accountId === session.id) { showToast("Can't delete your own account."); return; }
       if (!confirm('Remove this admin account? This cannot be undone.')) return;
       saveAdminAccounts(getAdminAccounts().filter(a => a.id !== accountId));
+      _dbDelete(`/.netlify/functions/admin-accounts?id=${encodeURIComponent(accountId)}`);
       renderAdminAccounts();
       showToast('Account removed ✓');
     }
@@ -798,8 +810,10 @@
         Array.from(document.querySelectorAll('#newAcctPerms input[type=checkbox]:checked')).map(cb => cb.value);
       const salt = Array.from(crypto.getRandomValues(new Uint8Array(16))).map(b=>b.toString(16).padStart(2,'0')).join('');
       const hash = await hashPwd(salt, pwd);
-      accounts.push({ id: 'acct-' + Date.now().toString(36), username, salt, hash, role, permissions: perms });
+      const newAcct = { id: 'acct-' + Date.now().toString(36), username, salt, hash, role, permissions: perms };
+      accounts.push(newAcct);
       saveAdminAccounts(accounts);
+      _dbPost('/.netlify/functions/admin-accounts', newAcct);
       e.target.reset();
       toggleNewAcctPerms();
       err.classList.remove('visible');
@@ -881,6 +895,7 @@
       if (val >= p.price) { showToast('Sale price must be lower than regular price ($' + Number(p.price).toFixed(2) + ').'); return; }
       p.salePrice = val;
       saveProducts(products);
+      dbUpdateProduct({ id, salePrice: val });
       showToast(`Sale set: ${p.name} → $${val.toFixed(2)} ✓`);
       renderSales();
     }
@@ -891,6 +906,7 @@
       if (!p) return;
       delete p.salePrice;
       saveProducts(products);
+      dbUpdateProduct({ id, salePrice: null });
       showToast(`Sale removed for ${p.name}.`);
       renderSales();
     }
@@ -1052,6 +1068,7 @@
     function deleteUser(id) {
       if (!confirm('Remove this account? They will be signed out immediately.')) return;
       saveUsers(getUsers().filter(u => u.id !== id));
+      _dbDelete(`/.netlify/functions/accounts?id=${encodeURIComponent(id)}`);
       renderUsers();
       showToast('Account removed.');
     }
@@ -1062,6 +1079,7 @@
       if (r) {
         r.status = 'Complete';
         saveOrders(orders);
+        _dbPut('/.netlify/functions/orders', { id, status: 'Complete' });
         addNotification(r.userId, 'custom_complete', r.id, `Your custom request ${r.id} is complete! We'll be in touch. ✓`);
         renderCustom();
         showToast('Marked complete ✓');
@@ -1075,6 +1093,7 @@
       if (r) {
         r.status = 'Rejected';
         saveOrders(orders);
+        _dbPut('/.netlify/functions/orders', { id, status: 'Rejected' });
         addNotification(r.userId, 'custom_rejected', r.id, `Your custom request ${r.id} was not accepted. Contact us for more info.`);
         renderCustom();
         showToast('Request rejected.');
@@ -1082,7 +1101,7 @@
     }
 
     // ===== PRODUCTS =====
-    function addProduct(e) {
+    async function addProduct(e) {
       e.preventDefault();
       const form = e.target;
       const data = Object.fromEntries(new FormData(form));
@@ -1102,24 +1121,27 @@
       const products = getProducts();
       products.push(product);
       saveProducts(products);
+      await dbUpsertProduct(product);
       form.reset();
       removeAiPhoto({ stopPropagation: () => {} });
       showToast('Product added! ✓');
       switchTab('manage');
     }
 
-    function deleteProduct(id) {
+    async function deleteProduct(id) {
       if (!confirm('Delete this product? This cannot be undone.')) return;
       saveProducts(getProducts().filter(p => p.id !== id));
+      await dbDeleteProduct(id);
       renderManage();
       showToast('Product deleted.');
     }
 
-    function toggleStock(id) {
+    async function toggleStock(id) {
       const products = getProducts();
       const p = products.find(p => p.id === id);
       if (p) p.inStock = !p.inStock;
       saveProducts(products);
+      await dbUpdateProduct({ id, inStock: p.inStock });
       renderManage();
     }
 
@@ -1199,6 +1221,7 @@
       if (o) {
         o.status = 'Complete';
         saveOrders(orders);
+        _dbPut('/.netlify/functions/orders', { id, status: 'Complete' });
         addNotification(o.userId, 'order_complete', o.id, `Your order ${o.id} is ready! 🎉`);
         renderOrders();
         showToast('Order marked as complete ✓');
@@ -1260,9 +1283,10 @@
     function clockIn() {
       if (getMyActive()) return;
       const session = getAdminSession();
-      saveMyActive({ start: new Date().toISOString(), accountId: session?.id || 'unknown', username: session?.username || '?' });
+      const active = { start: new Date().toISOString(), accountId: session?.id || 'unknown', username: session?.username || '?' };
+      saveMyActive(active);
+      _dbPost('/.netlify/functions/clock-sessions?active=1', active);
       renderClockIn();
-      cloudPush();
       showToast('Clocked in ✓');
     }
 
@@ -1272,25 +1296,28 @@
       const end = new Date().toISOString();
       const ms = new Date(end) - new Date(active.start);
       if (ms < 1000) { showToast('Clock-in too short.'); return; }
+      const completed = { start: active.start, end, ms, accountId: active.accountId || 'unknown', username: active.username || '?' };
       const sessions = getCISessions();
-      sessions.unshift({ start: active.start, end, ms, accountId: active.accountId || 'unknown', username: active.username || '?' });
+      sessions.unshift(completed);
       saveCISessions(sessions);
       saveMyActive(null);
+      _dbPost('/.netlify/functions/clock-sessions', completed);
+      _dbDelete(`/.netlify/functions/clock-sessions?active=1&accountId=${encodeURIComponent(active.accountId || 'unknown')}`);
       clearInterval(ciTimer);
       ciTimer = null;
       renderClockIn();
-      cloudPush();
       showToast(`Clocked out — ${fmtDuration(ms)} logged ✓`);
     }
 
     function clearAllSessions() {
       const session = getAdminSession();
       if (!confirm('Clear your entire time log? This cannot be undone.')) return;
+      const accountId = session?.id || 'unknown';
       // Only remove sessions belonging to current account
-      const remaining = getCISessions().filter(s => s.accountId !== (session?.id || 'unknown'));
+      const remaining = getCISessions().filter(s => s.accountId !== accountId);
       saveCISessions(remaining);
+      _dbDelete(`/.netlify/functions/clock-sessions?accountId=${encodeURIComponent(accountId)}`);
       renderClockIn();
-      cloudPush();
       showToast('Your time log cleared.');
     }
 
@@ -1503,7 +1530,7 @@
 
     async function pollForNewOrders() {
       if (!isAuthenticated()) { clearInterval(_pollTimer); _pollTimer = null; return; }
-      await cloudPull();
+      await syncAllFromDB();
       const current = getOrders().filter(o => o.type !== 'custom').map(o => o.id);
       if (_knownOrderIds === null) {
         // First poll after init — just record baseline, no notification
@@ -1575,7 +1602,6 @@
       const usersBadge = document.getElementById('usersBadge');
       const users = getUsers();
       if (usersBadge && users.length > 0) usersBadge.textContent = `(${users.length})`;
-      updateSyncBadge();
       syncMobileBadges();
       // Resume clock-in timer if currently clocked in
       if (getCIActive()) renderClockIn();
@@ -1589,7 +1615,7 @@
       if (isAuthenticated()) {
         document.getElementById('loginGate').style.display = 'none';
         document.querySelectorAll('.admin-content').forEach(el => el.classList.add('unlocked'));
-        await cloudPull(true); // syncProducts=true on initial load only
+        await syncAllFromDB(); // pull all entities from MySQL into localStorage
         initAdmin();
       } else {
         // Check if any accounts exist; if not, show first-run setup
@@ -1605,7 +1631,6 @@
             document.getElementById('loginUsername').focus();
           }
         }
-        cloudPull();
       }
     });
 

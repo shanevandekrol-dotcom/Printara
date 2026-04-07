@@ -1,10 +1,41 @@
+// ===== DB HELPERS (browser → Netlify Functions → MySQL) ======================
+// All writes are fire-and-forget; localStorage stays the synchronous source of truth.
+
+async function _dbGet(path) {
+  try { const r = await fetch(path); return r.ok ? r.json() : null; } catch { return null; }
+}
+async function _dbPost(path, body) {
+  try { await fetch(path, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }); } catch {}
+}
+async function _dbPut(path, body) {
+  try { await fetch(path, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }); } catch {}
+}
+async function _dbDelete(path) {
+  try { await fetch(path, { method: 'DELETE' }); } catch {}
+}
+
+// Pull all entities from MySQL in parallel and refresh localStorage caches.
+async function syncAllFromDB() {
+  try {
+    const [users, orders, notifications, products] = await Promise.all([
+      _dbGet('/.netlify/functions/accounts'),
+      _dbGet('/.netlify/functions/orders'),
+      _dbGet('/.netlify/functions/notifications'),
+      _dbGet('/.netlify/functions/listings'),
+    ]);
+    if (Array.isArray(users)         && users.length)         localStorage.setItem('profab_users',         JSON.stringify(users));
+    if (Array.isArray(orders)        && orders.length)        localStorage.setItem('profab_orders',        JSON.stringify(orders));
+    if (Array.isArray(notifications) && notifications.length) localStorage.setItem('profab_notifications', JSON.stringify(notifications));
+    if (Array.isArray(products)      && products.length)      localStorage.setItem('profab_products',      JSON.stringify(products));
+  } catch { /* DB unavailable — continue with cached data */ }
+}
+
 // ===== USER AUTH =====
 function getUsers() {
   return JSON.parse(localStorage.getItem('profab_users') || '[]');
 }
 function saveUsers(u) {
   localStorage.setItem('profab_users', JSON.stringify(u));
-  cloudPush();
 }
 function getUserSession() {
   return JSON.parse(localStorage.getItem('profab_user_session') || 'null');
@@ -41,6 +72,7 @@ function registerUser(e) {
   };
   users.push(user);
   saveUsers(users);
+  _dbPost('/.netlify/functions/accounts', user);
   saveUserSession({ id: user.id, name: user.name, email: user.email });
   err.classList.remove('visible');
   closeAuth();
@@ -170,13 +202,14 @@ function getNotifications() {
 }
 function saveNotifications(n) {
   localStorage.setItem('profab_notifications', JSON.stringify(n));
-  cloudPush();
 }
 function addNotification(userId, type, orderId, message) {
   if (!userId) return;
+  const notif = { id: 'notif-' + Date.now().toString(36), userId, type, orderId, message, date: new Date().toISOString(), read: false };
   const notifs = getNotifications();
-  notifs.unshift({ id: 'notif-' + Date.now().toString(36), userId, type, orderId, message, date: new Date().toISOString(), read: false });
+  notifs.unshift(notif);
   saveNotifications(notifs);
+  _dbPost('/.netlify/functions/notifications', notif);
 }
 function updateNotifBadge() {
   const session = getUserSession();
@@ -197,11 +230,7 @@ function openNotifications() {
   renderNotifications();
   document.getElementById('notifModal').classList.add('open');
   document.getElementById('notifOverlay').classList.add('open');
-  // Pull latest from cloud then re-render
-  cloudPull().then(() => {
-    renderNotifications();
-    markAllNotifsRead(session.id);
-  });
+  markAllNotifsRead(session.id);
 }
 function closeNotifications() {
   document.getElementById('notifModal')?.classList.remove('open');
@@ -245,125 +274,57 @@ function getProducts() {
 }
 function saveProducts(products) {
   localStorage.setItem('profab_products', JSON.stringify(products));
-  cloudPush();
+}
+
+// ===== LISTINGS DB SYNC =====
+// Pulls listings from MySQL (via Netlify Function) and refreshes localStorage cache.
+// Called once on page load; all synchronous getProducts() calls still read from cache.
+async function syncListingsFromDB() {
+  try {
+    const res = await fetch('/.netlify/functions/listings');
+    if (!res.ok) return;
+    const products = await res.json();
+    if (Array.isArray(products) && products.length > 0) {
+      localStorage.setItem('profab_products', JSON.stringify(products));
+    }
+  } catch {
+    // DB unavailable — continue with cached/localStorage data
+  }
+}
+
+// Write a single product to MySQL.
+async function dbUpsertProduct(product) {
+  try {
+    await fetch('/.netlify/functions/listings', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(product),
+    });
+  } catch { /* non-fatal */ }
+}
+
+// Delete a single product from MySQL.
+async function dbDeleteProduct(id) {
+  try {
+    await fetch(`/.netlify/functions/listings?id=${encodeURIComponent(id)}`, { method: 'DELETE' });
+  } catch { /* non-fatal */ }
+}
+
+// Update a field on a product in MySQL.
+async function dbUpdateProduct(patch) {
+  try {
+    await fetch('/.netlify/functions/listings', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(patch),
+    });
+  } catch { /* non-fatal */ }
 }
 function getOrders() {
   return JSON.parse(localStorage.getItem('profab_orders') || '[]');
 }
 function saveOrders(orders) {
   localStorage.setItem('profab_orders', JSON.stringify(orders));
-  cloudPush();
-}
-
-// ===== CLOUD SYNC (JSONBin.io) =====
-function getCloudConfig() {
-  const cfg = window.PROFAB_CONFIG || {};
-  return {
-    key: cfg.cloudKey || localStorage.getItem('profab_cloud_key') || '',
-    bin: cfg.cloudBin || localStorage.getItem('profab_cloud_bin') || ''
-  };
-}
-function saveCloudConfig(key, bin) {
-  localStorage.setItem('profab_cloud_key', key.trim());
-  localStorage.setItem('profab_cloud_bin', bin.trim());
-  // Also update the in-memory config so it takes effect immediately
-  if (window.PROFAB_CONFIG) {
-    window.PROFAB_CONFIG.cloudKey = key.trim();
-    window.PROFAB_CONFIG.cloudBin = bin.trim();
-  }
-}
-
-let _pushTimer = null;
-function cloudPush() {
-  // Debounce — wait 800ms after last save before pushing
-  clearTimeout(_pushTimer);
-  _pushTimer = setTimeout(async () => { // 200ms debounce keeps cloud fresh
-    const { key, bin } = getCloudConfig();
-    if (!key || !bin) return;
-    try {
-      await fetch(`https://api.jsonbin.io/v3/b/${bin}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json', 'X-Master-Key': key },
-        body: JSON.stringify({
-          orders: getOrders(),
-          products: getProducts(),
-          users: getUsers(),
-          ci_sessions: JSON.parse(localStorage.getItem('profab_ci_sessions') || '[]'),
-          ci_active: JSON.parse(localStorage.getItem('profab_ci_active') || 'null'),
-          notifications: getNotifications(),
-          admin_accounts: JSON.parse(localStorage.getItem('profab_admin_accounts') || '[]')
-        })
-      });
-      setSyncStatus('Synced ✓', 'ok');
-    } catch {
-      setSyncStatus('Sync failed', 'err');
-    }
-  }, 200);
-}
-
-// syncProducts=true only on initial page load — never overwrite products mid-session
-async function cloudPull(syncProducts = false) {
-  const { key, bin } = getCloudConfig();
-  if (!key || !bin) return false;
-  try {
-    const res = await fetch(`https://api.jsonbin.io/v3/b/${bin}/latest`, {
-      headers: { 'X-Master-Key': key }
-    });
-    if (!res.ok) return false;
-    const { record } = await res.json();
-    if (record.orders)   localStorage.setItem('profab_orders', JSON.stringify(record.orders));
-    // Products only synced on initial page load — mid-session pulls must never overwrite them
-    if (syncProducts && record.products && record.products.length > 0)
-      localStorage.setItem('profab_products', JSON.stringify(record.products));
-    if (record.users)    localStorage.setItem('profab_users',   JSON.stringify(record.users));
-    if (record.ci_sessions) localStorage.setItem('profab_ci_sessions', JSON.stringify(record.ci_sessions));
-    if (record.ci_active !== undefined) {
-      if (record.ci_active) localStorage.setItem('profab_ci_active', JSON.stringify(record.ci_active));
-      else localStorage.removeItem('profab_ci_active');
-    }
-    if (record.notifications)   localStorage.setItem('profab_notifications',    JSON.stringify(record.notifications));
-    if (record.admin_accounts && record.admin_accounts.length > 0)
-      localStorage.setItem('profab_admin_accounts', JSON.stringify(record.admin_accounts));
-    setSyncStatus('Synced ✓', 'ok');
-    return true;
-  } catch {
-    setSyncStatus('Sync failed', 'err');
-    return false;
-  }
-}
-
-async function createNewBin() {
-  const key = document.getElementById('cloudKeyInput')?.value.trim();
-  if (!key) { setSyncStatus('Enter your API key first.', 'err'); return; }
-  setSyncStatus('Creating bin…', '');
-  try {
-    const res = await fetch('https://api.jsonbin.io/v3/b', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-Master-Key': key,
-        'X-Bin-Name': 'Pro-Fab 3D',
-        'X-Bin-Private': 'true'
-      },
-      body: JSON.stringify({
-          orders: getOrders(),
-          products: getProducts(),
-          users: getUsers(),
-          ci_sessions: JSON.parse(localStorage.getItem('profab_ci_sessions') || '[]'),
-          ci_active: JSON.parse(localStorage.getItem('profab_ci_active') || 'null'),
-          notifications: getNotifications(),
-          admin_accounts: JSON.parse(localStorage.getItem('profab_admin_accounts') || '[]')
-        })
-    });
-    if (!res.ok) { setSyncStatus('Invalid API key.', 'err'); return; }
-    const { metadata } = await res.json();
-    document.getElementById('cloudBinInput').value = metadata.id;
-    saveCloudConfig(key, metadata.id);
-    setSyncStatus('Bin created & synced ✓', 'ok');
-    updateSyncBadge();
-  } catch {
-    setSyncStatus('Could not reach JSONBin.', 'err');
-  }
 }
 
 function saveStripeKey() {
@@ -377,55 +338,13 @@ function saveStripeKey() {
   if (saved) { saved.style.display = 'block'; setTimeout(() => saved.style.display = 'none', 4000); }
 }
 
-async function saveCloudSettings() {
-  const key = document.getElementById('cloudKeyInput')?.value.trim();
-  const bin = document.getElementById('cloudBinInput')?.value.trim();
-  if (!key || !bin) { setSyncStatus('Both fields are required.', 'err'); return; }
-  saveCloudConfig(key, bin);
-  setSyncStatus('Connecting…', '');
-  const ok = await cloudPull();
-  if (ok) {
-    updateSyncBadge();
-    if (typeof window['renderOrders'] === 'function') window['renderOrders']();
-    showToast('Cloud sync enabled ✓');
-  } else {
-    setSyncStatus('Connection failed — check key & bin ID.', 'err');
-  }
-}
-
 async function manualSync() {
-  setSyncStatus('Syncing…', '');
-  const ok = await cloudPull();
-  if (ok) {
-    if (typeof window['renderOrders'] === 'function') window['renderOrders']();
-    if (typeof window['renderManage'] === 'function') window['renderManage']();
-    renderProducts();
-    showToast('Synced from cloud ✓');
-  }
-}
-
-function setSyncStatus(msg, type) {
-  const el = document.getElementById('syncStatus');
-  if (!el) return;
-  el.textContent = msg;
-  el.className = 'sync-status' + (type === 'ok' ? ' sync-ok' : type === 'err' ? ' sync-err' : '');
-}
-
-function updateSyncBadge() {
-  const { key, bin } = getCloudConfig();
-  const active = !!(key && bin);
-  const badge = document.getElementById('syncBadge');
-  if (badge) badge.style.display = active ? 'inline-block' : 'none';
-  const keyEl = document.getElementById('cloudKeyInput');
-  const binEl = document.getElementById('cloudBinInput');
-  if (keyEl) keyEl.value = key;
-  if (binEl) binEl.value = bin;
-  // Show hint if credentials are in config.js (not just localStorage)
-  const fromConfig = !!(window.PROFAB_CONFIG?.cloudKey && window.PROFAB_CONFIG?.cloudBin);
-  const hint = document.getElementById('configHint');
-  const steps = document.getElementById('configSteps');
-  if (hint)  hint.style.display  = fromConfig ? 'block' : 'none';
-  if (steps) steps.style.display = fromConfig ? 'none'  : 'block';
+  showToast('Syncing…');
+  await syncAllFromDB();
+  if (typeof window['renderOrders'] === 'function') window['renderOrders']();
+  if (typeof window['renderManage'] === 'function') window['renderManage']();
+  renderProducts();
+  showToast('Synced from database ✓');
 }
 function getCart() {
   return JSON.parse(localStorage.getItem('profab_cart') || '[]');
@@ -791,6 +710,7 @@ async function submitOrder(e) {
   const orders = getOrders();
   orders.unshift(order);
   saveOrders(orders);
+  _dbPost('/.netlify/functions/orders', order);
   saveCart([]);
   updateCartUI();
 
@@ -890,6 +810,7 @@ function submitCustomOrder(e) {
   const orders = getOrders();
   orders.unshift(request);
   saveOrders(orders);
+  _dbPost('/.netlify/functions/orders', request);
 
   closeCustomOrder();
   form.reset();
@@ -1395,7 +1316,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   updateCartUI();
   updateUserNav();
   initStripe();
-  await cloudPull(true); // fetch latest from cloud, then refresh
+  await syncAllFromDB(); // sync all entities from MySQL
   renderProducts();
   updateCartUI();
 });
