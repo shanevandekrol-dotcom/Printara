@@ -1648,7 +1648,7 @@
       if (_pollTimer) return; // already running
       _knownOrderIds = null;
       pollForNewOrders(); // set baseline immediately
-      _pollTimer = setInterval(pollForNewOrders, 30000); // check every 30 seconds
+      _pollTimer = setInterval(pollForNewOrders, 5000); // check every 5 seconds
     }
 
     // ===== INIT =====

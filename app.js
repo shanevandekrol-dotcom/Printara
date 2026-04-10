@@ -1351,7 +1351,15 @@ document.addEventListener('DOMContentLoaded', async () => {
   updateCartUI();
   updateUserNav();
   initStripe();
-  await syncAllFromDB(); // sync all entities from MySQL
+  await syncAllFromDB();
   renderProducts();
   updateCartUI();
+
+  // Poll cloud every 5 seconds for updates from other devices
+  setInterval(async () => {
+    await syncAllFromDB();
+    renderProducts();
+    updateCartUI();
+    updateUserNav();
+  }, 5000);
 });
