@@ -504,9 +504,25 @@
       </div>
 
       <div class="pwd-section" style="margin-top:20px;">
-        <h3>Database Sync</h3>
-        <p>All data syncs automatically to MySQL. Click below to manually pull the latest from the database.</p>
-        <button class="tab-btn" onclick="manualSync()">↺ Sync Now</button>
+        <h3>☁️ Cloud Sync</h3>
+        <p>Enter your <a href="https://jsonbin.io" target="_blank" rel="noopener">JSONBin.io</a> credentials to sync products, orders, and accounts across all devices automatically.</p>
+        <div style="display:flex;flex-direction:column;gap:12px;max-width:480px;margin-top:14px;">
+          <div class="form-group">
+            <label>Master Key</label>
+            <input type="password" id="cloudKeyInput" placeholder="$2a$10$..." autocomplete="off" />
+            <span style="font-size:12px;color:var(--text3);margin-top:4px;">Found in JSONBin → Account → API Keys → Master Key.</span>
+          </div>
+          <div class="form-group">
+            <label>Bin ID</label>
+            <input type="text" id="cloudBinInput" placeholder="64a3f2c8e1b2a3c4d5e6f7a8" autocomplete="off" maxlength="32" />
+            <span style="font-size:12px;color:var(--text3);margin-top:4px;">Found in JSONBin → your bin URL. Create a new bin if you don't have one.</span>
+          </div>
+          <div style="display:flex;gap:10px;flex-wrap:wrap;">
+            <button class="btn-primary" style="align-self:flex-start;" onclick="saveCloudSettings()">Save &amp; Connect</button>
+            <button class="tab-btn" onclick="manualSync()">↺ Sync Now</button>
+          </div>
+          <div id="cloudSyncStatus" style="font-size:13px;display:none;"></div>
+        </div>
       </div>
     </div>
   </div>
@@ -521,6 +537,57 @@
     async function _dbPost()   {}
     async function _dbPut()    {}
     async function _dbDelete() {}
+
+    // Save cloud credentials to localStorage and config, then test connection
+    async function saveCloudSettings() {
+      const key = document.getElementById('cloudKeyInput')?.value.trim();
+      const bin = document.getElementById('cloudBinInput')?.value.trim();
+      const status = document.getElementById('cloudSyncStatus');
+      if (!key || !bin) {
+        status.textContent = '⚠️ Both Master Key and Bin ID are required.';
+        status.style.color = 'var(--accent3)';
+        status.style.display = 'block';
+        return;
+      }
+      // Persist to localStorage so all pages pick them up
+      localStorage.setItem('profab_cloud_key', key);
+      localStorage.setItem('profab_cloud_bin', bin);
+      // Inject into live config so cloudPull/cloudPush use them immediately
+      window.PROFAB_CONFIG = window.PROFAB_CONFIG || {};
+      window.PROFAB_CONFIG.cloudKey = key;
+      window.PROFAB_CONFIG.cloudBin = bin;
+
+      status.textContent = 'Testing connection…';
+      status.style.color = 'var(--text2)';
+      status.style.display = 'block';
+
+      const data = await cloudPull();
+      if (data === null) {
+        status.textContent = '❌ Could not connect. Check your Master Key and Bin ID.';
+        status.style.color = 'var(--accent3)';
+      } else {
+        // Push current local data up so other devices get it
+        await cloudPush();
+        status.textContent = '✅ Connected and synced!';
+        status.style.color = 'var(--green)';
+      }
+    }
+
+    // Load saved cloud credentials into the settings inputs
+    function loadCloudSettingsUI() {
+      const key = localStorage.getItem('profab_cloud_key') || window.PROFAB_CONFIG?.cloudKey || '';
+      const bin = localStorage.getItem('profab_cloud_bin') || window.PROFAB_CONFIG?.cloudBin || '';
+      const ki = document.getElementById('cloudKeyInput');
+      const bi = document.getElementById('cloudBinInput');
+      if (ki && key) ki.value = key;
+      if (bi && bin) bi.value = bin;
+      // Also inject into live config if stored in localStorage
+      if (key && bin) {
+        window.PROFAB_CONFIG = window.PROFAB_CONFIG || {};
+        window.PROFAB_CONFIG.cloudKey = key;
+        window.PROFAB_CONFIG.cloudBin = bin;
+      }
+    }
 
     // ===== MULTI-ACCOUNT ADMIN AUTH =====
     const LOCKOUT_LIMIT    = 5;
@@ -1702,10 +1769,11 @@
 
     // On load — check session IMMEDIATELY (no cloud delay)
     document.addEventListener('DOMContentLoaded', async () => {
+      loadCloudSettingsUI(); // inject saved cloud credentials before any sync
       if (isAuthenticated()) {
         document.getElementById('loginGate').style.display = 'none';
         document.querySelectorAll('.admin-content').forEach(el => el.classList.add('unlocked'));
-        await syncAllFromDB(); // pull all entities from MySQL into localStorage
+        await syncAllFromDB();
         initAdmin();
       } else {
         // Check if any accounts exist; if not, show first-run setup

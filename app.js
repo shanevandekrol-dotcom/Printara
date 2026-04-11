@@ -3,7 +3,10 @@ const CLOUD_URL = 'https://api.jsonbin.io/v3/b/';
 
 function getCloudConfig() {
   const cfg = window.PROFAB_CONFIG || {};
-  return { key: cfg.cloudKey || '', bin: cfg.cloudBin || '' };
+  // Fall back to localStorage-saved credentials if config.js doesn't have them
+  const key = cfg.cloudKey || localStorage.getItem('profab_cloud_key') || '';
+  const bin = cfg.cloudBin || localStorage.getItem('profab_cloud_bin') || '';
+  return { key, bin };
 }
 
 async function cloudPull() {
