@@ -537,122 +537,169 @@
 
     <!-- 3D STUDIO TAB -->
     <div class="tab-panel" id="tab-studio">
-      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:20px;">
-        <div>
-          <h2 style="margin:0 0 4px;">3D Studio</h2>
-          <p style="margin:0;color:var(--text2);font-size:14px;">Build models from shapes or convert photos to 3D — then export as STL for printing.</p>
-        </div>
-        <div style="display:flex;gap:8px;">
-          <button id="studioModeBuilder" class="btn-primary" onclick="setStudioMode('builder')" style="padding:8px 18px;font-size:13px;">Shape Builder</button>
-          <button id="studioModeImager" class="tab-btn" onclick="setStudioMode('imager')" style="padding:8px 18px;font-size:13px;">Image → 3D</button>
+
+      <!-- Mode toggle -->
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:14px;">
+        <div><h2 style="margin:0 0 2px;">3D Studio</h2><p style="margin:0;color:var(--text2);font-size:13px;">Build shapes or convert an image to a 3D model, then export as STL.</p></div>
+        <div style="display:flex;gap:6px;">
+          <button id="studioModeBuilder" class="btn-primary" onclick="setStudioMode('builder')" style="padding:7px 16px;font-size:13px;">Shape Builder</button>
+          <button id="studioModeImager" class="tab-btn" onclick="setStudioMode('imager')" style="padding:7px 16px;font-size:13px;">Image → 3D</button>
         </div>
       </div>
 
-      <!-- ── SHAPE BUILDER ── -->
+      <!-- ══ SHAPE BUILDER ══════════════════════════════════════════════════════ -->
       <div id="studioBuilderPanel">
-        <div style="display:flex;gap:16px;flex-wrap:wrap;">
-          <!-- Controls -->
-          <div style="flex:0 0 240px;min-width:200px;display:flex;flex-direction:column;gap:12px;">
-            <div>
-              <div style="font-size:12px;font-weight:600;color:var(--text2);margin-bottom:8px;text-transform:uppercase;letter-spacing:.05em;">Add Shape</div>
-              <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">
-                <button class="tab-btn" onclick="studioAddShape('box')" style="font-size:12px;padding:8px;">⬜ Box</button>
-                <button class="tab-btn" onclick="studioAddShape('sphere')" style="font-size:12px;padding:8px;">⚪ Sphere</button>
-                <button class="tab-btn" onclick="studioAddShape('cylinder')" style="font-size:12px;padding:8px;">🥫 Cylinder</button>
-                <button class="tab-btn" onclick="studioAddShape('cone')" style="font-size:12px;padding:8px;">🔺 Cone</button>
-                <button class="tab-btn" onclick="studioAddShape('torus')" style="font-size:12px;padding:8px;">⭕ Torus</button>
-                <button class="tab-btn" onclick="studioAddShape('wedge')" style="font-size:12px;padding:8px;">📐 Wedge</button>
+
+        <!-- Toolbar -->
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:8px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;margin-bottom:12px;font-size:12px;">
+          <span style="font-size:10px;font-weight:700;color:var(--text3);letter-spacing:.08em;">VIEW</span>
+          <button class="tab-btn" onclick="sbCamView('iso')"   style="padding:4px 10px;font-size:12px;" title="Isometric">Iso</button>
+          <button class="tab-btn" onclick="sbCamView('top')"   style="padding:4px 10px;font-size:12px;" title="Top down">Top</button>
+          <button class="tab-btn" onclick="sbCamView('front')" style="padding:4px 10px;font-size:12px;" title="Front">Front</button>
+          <button class="tab-btn" onclick="sbCamView('side')"  style="padding:4px 10px;font-size:12px;" title="Right side">Side</button>
+          <div style="width:1px;height:18px;background:var(--border);margin:0 2px;"></div>
+          <label style="display:flex;align-items:center;gap:5px;cursor:pointer;color:var(--text2);" title="Snap positions to 5 mm grid">
+            <input type="checkbox" id="sbSnap" checked style="accent-color:var(--accent);width:13px;height:13px;" /> Grid snap
+          </label>
+          <div style="width:1px;height:18px;background:var(--border);margin:0 2px;"></div>
+          <button class="tab-btn" id="sbUndoBtn" onclick="sbUndo()" style="padding:4px 10px;font-size:12px;" title="Undo (Ctrl+Z)">↩ Undo</button>
+          <button class="tab-btn" id="sbRedoBtn" onclick="sbRedo()" style="padding:4px 10px;font-size:12px;" title="Redo (Ctrl+Y)">↪ Redo</button>
+          <div style="flex:1;min-width:0;"></div>
+          <span id="sbHint" style="font-size:11px;color:var(--text3);font-style:italic;">Click a shape in the viewport to select it</span>
+        </div>
+
+        <!-- Two-column layout -->
+        <div style="display:flex;gap:14px;flex-wrap:wrap;">
+
+          <!-- LEFT: controls panel -->
+          <div style="flex:0 0 265px;min-width:220px;display:flex;flex-direction:column;gap:10px;">
+
+            <!-- Add shapes -->
+            <div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px;">
+              <div style="font-size:10px;font-weight:700;color:var(--text3);letter-spacing:.08em;margin-bottom:9px;text-transform:uppercase;">Add Shape</div>
+              <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:5px;">
+                <button class="tab-btn" onclick="studioAddShape('box')"      style="display:flex;flex-direction:column;align-items:center;padding:7px 4px;font-size:10px;gap:2px;"><span style="font-size:20px;">⬜</span>Box</button>
+                <button class="tab-btn" onclick="studioAddShape('sphere')"   style="display:flex;flex-direction:column;align-items:center;padding:7px 4px;font-size:10px;gap:2px;"><span style="font-size:20px;">⚪</span>Sphere</button>
+                <button class="tab-btn" onclick="studioAddShape('cylinder')" style="display:flex;flex-direction:column;align-items:center;padding:7px 4px;font-size:10px;gap:2px;"><span style="font-size:20px;">🥫</span>Cylinder</button>
+                <button class="tab-btn" onclick="studioAddShape('cone')"     style="display:flex;flex-direction:column;align-items:center;padding:7px 4px;font-size:10px;gap:2px;"><span style="font-size:20px;">🔺</span>Cone</button>
+                <button class="tab-btn" onclick="studioAddShape('torus')"    style="display:flex;flex-direction:column;align-items:center;padding:7px 4px;font-size:10px;gap:2px;"><span style="font-size:20px;">⭕</span>Torus</button>
+                <button class="tab-btn" onclick="studioAddShape('wedge')"    style="display:flex;flex-direction:column;align-items:center;padding:7px 4px;font-size:10px;gap:2px;"><span style="font-size:20px;">📐</span>Wedge</button>
               </div>
             </div>
 
-            <div>
-              <div style="font-size:12px;font-weight:600;color:var(--text2);margin-bottom:8px;text-transform:uppercase;letter-spacing:.05em;">Objects <span id="studioObjCount" style="font-weight:400;color:var(--text3);">(0)</span></div>
-              <div id="studioObjectList" style="max-height:140px;overflow-y:auto;display:flex;flex-direction:column;gap:4px;"></div>
-            </div>
-
-            <div id="studioTransform" style="display:none;">
-              <div style="font-size:12px;font-weight:600;color:var(--text2);margin-bottom:8px;text-transform:uppercase;letter-spacing:.05em;">Transform</div>
-              <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;align-items:center;font-size:12px;">
-                <span style="color:var(--text3);grid-column:span 3;font-size:11px;margin-bottom:2px;">Position (mm)</span>
-                <div><label style="color:var(--text3);font-size:11px;">X</label><input id="txX" type="number" step="1" value="0" oninput="studioTransformChange()" style="width:100%;padding:5px 7px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:12px;" /></div>
-                <div><label style="color:var(--text3);font-size:11px;">Y</label><input id="txY" type="number" step="1" value="0" oninput="studioTransformChange()" style="width:100%;padding:5px 7px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:12px;" /></div>
-                <div><label style="color:var(--text3);font-size:11px;">Z</label><input id="txZ" type="number" step="1" value="0" oninput="studioTransformChange()" style="width:100%;padding:5px 7px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:12px;" /></div>
-                <span style="color:var(--text3);grid-column:span 3;font-size:11px;margin-top:6px;margin-bottom:2px;">Scale (mm)</span>
-                <div><label style="color:var(--text3);font-size:11px;">W</label><input id="txSX" type="number" step="0.5" min="0.1" value="20" oninput="studioTransformChange()" style="width:100%;padding:5px 7px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:12px;" /></div>
-                <div><label style="color:var(--text3);font-size:11px;">H</label><input id="txSY" type="number" step="0.5" min="0.1" value="20" oninput="studioTransformChange()" style="width:100%;padding:5px 7px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:12px;" /></div>
-                <div><label style="color:var(--text3);font-size:11px;">D</label><input id="txSZ" type="number" step="0.5" min="0.1" value="20" oninput="studioTransformChange()" style="width:100%;padding:5px 7px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:12px;" /></div>
-                <span style="color:var(--text3);grid-column:span 3;font-size:11px;margin-top:6px;margin-bottom:2px;">Rotate (°)</span>
-                <div><label style="color:var(--text3);font-size:11px;">X</label><input id="txRX" type="number" step="5" value="0" oninput="studioTransformChange()" style="width:100%;padding:5px 7px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:12px;" /></div>
-                <div><label style="color:var(--text3);font-size:11px;">Y</label><input id="txRY" type="number" step="5" value="0" oninput="studioTransformChange()" style="width:100%;padding:5px 7px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:12px;" /></div>
-                <div><label style="color:var(--text3);font-size:11px;">Z</label><input id="txRZ" type="number" step="5" value="0" oninput="studioTransformChange()" style="width:100%;padding:5px 7px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:12px;" /></div>
+            <!-- Object list -->
+            <div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px;">
+              <div style="font-size:10px;font-weight:700;color:var(--text3);letter-spacing:.08em;margin-bottom:7px;text-transform:uppercase;">Objects <span id="studioObjCount" style="font-weight:400;">(0)</span></div>
+              <div id="studioObjectList" style="max-height:110px;overflow-y:auto;display:flex;flex-direction:column;gap:3px;">
+                <div style="color:var(--text3);font-size:12px;padding:8px 0;text-align:center;">No shapes yet</div>
               </div>
-              <button onclick="studioDeleteSelected()" style="margin-top:10px;width:100%;padding:8px;border-radius:8px;border:1px solid var(--accent3);background:rgba(239,83,80,.12);color:var(--accent3);font-size:12px;font-weight:600;cursor:pointer;">Delete Shape</button>
             </div>
 
-            <div style="display:flex;flex-direction:column;gap:6px;margin-top:auto;">
-              <button class="btn-primary" onclick="studioExportSTL()" style="font-size:13px;">↓ Export STL</button>
-              <button class="tab-btn" onclick="studioClear()" style="font-size:12px;">Clear All</button>
+            <!-- Transform panel (hidden until shape selected) -->
+            <div id="studioTransform" style="display:none;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px;">
+
+              <!-- Name + color -->
+              <div style="display:flex;align-items:center;gap:7px;margin-bottom:10px;">
+                <input id="sbSelName" type="text" placeholder="Shape name" oninput="sbRenameSelected(this.value)"
+                  style="flex:1;background:var(--surface);border:1px solid var(--border);border-radius:7px;padding:5px 8px;color:var(--text);font-size:13px;font-weight:600;" />
+                <input id="sbSelColor" type="color" value="#7c6af7" oninput="sbColorSelected(this.value)" title="Pick shape color"
+                  style="width:34px;height:30px;border:none;border-radius:7px;cursor:pointer;padding:2px;background:none;" />
+              </div>
+
+              <!-- Position -->
+              <div style="font-size:10px;font-weight:700;color:var(--text3);letter-spacing:.07em;margin-bottom:5px;text-transform:uppercase;">Position (mm)</div>
+              <div id="sbPosSliders"></div>
+
+              <!-- Size -->
+              <div style="font-size:10px;font-weight:700;color:var(--text3);letter-spacing:.07em;margin:8px 0 5px;text-transform:uppercase;">Size (mm)</div>
+              <div id="sbSizeSliders"></div>
+
+              <!-- Rotate -->
+              <div style="font-size:10px;font-weight:700;color:var(--text3);letter-spacing:.07em;margin:8px 0 5px;text-transform:uppercase;">Rotate (°)</div>
+              <div id="sbRotSliders"></div>
+
+              <!-- Quick-action buttons -->
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-top:10px;">
+                <button class="tab-btn" onclick="sbAlignFloor()"    title="Snap bottom of shape to Y = 0" style="font-size:11px;padding:6px;">⬇ To Floor</button>
+                <button class="tab-btn" onclick="sbCenterXZ()"      title="Move to center of scene (X=0, Z=0)" style="font-size:11px;padding:6px;">⊕ Center</button>
+                <button class="tab-btn" onclick="sbDuplicate()"     title="Duplicate selected shape" style="font-size:11px;padding:6px;">⎘ Duplicate</button>
+                <button onclick="studioDeleteSelected()" title="Delete (Del key)" style="font-size:11px;padding:6px;border-radius:7px;border:1px solid var(--accent3);background:rgba(239,83,80,.1);color:var(--accent3);cursor:pointer;font-weight:600;">✕ Delete</button>
+              </div>
+            </div>
+
+            <!-- Export row -->
+            <div style="display:flex;gap:6px;">
+              <button class="btn-primary" onclick="studioExportSTL()" style="flex:1;font-size:13px;">↓ Export STL</button>
+              <button class="tab-btn" onclick="studioClear()" title="Remove all shapes" style="padding:10px 14px;font-size:15px;">🗑</button>
             </div>
           </div>
 
-          <!-- Viewport -->
-          <div style="flex:1;min-width:280px;">
-            <div style="font-size:11px;color:var(--text3);margin-bottom:6px;">Left-drag: rotate · Right-drag: pan · Scroll: zoom · Click shape to select</div>
+          <!-- RIGHT: 3D viewport -->
+          <div style="flex:1;min-width:260px;display:flex;flex-direction:column;gap:5px;">
+            <div style="font-size:11px;color:var(--text3);">
+              <b>Left-drag</b> orbit · <b>Right-drag</b> pan · <b>Scroll</b> zoom · <b>Click shape</b> to select · <kbd style="background:var(--surface2);border:1px solid var(--border);border-radius:3px;padding:1px 4px;">Del</kbd> delete · <kbd style="background:var(--surface2);border:1px solid var(--border);border-radius:3px;padding:1px 4px;">Ctrl Z</kbd> undo
+            </div>
             <canvas id="studioCanvas" style="width:100%;border-radius:12px;background:#0e0e1a;display:block;touch-action:none;cursor:grab;"></canvas>
+            <div id="sbDimLabel" style="font-size:11px;color:var(--accent);min-height:16px;text-align:right;"></div>
           </div>
+
         </div>
       </div>
 
-      <!-- ── IMAGE → 3D ── -->
+      <!-- ══ IMAGE → 3D ══════════════════════════════════════════════════════════ -->
       <div id="studioImagerPanel" style="display:none;">
-        <div style="display:flex;gap:16px;flex-wrap:wrap;">
+        <div style="display:flex;gap:14px;flex-wrap:wrap;">
+
           <!-- Controls -->
-          <div style="flex:0 0 240px;min-width:200px;display:flex;flex-direction:column;gap:14px;">
-            <div>
-              <div style="font-size:12px;font-weight:600;color:var(--text2);margin-bottom:8px;text-transform:uppercase;letter-spacing:.05em;">Upload Image</div>
-              <div id="imgUploadArea" onclick="document.getElementById('studioImgInput').click()" style="border:2px dashed var(--border);border-radius:10px;padding:24px 16px;text-align:center;cursor:pointer;color:var(--text3);font-size:13px;transition:border-color .2s;" onmouseenter="this.style.borderColor='var(--accent)'" onmouseleave="this.style.borderColor='var(--border)'">
+          <div style="flex:0 0 265px;min-width:220px;display:flex;flex-direction:column;gap:10px;">
+            <div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px;">
+              <div style="font-size:10px;font-weight:700;color:var(--text3);letter-spacing:.08em;margin-bottom:8px;text-transform:uppercase;">Upload Image</div>
+              <div id="imgUploadArea" onclick="document.getElementById('studioImgInput').click()"
+                style="border:2px dashed var(--border);border-radius:10px;padding:20px 12px;text-align:center;cursor:pointer;color:var(--text3);font-size:13px;transition:border-color .2s;"
+                onmouseenter="this.style.borderColor='var(--accent)'" onmouseleave="this.style.borderColor='var(--border)'">
                 <div style="font-size:28px;margin-bottom:6px;">🖼️</div>
-                <div>Click to upload<br><span style="font-size:11px;">JPG, PNG, WebP · grayscale works best</span></div>
+                <div>Click to upload<br><span style="font-size:11px;">JPG · PNG · WebP<br>Dark pixels = raised, light = flat</span></div>
               </div>
               <input type="file" id="studioImgInput" accept="image/*" style="display:none;" onchange="studioLoadImage(event)" />
-              <img id="studioImgPreview" style="display:none;width:100%;border-radius:8px;margin-top:8px;" alt="preview" />
+              <img id="studioImgPreview" style="display:none;width:100%;border-radius:8px;margin-top:8px;max-height:120px;object-fit:contain;" alt="preview" />
             </div>
 
-            <div>
-              <div style="font-size:12px;font-weight:600;color:var(--text2);margin-bottom:10px;text-transform:uppercase;letter-spacing:.05em;">Settings</div>
-              <div style="display:flex;flex-direction:column;gap:10px;font-size:13px;">
+            <div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px;">
+              <div style="font-size:10px;font-weight:700;color:var(--text3);letter-spacing:.08em;margin-bottom:10px;text-transform:uppercase;">Settings</div>
+              <div style="display:flex;flex-direction:column;gap:10px;font-size:12px;">
                 <div>
-                  <div style="display:flex;justify-content:space-between;margin-bottom:4px;"><span style="color:var(--text2);">Resolution</span><span id="imgResVal" style="color:var(--accent);font-weight:600;">80</span></div>
+                  <div style="display:flex;justify-content:space-between;margin-bottom:4px;"><span style="color:var(--text2);">Resolution (grid size)</span><span id="imgResVal" style="color:var(--accent);font-weight:600;">80</span></div>
                   <input type="range" id="imgRes" min="20" max="200" value="80" oninput="document.getElementById('imgResVal').textContent=this.value" style="width:100%;accent-color:var(--accent);" />
                 </div>
                 <div>
-                  <div style="display:flex;justify-content:space-between;margin-bottom:4px;"><span style="color:var(--text2);">Height Scale</span><span id="imgHtVal" style="color:var(--accent);font-weight:600;">8</span></div>
+                  <div style="display:flex;justify-content:space-between;margin-bottom:4px;"><span style="color:var(--text2);">Height (mm)</span><span id="imgHtVal" style="color:var(--accent);font-weight:600;">8</span></div>
                   <input type="range" id="imgHt" min="1" max="40" value="8" oninput="document.getElementById('imgHtVal').textContent=this.value" style="width:100%;accent-color:var(--accent);" />
                 </div>
                 <div>
-                  <div style="display:flex;justify-content:space-between;margin-bottom:4px;"><span style="color:var(--text2);">Base Thickness</span><span id="imgBaseVal" style="color:var(--accent);font-weight:600;">2</span></div>
+                  <div style="display:flex;justify-content:space-between;margin-bottom:4px;"><span style="color:var(--text2);">Base thickness (mm)</span><span id="imgBaseVal" style="color:var(--accent);font-weight:600;">2</span></div>
                   <input type="range" id="imgBase" min="0" max="10" value="2" oninput="document.getElementById('imgBaseVal').textContent=this.value" style="width:100%;accent-color:var(--accent);" />
                 </div>
                 <label style="display:flex;align-items:center;gap:8px;cursor:pointer;color:var(--text2);">
-                  <input type="checkbox" id="imgInvert" style="accent-color:var(--accent);" /> Invert heights (dark = raised)
+                  <input type="checkbox" id="imgInvert" style="accent-color:var(--accent);" /> Invert (white = raised)
                 </label>
               </div>
             </div>
 
             <div style="display:flex;flex-direction:column;gap:6px;">
-              <button class="btn-primary" onclick="studioGenerateFromImage()" style="font-size:13px;">Generate 3D Model</button>
+              <button class="btn-primary" onclick="studioGenerateFromImage()" style="font-size:13px;">Generate 3D Model →</button>
               <button id="imgExportBtn" class="tab-btn" onclick="studioExportImageSTL()" style="font-size:12px;display:none;">↓ Export STL</button>
             </div>
             <div id="imgStatus" style="font-size:12px;color:var(--text3);display:none;"></div>
           </div>
 
           <!-- Viewport -->
-          <div style="flex:1;min-width:280px;">
-            <div style="font-size:11px;color:var(--text3);margin-bottom:6px;">Left-drag: rotate · Right-drag: pan · Scroll: zoom</div>
+          <div style="flex:1;min-width:260px;display:flex;flex-direction:column;gap:5px;">
+            <div style="font-size:11px;color:var(--text3);"><b>Left-drag</b> orbit · <b>Right-drag</b> pan · <b>Scroll</b> zoom</div>
             <canvas id="studioImgCanvas" style="width:100%;border-radius:12px;background:#0e0e1a;display:block;touch-action:none;cursor:grab;"></canvas>
           </div>
         </div>
       </div>
+
     </div><!-- /tab-studio -->
 
   </div>
@@ -1993,50 +2040,62 @@
     document.addEventListener('profab-unlocked', syncMobileBadges);
 
     // ===== 3D STUDIO =================================================================
-    // Shared Three.js state — lazily initialized when the tab first opens.
     let _studioInited = false;
-    let _studioMode   = 'builder'; // 'builder' | 'imager'
+    let _studioMode   = 'builder';
 
-    // Shape-builder state
+    // ── Shape builder state ──────────────────────────────────────────────────────
     let _sbRenderer, _sbScene, _sbCamera, _sbOrbit, _sbAnimId;
-    let _sbObjects  = [];  // [{id, mesh, name}]
-    let _sbSelected = null;
+    let _sbRaycaster, _sbMouse;
+    let _sbObjects  = [];   // [{id, type, name, color, mesh}]
+    let _sbSelected = null; // id
     let _sbIdSeq    = 0;
+    let _sbUndoStack = [], _sbRedoStack = [];
+    let _sbHovered  = null; // id of hovered mesh
 
-    // Image-to-3D state
+    // ── Image-to-3D state ────────────────────────────────────────────────────────
     let _igRenderer, _igScene, _igCamera, _igOrbit, _igAnimId;
-    let _igGeom   = null; // current heightmap geometry
-    let _igImgEl  = null; // loaded HTMLImageElement
+    let _igImgEl = null;
 
-    // ── Mode switcher ──────────────────────────────────────────────────────────────
+    // ── Mode switcher ────────────────────────────────────────────────────────────
     function setStudioMode(mode) {
       _studioMode = mode;
       document.getElementById('studioBuilderPanel').style.display = mode === 'builder' ? '' : 'none';
       document.getElementById('studioImagerPanel').style.display  = mode === 'imager'  ? '' : 'none';
       document.getElementById('studioModeBuilder').className = mode === 'builder' ? 'btn-primary' : 'tab-btn';
       document.getElementById('studioModeImager').className  = mode === 'imager'  ? 'btn-primary' : 'tab-btn';
-      document.getElementById('studioModeBuilder').style.padding = '8px 18px';
-      document.getElementById('studioModeImager').style.padding  = '8px 18px';
-      document.getElementById('studioModeBuilder').style.fontSize = '13px';
-      document.getElementById('studioModeImager').style.fontSize  = '13px';
       if (mode === 'builder') _sbStartRender();
       if (mode === 'imager')  _igStartRender();
     }
 
-    // ── Init (called once when tab first opens) ───────────────────────────────────
     function initStudio() {
       if (!_studioInited) {
         _studioInited = true;
         _sbInit();
         _igInit();
+        // Keyboard shortcuts active while studio tab is open
+        document.addEventListener('keydown', _sbKeyDown);
       }
-      // Resize viewports to fit current layout
       _sbResize();
       _igResize();
       setStudioMode(_studioMode);
     }
 
-    // ── Shared orbit controls factory ─────────────────────────────────────────────
+    function _sbKeyDown(e) {
+      // Only fire when studio tab is active
+      if (!document.getElementById('tab-studio')?.classList.contains('active')) return;
+      if ((e.key === 'Delete' || e.key === 'Backspace') && _sbSelected && !['INPUT','TEXTAREA'].includes(e.target.tagName)) {
+        studioDeleteSelected(); e.preventDefault();
+      }
+      if (e.ctrlKey && e.key === 'z') { sbUndo(); e.preventDefault(); }
+      if (e.ctrlKey && (e.key === 'y' || e.key === 'Z')) { sbRedo(); e.preventDefault(); }
+      if (e.ctrlKey && e.key === 'd') { sbDuplicate(); e.preventDefault(); }
+    }
+
+    // ════════════════════════════════════════════════════════════════════════════
+    // SHARED HELPERS
+    // ════════════════════════════════════════════════════════════════════════════
+
+    // ── Orbit controls ───────────────────────────────────────────────────────────
     function _makeOrbit(camera, canvas) {
       let down = false, rdown = false, px = 0, py = 0;
       let sph = { theta: Math.PI * 0.35, phi: Math.PI * 0.35, r: 80 };
@@ -2053,16 +2112,26 @@
       }
       apply();
 
+      let _moved = false; // track drag vs click
+      const self = { apply, _wasDragging: false,
+        setTarget: v => { target.copy(v); apply(); },
+        setPreset: ({ theta, phi, r }) => { sph.theta = theta; sph.phi = phi; sph.r = r; apply(); }
+      };
+
       canvas.addEventListener('mousedown', e => {
         if (e.button === 0) down  = true;
         if (e.button === 2) rdown = true;
         px = e.clientX; py = e.clientY;
+        _moved = false; self._wasDragging = false;
         e.preventDefault();
       });
       canvas.addEventListener('contextmenu', e => e.preventDefault());
       window.addEventListener('mousemove', e => {
         const dx = e.clientX - px, dy = e.clientY - py;
         px = e.clientX; py = e.clientY;
+        if ((down || rdown) && (Math.abs(dx) > 2 || Math.abs(dy) > 2)) {
+          _moved = true; self._wasDragging = true;
+        }
         if (down) {
           sph.theta -= dx * 0.012;
           sph.phi    = Math.max(0.05, Math.min(Math.PI - 0.05, sph.phi - dy * 0.012));
@@ -2077,16 +2146,17 @@
           apply();
         }
       });
-      window.addEventListener('mouseup', () => { down = false; rdown = false; });
+      window.addEventListener('mouseup', () => {
+        down = false; rdown = false;
+        // Reset drag flag after a short delay so click handler can read it
+        setTimeout(() => { self._wasDragging = false; }, 50);
+      });
       canvas.addEventListener('wheel', e => {
         sph.r = Math.max(5, Math.min(500, sph.r * (1 + e.deltaY * 0.001)));
-        apply();
-        e.preventDefault();
+        apply(); e.preventDefault();
       }, { passive: false });
 
-      // Touch support
-      let _touches = [];
-      let _lastPinchDist = null;
+      let _touches = [], _lastPinchDist = null;
       canvas.addEventListener('touchstart', e => {
         _touches = Array.from(e.touches);
         if (_touches.length === 1) { down = true; px = _touches[0].clientX; py = _touches[0].clientY; }
@@ -2104,14 +2174,13 @@
         if (t.length === 2) {
           const d = Math.hypot(t[0].clientX - t[1].clientX, t[0].clientY - t[1].clientY);
           if (_lastPinchDist !== null) sph.r = Math.max(5, Math.min(500, sph.r * (_lastPinchDist / d)));
-          _lastPinchDist = d;
-          apply();
+          _lastPinchDist = d; apply();
         }
         e.preventDefault();
       }, { passive: false });
       canvas.addEventListener('touchend', () => { down = false; _lastPinchDist = null; });
 
-      return { apply, setTarget: v => { target.copy(v); apply(); } };
+      return self;
     }
 
     // ── Binary STL exporter ───────────────────────────────────────────────────────
@@ -2168,7 +2237,10 @@
       setTimeout(() => URL.revokeObjectURL(url), 1000);
     }
 
-    // ===================== SHAPE BUILDER =========================================
+    // ════════════════════════════════════════════════════════════════════════════
+    // SHAPE BUILDER
+    // ════════════════════════════════════════════════════════════════════════════
+
     function _sbInit() {
       const canvas = document.getElementById('studioCanvas');
       _sbRenderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
@@ -2177,32 +2249,57 @@
 
       _sbScene = new THREE.Scene();
       _sbScene.background = new THREE.Color(0x0e0e1a);
-
-      // Grid helper
-      const grid = new THREE.GridHelper(200, 20, 0x2a2a40, 0x1e1e30);
-      _sbScene.add(grid);
-
-      // Lights
+      _sbScene.add(new THREE.GridHelper(200, 20, 0x2a2a40, 0x1e1e30));
       _sbScene.add(new THREE.AmbientLight(0xffffff, 0.4));
       const sun = new THREE.DirectionalLight(0xffffff, 0.9);
-      sun.position.set(60, 100, 60);
-      sun.castShadow = true;
+      sun.position.set(60, 100, 60); sun.castShadow = true;
       _sbScene.add(sun);
-      _sbScene.add(new THREE.DirectionalLight(0x8080ff, 0.3).translateX(-60).translateY(40));
+      const fill = new THREE.DirectionalLight(0x8080ff, 0.3);
+      fill.position.set(-60, 40, 0); _sbScene.add(fill);
 
       _sbCamera = new THREE.PerspectiveCamera(45, 1, 0.1, 2000);
       _sbOrbit  = _makeOrbit(_sbCamera, canvas);
+      _sbRaycaster = new THREE.Raycaster();
+      _sbMouse     = new THREE.Vector2(-99, -99);
+
+      // Track mouse for raycasting (hover + click)
+      canvas.addEventListener('mousemove', e => {
+        const r = canvas.getBoundingClientRect();
+        _sbMouse.x = ((e.clientX - r.left) / r.width)  *  2 - 1;
+        _sbMouse.y = ((e.clientY - r.top)  / r.height) * -2 + 1;
+      });
+      canvas.addEventListener('mouseleave', () => { _sbMouse.set(-99,-99); });
+
+      // Click to select shape in viewport
+      canvas.addEventListener('click', e => {
+        if (_sbOrbit._wasDragging) return; // ignore drag-release
+        const r = canvas.getBoundingClientRect();
+        const mx = ((e.clientX - r.left) / r.width)  *  2 - 1;
+        const my = ((e.clientY - r.top)  / r.height) * -2 + 1;
+        _sbRaycaster.setFromCamera({ x: mx, y: my }, _sbCamera);
+        const hits = _sbRaycaster.intersectObjects(_sbObjects.map(o => o.mesh));
+        if (hits.length) {
+          _sbPushUndo();
+          _sbSelectObj(hits[0].object.userData.studioId);
+        } else {
+          _sbSelected = null;
+          _sbObjects.forEach(o => _sbApplyMat(o));
+          document.getElementById('studioTransform').style.display = 'none';
+          _sbRenderList();
+        }
+      });
 
       _sbResize();
       new ResizeObserver(_sbResize).observe(canvas.parentElement);
       _sbStartRender();
     }
 
+    // ── Resize & render loop ─────────────────────────────────────────────────────
     function _sbResize() {
       const canvas = document.getElementById('studioCanvas');
       if (!canvas || !_sbRenderer) return;
       const w = canvas.parentElement.clientWidth;
-      const h = Math.max(340, Math.round(w * 0.55));
+      const h = Math.max(320, Math.round(w * 0.56));
       _sbRenderer.setSize(w, h);
       if (_sbCamera) { _sbCamera.aspect = w / h; _sbCamera.updateProjectionMatrix(); }
     }
@@ -2212,14 +2309,47 @@
       if (_sbAnimId) cancelAnimationFrame(_sbAnimId);
       (function loop() {
         _sbAnimId = requestAnimationFrame(loop);
+        // Hover highlight via raycasting
+        _sbRaycaster.setFromCamera(_sbMouse, _sbCamera);
+        const hits  = _sbRaycaster.intersectObjects(_sbObjects.map(o => o.mesh));
+        const hovId = hits.length ? hits[0].object.userData.studioId : null;
+        if (hovId !== _sbHovered) {
+          _sbHovered = hovId;
+          _sbObjects.forEach(o => _sbApplyMat(o));
+          document.getElementById('studioCanvas').style.cursor = hovId ? 'pointer' : 'grab';
+        }
         _sbRenderer.render(_sbScene, _sbCamera);
       })();
     }
 
-    const _sbMat     = new THREE.MeshStandardMaterial({ color: 0x7c6af7, metalness: 0.15, roughness: 0.55 });
-    const _sbMatSel  = new THREE.MeshStandardMaterial({ color: 0xf7a26a, metalness: 0.15, roughness: 0.45, emissive: 0x3a1a00 });
-    const _sbWire    = new THREE.MeshBasicMaterial({ color: 0xffffff, wireframe: true, opacity: 0.08, transparent: true });
+    // ── Camera presets ────────────────────────────────────────────────────────────
+    function sbCamView(preset) {
+      if (!_sbOrbit) return;
+      const presets = {
+        iso:   { theta: Math.PI * 0.35, phi: Math.PI * 0.35, r: 180 },
+        top:   { theta: 0, phi: 0.01,             r: 200 },
+        front: { theta: 0, phi: Math.PI / 2,      r: 200 },
+        side:  { theta: Math.PI / 2, phi: Math.PI / 2, r: 200 },
+      };
+      if (presets[preset]) _sbOrbit.setPreset(presets[preset]);
+    }
 
+    // ── Material helper ───────────────────────────────────────────────────────────
+    function _sbApplyMat(o) {
+      const isSel  = o.id === _sbSelected;
+      const isHov  = o.id === _sbHovered && !isSel;
+      const col    = o.color || '#7c6af7';
+      const mat    = o.mesh.material;
+      if (isSel) {
+        mat.color.set(0xf7a26a); mat.emissive.set(0x3a1a00); mat.roughness = 0.45;
+      } else if (isHov) {
+        mat.color.set(col); mat.emissive.setHex(0x111122); mat.roughness = 0.4;
+      } else {
+        mat.color.set(col); mat.emissive.set(0x000000); mat.roughness = 0.55;
+      }
+    }
+
+    // ── Geometry factory ──────────────────────────────────────────────────────────
     function _sbGeomFor(type) {
       switch (type) {
         case 'box':      return new THREE.BoxGeometry(1, 1, 1, 2, 2, 2);
@@ -2228,25 +2358,18 @@
         case 'cone':     return new THREE.ConeGeometry(0.5, 1, 32);
         case 'torus':    return new THREE.TorusGeometry(0.4, 0.15, 16, 64);
         case 'wedge': {
-          // Right-triangle prism built with BufferGeometry
           const g = new THREE.BufferGeometry();
           const v = new Float32Array([
-            // Front face (z=0.5)
             -0.5,-.5, 0.5,  0.5,-.5, 0.5,  0.5, 0.5, 0.5,
             -0.5,-.5, 0.5,  0.5, 0.5, 0.5, -0.5, 0.5, 0.5,
-            // Back face  (z=-0.5)
             -0.5,-.5,-0.5,  0.5, 0.5,-0.5,  0.5,-.5,-0.5,
             -0.5,-.5,-0.5, -0.5, 0.5,-0.5,  0.5, 0.5,-0.5,
-            // Bottom
             -0.5,-.5, 0.5,  0.5,-.5,-0.5,  0.5,-.5, 0.5,
             -0.5,-.5, 0.5, -0.5,-.5,-0.5,  0.5,-.5,-0.5,
-            // Right
              0.5,-.5, 0.5,  0.5, 0.5,-0.5,  0.5,-.5,-0.5,
              0.5,-.5, 0.5,  0.5, 0.5, 0.5,  0.5, 0.5,-0.5,
-            // Slope (hypotenuse)
             -0.5,-.5, 0.5,  0.5, 0.5, 0.5,  0.5, 0.5,-0.5,
             -0.5,-.5, 0.5,  0.5, 0.5,-0.5, -0.5, 0.5,-0.5,
-            // Left
             -0.5,-.5, 0.5, -0.5, 0.5,-0.5, -0.5,-.5,-0.5,
             -0.5,-.5, 0.5, -0.5, 0.5, 0.5, -0.5, 0.5,-0.5,
           ]);
@@ -2258,105 +2381,250 @@
       }
     }
 
+    // ── Add shape ─────────────────────────────────────────────────────────────────
     function studioAddShape(type) {
       if (!_sbScene) return;
-      const id   = ++_sbIdSeq;
-      const name = type.charAt(0).toUpperCase() + type.slice(1) + ' ' + id;
-      const geom = _sbGeomFor(type);
-      const mesh = new THREE.Mesh(geom, _sbMat.clone());
+      _sbPushUndo();
+      const id    = ++_sbIdSeq;
+      const color = '#7c6af7';
+      const name  = type.charAt(0).toUpperCase() + type.slice(1) + ' ' + id;
+      const geom  = _sbGeomFor(type);
+      const mat   = new THREE.MeshStandardMaterial({ color, metalness: 0.15, roughness: 0.55 });
+      const mesh  = new THREE.Mesh(geom, mat);
+      // Offset each new shape so they don't stack exactly
+      const offset = (_sbObjects.length % 5) * 25;
       mesh.scale.setScalar(20);
-      mesh.position.set(0, 10, 0);
+      mesh.position.set(offset - 50, 10, 0);
       mesh.castShadow = true;
       mesh.receiveShadow = true;
       mesh.userData.studioId = id;
       _sbScene.add(mesh);
-      _sbObjects.push({ id, mesh, name, type });
+      _sbObjects.push({ id, type, name, color, mesh });
       _sbSelectObj(id);
-      _sbRenderList();
     }
 
+    // ── Object list ───────────────────────────────────────────────────────────────
     function _sbRenderList() {
       const list = document.getElementById('studioObjectList');
       const cnt  = document.getElementById('studioObjCount');
       if (!list) return;
       cnt.textContent = `(${_sbObjects.length})`;
+      if (_sbObjects.length === 0) {
+        list.innerHTML = '<div style="color:var(--text3);font-size:12px;padding:8px 0;text-align:center;">No shapes yet</div>';
+        return;
+      }
       list.innerHTML = _sbObjects.map(o => `
-        <div onclick="studioSelectById(${o.id})" style="display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:7px;cursor:pointer;background:${o.id===_sbSelected?'rgba(124,106,247,.18)':'transparent'};border:1px solid ${o.id===_sbSelected?'rgba(124,106,247,.4)':'transparent'};">
-          <span style="font-size:11px;flex:1;color:var(--text);">${o.name}</span>
-          <button onclick="event.stopPropagation();studioDeleteById(${o.id})" style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:14px;line-height:1;padding:0;">✕</button>
+        <div onclick="studioSelectById(${o.id})"
+          style="display:flex;align-items:center;gap:7px;padding:5px 8px;border-radius:7px;cursor:pointer;
+                 background:${o.id===_sbSelected?'rgba(124,106,247,.18)':'transparent'};
+                 border:1px solid ${o.id===_sbSelected?'rgba(124,106,247,.45)':'transparent'};">
+          <span style="width:10px;height:10px;border-radius:50%;background:${o.color||'#7c6af7'};flex-shrink:0;"></span>
+          <span style="font-size:12px;flex:1;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${o.name}</span>
+          <button onclick="event.stopPropagation();_sbPushUndo();studioDeleteById(${o.id})"
+            style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:13px;padding:0;line-height:1;flex-shrink:0;">✕</button>
         </div>`).join('');
     }
 
+    // ── Select ────────────────────────────────────────────────────────────────────
     function studioSelectById(id) { _sbSelectObj(id); }
     function _sbSelectObj(id) {
       _sbSelected = id;
-      _sbObjects.forEach(o => {
-        o.mesh.material = (o.id === id) ? _sbMatSel.clone() : _sbMat.clone();
-      });
+      _sbObjects.forEach(o => _sbApplyMat(o));
       _sbRenderList();
       const obj = _sbObjects.find(o => o.id === id);
       const tx  = document.getElementById('studioTransform');
-      if (obj && tx) {
-        tx.style.display = '';
-        document.getElementById('txX').value  = Math.round(obj.mesh.position.x);
-        document.getElementById('txY').value  = Math.round(obj.mesh.position.y);
-        document.getElementById('txZ').value  = Math.round(obj.mesh.position.z);
-        document.getElementById('txSX').value = +(obj.mesh.scale.x).toFixed(2);
-        document.getElementById('txSY').value = +(obj.mesh.scale.y).toFixed(2);
-        document.getElementById('txSZ').value = +(obj.mesh.scale.z).toFixed(2);
-        document.getElementById('txRX').value = Math.round(obj.mesh.rotation.x * 180 / Math.PI);
-        document.getElementById('txRY').value = Math.round(obj.mesh.rotation.y * 180 / Math.PI);
-        document.getElementById('txRZ').value = Math.round(obj.mesh.rotation.z * 180 / Math.PI);
-      } else if (tx) {
-        tx.style.display = 'none';
-      }
+      if (!obj || !tx) return;
+      tx.style.display = '';
+      document.getElementById('sbSelName').value  = obj.name;
+      document.getElementById('sbSelColor').value = obj.color || '#7c6af7';
+      _sbBuildSliders(obj);
+      _sbUpdateDimLabel(obj);
     }
 
-    function studioTransformChange() {
+    // ── Slider panels ─────────────────────────────────────────────────────────────
+    function _sbBuildSliders(obj) {
+      const snap = document.getElementById('sbSnap')?.checked;
+      const px = Math.round(obj.mesh.position.x);
+      const py = Math.round(obj.mesh.position.y);
+      const pz = Math.round(obj.mesh.position.z);
+      const sx = Math.round(obj.mesh.scale.x);
+      const sy = Math.round(obj.mesh.scale.y);
+      const sz = Math.round(obj.mesh.scale.z);
+      const rx = Math.round(obj.mesh.rotation.x * 180/Math.PI);
+      const ry = Math.round(obj.mesh.rotation.y * 180/Math.PI);
+      const rz = Math.round(obj.mesh.rotation.z * 180/Math.PI);
+
+      document.getElementById('sbPosSliders').innerHTML  = _slRow('pos','X',-200,200,1,px) + _slRow('pos','Y',0,200,1,py) + _slRow('pos','Z',-200,200,1,pz);
+      document.getElementById('sbSizeSliders').innerHTML = _slRow('siz','W',1,200,1,sx)    + _slRow('siz','H',1,200,1,sy) + _slRow('siz','D',1,200,1,sz);
+      document.getElementById('sbRotSliders').innerHTML  = _slRow('rot','X',-180,180,5,rx) + _slRow('rot','Y',-180,180,5,ry) + _slRow('rot','Z',-180,180,5,rz);
+    }
+
+    function _slRow(grp, lbl, mn, mx, st, val) {
+      return `<div style="display:flex;align-items:center;gap:5px;margin-bottom:4px;">
+        <span style="width:13px;font-size:10px;font-weight:700;color:var(--text3);">${lbl}</span>
+        <input type="range" id="sbs_${grp}_${lbl}" min="${mn}" max="${mx}" step="${st}" value="${val}"
+          oninput="sbSlide('${grp}','${lbl}',+this.value)"
+          style="flex:1;accent-color:var(--accent);cursor:pointer;height:4px;" />
+        <input type="number" id="sbn_${grp}_${lbl}" value="${val}" step="${st}" min="${mn}" max="${mx}"
+          oninput="sbNum('${grp}','${lbl}',+this.value)"
+          style="width:52px;padding:3px 5px;background:var(--surface);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:12px;" />
+      </div>`;
+    }
+
+    function sbSlide(grp, lbl, raw) {
+      const snap = grp === 'pos' && document.getElementById('sbSnap')?.checked;
+      const v = snap ? Math.round(raw / 5) * 5 : raw;
+      const num = document.getElementById(`sbn_${grp}_${lbl}`);
+      const sl  = document.getElementById(`sbs_${grp}_${lbl}`);
+      if (num) num.value = v;
+      if (sl && snap) sl.value = v;
+      _sbMeshApply(grp, lbl, v);
+    }
+    function sbNum(grp, lbl, raw) {
+      const sl = document.getElementById(`sbs_${grp}_${lbl}`);
+      if (sl) sl.value = Math.min(+sl.max, Math.max(+sl.min, raw));
+      _sbMeshApply(grp, lbl, raw);
+    }
+    function _sbMeshApply(grp, lbl, v) {
       const obj = _sbObjects.find(o => o.id === _sbSelected);
       if (!obj) return;
-      const DEG = Math.PI / 180;
-      obj.mesh.position.set(
-        +document.getElementById('txX').value,
-        +document.getElementById('txY').value,
-        +document.getElementById('txZ').value
-      );
-      obj.mesh.scale.set(
-        +document.getElementById('txSX').value,
-        +document.getElementById('txSY').value,
-        +document.getElementById('txSZ').value
-      );
-      obj.mesh.rotation.set(
-        +document.getElementById('txRX').value * DEG,
-        +document.getElementById('txRY').value * DEG,
-        +document.getElementById('txRZ').value * DEG
-      );
+      const ax = lbl === 'W' ? 'x' : lbl === 'H' ? 'y' : lbl === 'D' ? 'z' : lbl.toLowerCase();
+      if (grp === 'pos') obj.mesh.position[ax] = v;
+      if (grp === 'siz') obj.mesh.scale[ax]    = Math.max(1, v);
+      if (grp === 'rot') obj.mesh.rotation[ax]  = v * Math.PI / 180;
+      _sbUpdateDimLabel(obj);
     }
 
-    function studioDeleteSelected() { if (_sbSelected) studioDeleteById(_sbSelected); }
+    // ── Dimension label ───────────────────────────────────────────────────────────
+    function _sbUpdateDimLabel(obj) {
+      obj = obj || _sbObjects.find(o => o.id === _sbSelected);
+      const el = document.getElementById('sbDimLabel');
+      if (!el || !obj) { if (el) el.style.display='none'; return; }
+      const s = obj.mesh.scale;
+      el.style.display = '';
+      el.textContent = `${Math.round(s.x)} × ${Math.round(s.y)} × ${Math.round(s.z)} mm`;
+    }
+
+    // ── Rename / Color ────────────────────────────────────────────────────────────
+    function sbRenameSelected(name) {
+      const obj = _sbObjects.find(o => o.id === _sbSelected);
+      if (obj) { obj.name = name; _sbRenderList(); }
+    }
+    function sbColorSelected(color) {
+      const obj = _sbObjects.find(o => o.id === _sbSelected);
+      if (!obj) return;
+      obj.color = color;
+      obj.mesh.material.color.set(color);
+      _sbRenderList();
+    }
+
+    // ── Quick actions ─────────────────────────────────────────────────────────────
+    function sbAlignFloor() {
+      const obj = _sbObjects.find(o => o.id === _sbSelected);
+      if (!obj) return;
+      _sbPushUndo();
+      obj.mesh.position.y = obj.mesh.scale.y / 2;
+      _sbBuildSliders(obj);
+    }
+    function sbCenterXZ() {
+      const obj = _sbObjects.find(o => o.id === _sbSelected);
+      if (!obj) return;
+      _sbPushUndo();
+      obj.mesh.position.x = 0;
+      obj.mesh.position.z = 0;
+      _sbBuildSliders(obj);
+    }
+    function sbDuplicate() {
+      const src = _sbObjects.find(o => o.id === _sbSelected);
+      if (!src) { showToast('Select a shape to duplicate.'); return; }
+      _sbPushUndo();
+      const id   = ++_sbIdSeq;
+      const geom = _sbGeomFor(src.type);
+      const mat  = new THREE.MeshStandardMaterial({ color: src.color || '#7c6af7', metalness: 0.15, roughness: 0.55 });
+      const mesh = new THREE.Mesh(geom, mat);
+      mesh.position.copy(src.mesh.position).x += src.mesh.scale.x + 5;
+      mesh.scale.copy(src.mesh.scale);
+      mesh.rotation.copy(src.mesh.rotation);
+      mesh.castShadow = true;
+      mesh.userData.studioId = id;
+      _sbScene.add(mesh);
+      _sbObjects.push({ id, type: src.type, name: src.name + ' copy', color: src.color || '#7c6af7', mesh });
+      _sbSelectObj(id);
+    }
+
+    // ── Delete ────────────────────────────────────────────────────────────────────
+    function studioDeleteSelected() { if (_sbSelected !== null) studioDeleteById(_sbSelected); }
     function studioDeleteById(id) {
+      _sbPushUndo();
       const obj = _sbObjects.find(o => o.id === id);
       if (!obj) return;
       _sbScene.remove(obj.mesh);
       obj.mesh.geometry.dispose();
       _sbObjects = _sbObjects.filter(o => o.id !== id);
       if (_sbSelected === id) {
-        _sbSelected = _sbObjects.length ? _sbObjects[_sbObjects.length-1].id : null;
+        _sbSelected = _sbObjects.length ? _sbObjects[_sbObjects.length - 1].id : null;
         if (_sbSelected) _sbSelectObj(_sbSelected);
-        else { document.getElementById('studioTransform').style.display = 'none'; }
+        else { document.getElementById('studioTransform').style.display = 'none'; document.getElementById('sbDimLabel').style.display = 'none'; }
       }
       _sbRenderList();
     }
-
     function studioClear() {
-      if (_sbObjects.length && !confirm('Clear all shapes?')) return;
+      if (_sbObjects.length && !confirm('Remove all shapes?')) return;
+      _sbPushUndo();
       _sbObjects.forEach(o => { _sbScene.remove(o.mesh); o.mesh.geometry.dispose(); });
-      _sbObjects = [];
-      _sbSelected = null;
+      _sbObjects = []; _sbSelected = null;
       document.getElementById('studioTransform').style.display = 'none';
+      document.getElementById('sbDimLabel').style.display = 'none';
       _sbRenderList();
     }
 
+    // ── Undo / Redo ───────────────────────────────────────────────────────────────
+    function _sbSerialize() {
+      return JSON.stringify(_sbObjects.map(o => ({
+        id: o.id, type: o.type, name: o.name, color: o.color,
+        px: o.mesh.position.x, py: o.mesh.position.y, pz: o.mesh.position.z,
+        sx: o.mesh.scale.x,    sy: o.mesh.scale.y,    sz: o.mesh.scale.z,
+        rx: o.mesh.rotation.x, ry: o.mesh.rotation.y, rz: o.mesh.rotation.z,
+      })));
+    }
+    function _sbPushUndo() {
+      _sbUndoStack.push(_sbSerialize());
+      if (_sbUndoStack.length > 40) _sbUndoStack.shift();
+      _sbRedoStack = [];
+    }
+    function _sbRestore(json) {
+      const data = JSON.parse(json);
+      _sbObjects.forEach(o => { _sbScene.remove(o.mesh); o.mesh.geometry.dispose(); });
+      _sbObjects = [];
+      _sbIdSeq   = 0;
+      for (const d of data) {
+        const mat  = new THREE.MeshStandardMaterial({ color: d.color || '#7c6af7', metalness: 0.15, roughness: 0.55 });
+        const mesh = new THREE.Mesh(_sbGeomFor(d.type), mat);
+        mesh.position.set(d.px, d.py, d.pz);
+        mesh.scale.set(d.sx, d.sy, d.sz);
+        mesh.rotation.set(d.rx, d.ry, d.rz);
+        mesh.castShadow = true;
+        mesh.userData.studioId = d.id;
+        _sbScene.add(mesh);
+        _sbObjects.push({ id: d.id, type: d.type, name: d.name, color: d.color, mesh });
+        _sbIdSeq = Math.max(_sbIdSeq, d.id);
+      }
+      _sbSelected = _sbObjects.length ? _sbObjects[_sbObjects.length - 1].id : null;
+      if (_sbSelected) _sbSelectObj(_sbSelected);
+      else { document.getElementById('studioTransform').style.display = 'none'; _sbRenderList(); }
+    }
+    function sbUndo() {
+      if (!_sbUndoStack.length) { showToast('Nothing to undo.'); return; }
+      _sbRedoStack.push(_sbSerialize());
+      _sbRestore(_sbUndoStack.pop());
+    }
+    function sbRedo() {
+      if (!_sbRedoStack.length) { showToast('Nothing to redo.'); return; }
+      _sbUndoStack.push(_sbSerialize());
+      _sbRestore(_sbRedoStack.pop());
+    }
+
+    // ── Export ────────────────────────────────────────────────────────────────────
     function studioExportSTL() {
       if (_sbObjects.length === 0) { showToast('Add at least one shape first.'); return; }
       const buf = _buildSTL(_sbObjects.map(o => o.mesh));
@@ -2364,7 +2632,10 @@
       showToast('STL exported ✓');
     }
 
-    // ===================== IMAGE → 3D ============================================
+    // ════════════════════════════════════════════════════════════════════════════
+    // IMAGE → 3D
+    // ════════════════════════════════════════════════════════════════════════════
+
     function _igInit() {
       const canvas = document.getElementById('studioImgCanvas');
       _igRenderer = new THREE.WebGLRenderer({ canvas, antialias: true });
@@ -2390,7 +2661,7 @@
       const canvas = document.getElementById('studioImgCanvas');
       if (!canvas || !_igRenderer) return;
       const w = canvas.parentElement.clientWidth;
-      const h = Math.max(340, Math.round(w * 0.55));
+      const h = Math.max(320, Math.round(w * 0.56));
       _igRenderer.setSize(w, h);
       if (_igCamera) { _igCamera.aspect = w / h; _igCamera.updateProjectionMatrix(); }
     }
@@ -2413,8 +2684,7 @@
         img.onload = () => {
           _igImgEl = img;
           const prev = document.getElementById('studioImgPreview');
-          prev.src = ev.target.result;
-          prev.style.display = 'block';
+          prev.src = ev.target.result; prev.style.display = 'block';
           document.getElementById('imgUploadArea').style.display = 'none';
         };
         img.src = ev.target.result;
@@ -2425,75 +2695,61 @@
     function studioGenerateFromImage() {
       if (!_igImgEl) { showToast('Upload an image first.'); return; }
       const status = document.getElementById('imgStatus');
-      status.textContent = 'Generating…';
-      status.style.display = 'block';
+      status.textContent = 'Generating mesh…'; status.style.display = 'block'; status.style.color = 'var(--text3)';
 
-      // Sample settings
       const res    = +document.getElementById('imgRes').value;
       const hScale = +document.getElementById('imgHt').value;
       const base   = +document.getElementById('imgBase').value;
       const invert = document.getElementById('imgInvert').checked;
 
-      // Draw image to offscreen canvas at target resolution
+      // Sample image pixels
       const oc = document.createElement('canvas');
       oc.width = res; oc.height = res;
       const ctx = oc.getContext('2d');
       ctx.drawImage(_igImgEl, 0, 0, res, res);
       const px = ctx.getImageData(0, 0, res, res).data;
 
-      // Build PlaneGeometry vertex grid
+      // Build heightmap mesh
       const cols = res, rows = res;
       const geom = new THREE.PlaneGeometry(100, 100, cols - 1, rows - 1);
-      geom.rotateX(-Math.PI / 2); // lay flat
-
+      geom.rotateX(-Math.PI / 2);
       const posArr = geom.attributes.position.array;
       for (let r = 0; r < rows; r++) {
         for (let c = 0; c < cols; c++) {
           const pi   = (r * cols + c) * 4;
           const gray = (px[pi] * 0.299 + px[pi+1] * 0.587 + px[pi+2] * 0.114) / 255;
-          const h    = invert ? (1 - gray) : gray;
-          const vi   = (r * cols + c) * 3;
-          posArr[vi + 1] = h * hScale + base; // Y = height
+          const h    = invert ? gray : (1 - gray);
+          posArr[(r * cols + c) * 3 + 1] = h * hScale + base;
         }
       }
       geom.computeVertexNormals();
 
-      // Add solid base (simple box underneath)
-      const totalH = hScale + base;
+      // Remove old meshes
+      _igScene.children.filter(c => c.userData.isHM || c.userData.isBase)
+        .forEach(c => { _igScene.remove(c); c.geometry?.dispose(); });
+
+      const surf = new THREE.Mesh(geom, new THREE.MeshStandardMaterial({ color: 0x7c6af7, metalness: 0.1, roughness: 0.55 }));
+      surf.userData.isHM = true; surf.position.y = base; surf.castShadow = true;
+
       const baseMesh = new THREE.Mesh(
-        new THREE.BoxGeometry(100, base, 100),
-        new THREE.MeshStandardMaterial({ color: 0x7c6af7, metalness: 0.1, roughness: 0.6 })
+        new THREE.BoxGeometry(100, Math.max(base, 0.01), 100),
+        new THREE.MeshStandardMaterial({ color: 0x5a4ac7, metalness: 0.1, roughness: 0.6 })
       );
-      baseMesh.position.y = base / 2;
+      baseMesh.userData.isBase = true; baseMesh.position.y = base / 2;
 
-      // Remove old mesh
-      if (_igGeom) {
-        _igScene.children.filter(c => c.userData.isHeightmap || c.userData.isBase)
-          .forEach(c => { _igScene.remove(c); c.geometry?.dispose(); });
-      }
-      _igGeom = geom;
-
-      const surf = new THREE.Mesh(geom, new THREE.MeshStandardMaterial({ color: 0x7c6af7, metalness: 0.1, roughness: 0.6 }));
-      surf.userData.isHeightmap = true;
-      surf.position.y = base;
-      surf.castShadow = true;
-      baseMesh.userData.isBase = true;
-
-      _igScene.add(surf);
-      _igScene.add(baseMesh);
-      _igOrbit.setTarget(new THREE.Vector3(0, totalH / 2, 0));
+      _igScene.add(surf); _igScene.add(baseMesh);
+      _igOrbit.setTarget(new THREE.Vector3(0, (hScale + base) / 2, 0));
       _igStartRender();
 
       document.getElementById('imgExportBtn').style.display = '';
-      status.textContent = `✅ ${cols}×${rows} mesh generated — ${cols*rows*2} triangles`;
+      status.textContent = `✅ ${cols}×${rows} grid · ${(cols*rows*2).toLocaleString()} triangles`;
       status.style.color = 'var(--green)';
     }
 
     function studioExportImageSTL() {
-      const meshes = _igScene.children.filter(c => c.isMesh && (c.userData.isHeightmap || c.userData.isBase));
-      if (meshes.length === 0) { showToast('Generate a model first.'); return; }
-      const buf = _buildSTL(meshes);
-      _downloadSTL(buf, 'profab-image-model.stl');
+      const meshes = _igScene.children.filter(c => c.isMesh && (c.userData.isHM || c.userData.isBase));
+      if (!meshes.length) { showToast('Generate a model first.'); return; }
+      _downloadSTL(_buildSTL(meshes), 'profab-relief.stl');
       showToast('STL exported ✓');
     }
     // ===== END 3D STUDIO ==========================================================
