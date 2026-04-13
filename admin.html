@@ -646,55 +646,88 @@
         </div>
       </div>
 
-      <!-- ══ IMAGE → 3D ══════════════════════════════════════════════════════════ -->
+      <!-- ══ IMAGE → 3D (LITHOPHANE) ══════════════════════════════════════════ -->
       <div id="studioImagerPanel" style="display:none;">
-        <div style="display:flex;gap:14px;flex-wrap:wrap;">
 
+        <!-- Model type selector -->
+        <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:12px;padding:10px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;">
+          <span style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;margin-right:4px;">Shape:</span>
+          <button id="ltBtn_flat"     onclick="setLithoType('flat')"     class="btn-primary" style="font-size:12px;padding:5px 12px;">&#9633; Flat</button>
+          <button id="ltBtn_curved"   onclick="setLithoType('curved')"   class="tab-btn"     style="font-size:12px;padding:5px 12px;">&#11835; Curved</button>
+          <button id="ltBtn_cylinder" onclick="setLithoType('cylinder')" class="tab-btn"     style="font-size:12px;padding:5px 12px;">&#9649; Cylinder</button>
+          <button id="ltBtn_round"    onclick="setLithoType('round')"    class="tab-btn"     style="font-size:12px;padding:5px 12px;">&#9898; Round</button>
+          <button id="ltBtn_heart"    onclick="setLithoType('heart')"    class="tab-btn"     style="font-size:12px;padding:5px 12px;">&#10084; Heart</button>
+          <button id="ltBtn_ornament" onclick="setLithoType('ornament')" class="tab-btn"     style="font-size:12px;padding:5px 12px;">&#9670; Ornament</button>
+        </div>
+
+        <div style="display:flex;gap:14px;flex-wrap:wrap;">
           <!-- Controls -->
           <div style="flex:0 0 265px;min-width:220px;display:flex;flex-direction:column;gap:10px;">
+
+            <!-- Upload -->
             <div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px;">
               <div style="font-size:10px;font-weight:700;color:var(--text3);letter-spacing:.08em;margin-bottom:8px;text-transform:uppercase;">Upload Image</div>
               <div id="imgUploadArea" onclick="document.getElementById('studioImgInput').click()"
                 style="border:2px dashed var(--border);border-radius:10px;padding:20px 12px;text-align:center;cursor:pointer;color:var(--text3);font-size:13px;transition:border-color .2s;"
                 onmouseenter="this.style.borderColor='var(--accent)'" onmouseleave="this.style.borderColor='var(--border)'">
-                <div style="font-size:28px;margin-bottom:6px;">🖼️</div>
-                <div>Click to upload<br><span style="font-size:11px;">JPG · PNG · WebP<br>Dark pixels = raised, light = flat</span></div>
+                <div style="font-size:28px;margin-bottom:6px;">&#128444;&#65039;</div>
+                <div>Click to upload<br><span style="font-size:11px;">JPG &middot; PNG &middot; WebP<br><b style="color:var(--accent);">Dark = thick &middot; Light = thin</b></span></div>
               </div>
               <input type="file" id="studioImgInput" accept="image/*" style="display:none;" onchange="studioLoadImage(event)" />
               <img id="studioImgPreview" style="display:none;width:100%;border-radius:8px;margin-top:8px;max-height:120px;object-fit:contain;" alt="preview" />
             </div>
 
+            <!-- Lithophane settings -->
             <div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px;">
-              <div style="font-size:10px;font-weight:700;color:var(--text3);letter-spacing:.08em;margin-bottom:10px;text-transform:uppercase;">Settings</div>
-              <div style="display:flex;flex-direction:column;gap:10px;font-size:12px;">
-                <div>
-                  <div style="display:flex;justify-content:space-between;margin-bottom:4px;"><span style="color:var(--text2);">Resolution (grid size)</span><span id="imgResVal" style="color:var(--accent);font-weight:600;">80</span></div>
-                  <input type="range" id="imgRes" min="20" max="200" value="80" oninput="document.getElementById('imgResVal').textContent=this.value" style="width:100%;accent-color:var(--accent);" />
+              <div style="font-size:10px;font-weight:700;color:var(--text3);letter-spacing:.08em;margin-bottom:10px;text-transform:uppercase;">Lithophane Settings</div>
+              <div style="display:flex;flex-direction:column;gap:8px;font-size:12px;">
+                <div id="ltWidRow">
+                  <div style="display:flex;justify-content:space-between;margin-bottom:3px;"><span id="ltWidLbl" style="color:var(--text2);">Width (mm)</span><span id="ltWidVal" style="color:var(--accent);font-weight:600;">100</span></div>
+                  <input type="range" id="ltWid" min="20" max="300" value="100" oninput="document.getElementById('ltWidVal').textContent=this.value" style="width:100%;accent-color:var(--accent);" />
+                </div>
+                <div id="ltHtRow">
+                  <div style="display:flex;justify-content:space-between;margin-bottom:3px;"><span style="color:var(--text2);">Height (mm)</span><span id="ltHtVal" style="color:var(--accent);font-weight:600;">75</span></div>
+                  <input type="range" id="ltHt" min="20" max="300" value="75" oninput="document.getElementById('ltHtVal').textContent=this.value" style="width:100%;accent-color:var(--accent);" />
                 </div>
                 <div>
-                  <div style="display:flex;justify-content:space-between;margin-bottom:4px;"><span style="color:var(--text2);">Height (mm)</span><span id="imgHtVal" style="color:var(--accent);font-weight:600;">8</span></div>
-                  <input type="range" id="imgHt" min="1" max="40" value="8" oninput="document.getElementById('imgHtVal').textContent=this.value" style="width:100%;accent-color:var(--accent);" />
+                  <div style="display:flex;justify-content:space-between;margin-bottom:3px;"><span style="color:var(--text2);">Max thickness &mdash; dark (mm)</span><span id="ltMaxTVal" style="color:var(--accent);font-weight:600;">3.0</span></div>
+                  <input type="range" id="ltMaxT" min="1" max="8" step="0.5" value="3" oninput="document.getElementById('ltMaxTVal').textContent=(+this.value).toFixed(1)" style="width:100%;accent-color:var(--accent);" />
                 </div>
                 <div>
-                  <div style="display:flex;justify-content:space-between;margin-bottom:4px;"><span style="color:var(--text2);">Base thickness (mm)</span><span id="imgBaseVal" style="color:var(--accent);font-weight:600;">2</span></div>
-                  <input type="range" id="imgBase" min="0" max="10" value="2" oninput="document.getElementById('imgBaseVal').textContent=this.value" style="width:100%;accent-color:var(--accent);" />
+                  <div style="display:flex;justify-content:space-between;margin-bottom:3px;"><span style="color:var(--text2);">Min thickness &mdash; light (mm)</span><span id="ltMinTVal" style="color:var(--accent);font-weight:600;">0.6</span></div>
+                  <input type="range" id="ltMinT" min="0.2" max="3" step="0.1" value="0.6" oninput="document.getElementById('ltMinTVal').textContent=(+this.value).toFixed(1)" style="width:100%;accent-color:var(--accent);" />
+                </div>
+                <div>
+                  <div style="display:flex;justify-content:space-between;margin-bottom:3px;"><span style="color:var(--text2);">Resolution (columns)</span><span id="ltResVal" style="color:var(--accent);font-weight:600;">120</span></div>
+                  <input type="range" id="ltRes" min="30" max="300" value="120" oninput="document.getElementById('ltResVal').textContent=this.value" style="width:100%;accent-color:var(--accent);" />
+                </div>
+                <div id="ltBordRow">
+                  <div style="display:flex;justify-content:space-between;margin-bottom:3px;"><span style="color:var(--text2);">Border (mm)</span><span id="ltBordVal" style="color:var(--accent);font-weight:600;">3</span></div>
+                  <input type="range" id="ltBord" min="0" max="20" value="3" oninput="document.getElementById('ltBordVal').textContent=this.value" style="width:100%;accent-color:var(--accent);" />
                 </div>
                 <label style="display:flex;align-items:center;gap:8px;cursor:pointer;color:var(--text2);">
-                  <input type="checkbox" id="imgInvert" style="accent-color:var(--accent);" /> Invert (white = raised)
+                  <input type="checkbox" id="ltInvert" style="accent-color:var(--accent);" /> Invert (light = thick)
                 </label>
               </div>
             </div>
 
+            <!-- Shape-specific options -->
+            <div id="ltTypeSettings" style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px;display:none;">
+              <div style="font-size:10px;font-weight:700;color:var(--text3);letter-spacing:.08em;margin-bottom:10px;text-transform:uppercase;">Shape Options</div>
+              <div id="ltTypeBody" style="display:flex;flex-direction:column;gap:8px;font-size:12px;"></div>
+            </div>
+
+            <!-- Actions -->
             <div style="display:flex;flex-direction:column;gap:6px;">
-              <button class="btn-primary" onclick="studioGenerateFromImage()" style="font-size:13px;">Generate 3D Model →</button>
-              <button id="imgExportBtn" class="tab-btn" onclick="studioExportImageSTL()" style="font-size:12px;display:none;">↓ Export STL</button>
+              <button class="btn-primary" onclick="studioGenerateFromImage()" style="font-size:13px;">Generate Lithophane &#8594;</button>
+              <button id="imgExportBtn" class="tab-btn" onclick="studioExportImageSTL()" style="font-size:12px;display:none;">&#8595; Export STL</button>
             </div>
             <div id="imgStatus" style="font-size:12px;color:var(--text3);display:none;"></div>
           </div>
 
           <!-- Viewport -->
           <div style="flex:1;min-width:260px;display:flex;flex-direction:column;gap:5px;">
-            <div style="font-size:11px;color:var(--text3);"><b>Left-drag</b> orbit · <b>Right-drag</b> pan · <b>Scroll</b> zoom</div>
+            <div style="font-size:11px;color:var(--text3);"><b>Left-drag</b> orbit &middot; <b>Right-drag</b> pan &middot; <b>Scroll</b> zoom</div>
             <canvas id="studioImgCanvas" style="width:100%;border-radius:12px;background:#0e0e1a;display:block;touch-action:none;cursor:grab;"></canvas>
           </div>
         </div>
@@ -2054,7 +2087,8 @@
 
     // ── Image-to-3D state ────────────────────────────────────────────────────────
     let _igRenderer, _igScene, _igCamera, _igOrbit, _igAnimId;
-    let _igImgEl = null;
+    let _igImgEl = null, _igMesh = null;
+    let _lithoType = 'flat';
 
     // ── Mode switcher ────────────────────────────────────────────────────────────
     function setStudioMode(mode) {
@@ -2633,26 +2667,64 @@
     }
 
     // ════════════════════════════════════════════════════════════════════════════
-    // IMAGE → 3D
+    // IMAGE → 3D  (LITHOPHANE GENERATOR)
     // ════════════════════════════════════════════════════════════════════════════
+
+    function setLithoType(t) {
+      _lithoType = t;
+      ['flat','curved','cylinder','round','heart','ornament'].forEach(n => {
+        const b = document.getElementById('ltBtn_' + n);
+        if (b) b.className = n === t ? 'btn-primary' : 'tab-btn';
+      });
+      // Height row: hide for shapes that use Width as diameter
+      const noH = (t === 'round' || t === 'ornament');
+      const htRow = document.getElementById('ltHtRow');
+      if (htRow) htRow.style.display = noH ? 'none' : '';
+      // Width label rename
+      const wl = document.getElementById('ltWidLbl');
+      if (wl) wl.textContent = noH ? 'Diameter (mm)' : 'Width (mm)';
+      // Type-specific panel
+      const ts = document.getElementById('ltTypeSettings');
+      const tb = document.getElementById('ltTypeBody');
+      let html = '';
+      if (t === 'curved') {
+        html = `<div><div style="display:flex;justify-content:space-between;margin-bottom:3px;">
+          <span style="color:var(--text2);">Arc angle (&deg;)</span>
+          <span id="ltArcVal" style="color:var(--accent);font-weight:600;">90</span></div>
+          <input type="range" id="ltArc" min="20" max="270" value="90"
+            oninput="document.getElementById('ltArcVal').textContent=this.value"
+            style="width:100%;accent-color:var(--accent);" /></div>`;
+      } else if (t === 'cylinder') {
+        html = `<div><div style="display:flex;justify-content:space-between;margin-bottom:3px;">
+          <span style="color:var(--text2);">Diameter (mm)</span>
+          <span id="ltDiamVal" style="color:var(--accent);font-weight:600;">80</span></div>
+          <input type="range" id="ltDiam" min="20" max="250" value="80"
+            oninput="document.getElementById('ltDiamVal').textContent=this.value"
+            style="width:100%;accent-color:var(--accent);" /></div>`;
+      } else if (t === 'round') {
+        html = `<div style="color:var(--text3);font-size:11px;line-height:1.6;">Circular disc lithophane. Diameter set by Width. Image maps to the full circle.</div>`;
+      } else if (t === 'heart') {
+        html = `<div style="color:var(--text3);font-size:11px;line-height:1.6;">Heart-shaped panel. Image fills the heart interior; border area uses max thickness.</div>`;
+      } else if (t === 'ornament') {
+        html = `<div style="color:var(--text3);font-size:11px;line-height:1.6;">Circular ornament with a hanging slot at the top. Diameter set by Width.</div>`;
+      }
+      if (tb) tb.innerHTML = html;
+      if (ts) ts.style.display = html ? '' : 'none';
+    }
 
     function _igInit() {
       const canvas = document.getElementById('studioImgCanvas');
       _igRenderer = new THREE.WebGLRenderer({ canvas, antialias: true });
       _igRenderer.setPixelRatio(Math.min(devicePixelRatio, 2));
-      _igRenderer.shadowMap.enabled = true;
-
       _igScene = new THREE.Scene();
       _igScene.background = new THREE.Color(0x0e0e1a);
-      _igScene.add(new THREE.GridHelper(200, 20, 0x2a2a40, 0x1e1e30));
-      _igScene.add(new THREE.AmbientLight(0xffffff, 0.45));
-      const sun2 = new THREE.DirectionalLight(0xffffff, 1.0);
-      sun2.position.set(50, 80, 50); sun2.castShadow = true;
-      _igScene.add(sun2);
-
-      _igCamera = new THREE.PerspectiveCamera(45, 1, 0.1, 2000);
+      _igScene.add(new THREE.GridHelper(300, 30, 0x2a2a40, 0x1e1e30));
+      _igScene.add(new THREE.AmbientLight(0xffffff, 0.55));
+      const sun = new THREE.DirectionalLight(0xffffff, 1.0); sun.position.set(60, 120, 80); _igScene.add(sun);
+      const back = new THREE.DirectionalLight(0xfff4d0, 0.5); back.position.set(0, 0, -200); _igScene.add(back);
+      _igCamera = new THREE.PerspectiveCamera(45, 1, 0.1, 3000);
       _igOrbit  = _makeOrbit(_igCamera, canvas);
-
+      _igOrbit.setPreset({ theta: 0.4, phi: 1.1, r: 280 });
       _igResize();
       new ResizeObserver(_igResize).observe(canvas.parentElement);
     }
@@ -2661,7 +2733,7 @@
       const canvas = document.getElementById('studioImgCanvas');
       if (!canvas || !_igRenderer) return;
       const w = canvas.parentElement.clientWidth;
-      const h = Math.max(320, Math.round(w * 0.56));
+      const h = Math.max(340, Math.round(w * 0.58));
       _igRenderer.setSize(w, h);
       if (_igCamera) { _igCamera.aspect = w / h; _igCamera.updateProjectionMatrix(); }
     }
@@ -2669,15 +2741,11 @@
     function _igStartRender() {
       if (!_igRenderer) return;
       if (_igAnimId) cancelAnimationFrame(_igAnimId);
-      (function loop() {
-        _igAnimId = requestAnimationFrame(loop);
-        _igRenderer.render(_igScene, _igCamera);
-      })();
+      (function loop() { _igAnimId = requestAnimationFrame(loop); _igRenderer.render(_igScene, _igCamera); })();
     }
 
     function studioLoadImage(e) {
-      const file = e.target.files[0];
-      if (!file) return;
+      const file = e.target.files[0]; if (!file) return;
       const reader = new FileReader();
       reader.onload = ev => {
         const img = new Image();
@@ -2692,65 +2760,295 @@
       reader.readAsDataURL(file);
     }
 
+    // ── Pixel helpers ─────────────────────────────────────────────────────────────
+    function _sampleGray(cols, rows) {
+      const oc = document.createElement('canvas'); oc.width = cols; oc.height = rows;
+      const ctx = oc.getContext('2d'); ctx.drawImage(_igImgEl, 0, 0, cols, rows);
+      const px = ctx.getImageData(0, 0, cols, rows).data;
+      const g  = new Float32Array(cols * rows);
+      for (let i = 0; i < g.length; i++)
+        g[i] = (px[i*4]*0.299 + px[i*4+1]*0.587 + px[i*4+2]*0.114) / 255;
+      return g;
+    }
+    // Lithophane rule: dark (g≈0) → thick, light (g≈1) → thin
+    function _gToThk(g, maxT, minT, inv) {
+      const t = inv ? g : (1 - g);
+      return minT + t * (maxT - minT);
+    }
+
+    // ── Geometry builders ─────────────────────────────────────────────────────────
+
+    // Closed rectangular grid (flat / curved)
+    function _lithoGeom(fv, bv, cols, rows) {
+      const N = cols * rows;
+      const pos = new Float32Array(N * 6); pos.set(fv, 0); pos.set(bv, N * 3);
+      const idx = [];
+      const F = (r,c) => r*cols+c, B = (r,c) => N+r*cols+c;
+      for (let r = 0; r < rows-1; r++) {
+        for (let c = 0; c < cols-1; c++) {
+          const a=F(r,c),b=F(r,c+1),d=F(r+1,c),e=F(r+1,c+1);
+          idx.push(a,b,e, a,e,d);                                                       // front
+          idx.push(B(r,c),B(r+1,c+1),B(r,c+1), B(r,c),B(r+1,c),B(r+1,c+1));          // back
+        }
+      }
+      for (let r = 0; r < rows-1; r++) {
+        idx.push(F(r,0),B(r+1,0),B(r,0),         F(r,0),F(r+1,0),B(r+1,0));           // left wall
+        idx.push(F(r,cols-1),B(r,cols-1),B(r+1,cols-1), F(r,cols-1),B(r+1,cols-1),F(r+1,cols-1)); // right
+      }
+      for (let c = 0; c < cols-1; c++) {
+        idx.push(F(0,c),B(0,c),B(0,c+1),         F(0,c),B(0,c+1),F(0,c+1));           // bottom
+        idx.push(F(rows-1,c),F(rows-1,c+1),B(rows-1,c+1), F(rows-1,c),B(rows-1,c+1),B(rows-1,c)); // top
+      }
+      const g = new THREE.BufferGeometry();
+      g.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+      g.setIndex(idx); g.computeVertexNormals(); return g;
+    }
+
+    // Closed masked grid: thick[i]==0 means vertex is outside the shape
+    function _lithoMaskedGeom(fv, bv, thick, cols, rows) {
+      const N = cols * rows;
+      const pos = new Float32Array(N * 6); pos.set(fv, 0); pos.set(bv, N * 3);
+      const idx = [];
+      const F = (r,c) => r*cols+c, B = (r,c) => N+r*cols+c;
+      // quad "inside" only if all 4 corners are non-zero
+      const qIn = (r,c) =>
+        r>=0&&r<rows-1&&c>=0&&c<cols-1 &&
+        thick[r*cols+c]>0 && thick[r*cols+c+1]>0 &&
+        thick[(r+1)*cols+c]>0 && thick[(r+1)*cols+c+1]>0;
+
+      for (let r = 0; r < rows-1; r++) {
+        for (let c = 0; c < cols-1; c++) {
+          if (!qIn(r,c)) continue;
+          const a=F(r,c),b=F(r,c+1),d=F(r+1,c),e=F(r+1,c+1);
+          idx.push(a,b,e, a,e,d);
+          idx.push(B(r,c),B(r+1,c+1),B(r,c+1), B(r,c),B(r+1,c),B(r+1,c+1));
+        }
+      }
+      // Boundary walls wherever an inside quad borders an outside (or grid edge)
+      for (let r = 0; r < rows-1; r++) {
+        for (let c = 0; c <= cols-1; c++) {
+          const lIn = qIn(r, c-1), rIn = qIn(r, c);
+          if       (rIn && !lIn) { idx.push(F(r,c),B(r+1,c),B(r,c), F(r,c),F(r+1,c),B(r+1,c)); }
+          else if  (lIn && !rIn) { idx.push(F(r,c),B(r,c),B(r+1,c), F(r,c),B(r+1,c),F(r+1,c)); }
+        }
+      }
+      for (let c = 0; c < cols-1; c++) {
+        for (let r = 0; r <= rows-1; r++) {
+          const bIn = qIn(r, c), aIn = qIn(r-1, c);
+          if  (bIn && !aIn) { idx.push(F(r,c),B(r,c),B(r,c+1), F(r,c),B(r,c+1),F(r,c+1)); }
+          elif (aIn && !bIn) { idx.push(F(r,c),F(r,c+1),B(r,c+1), F(r,c),B(r,c+1),B(r,c)); }
+        }
+      }
+      const g = new THREE.BufferGeometry();
+      g.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+      g.setIndex(idx); g.computeVertexNormals(); return g;
+    }
+
+    // ── Per-shape builders ────────────────────────────────────────────────────────
+
+    function _buildFlat(gray, cols, rows, W, H, maxT, minT, inv, border) {
+      const bC = Math.round(border*(cols-1)/W), bR = Math.round(border*(rows-1)/H);
+      const dx = W/(cols-1), dy = H/(rows-1), N = cols*rows;
+      const fv = new Float32Array(N*3), bv = new Float32Array(N*3);
+      for (let r = 0; r < rows; r++) { for (let c = 0; c < cols; c++) {
+        const i = r*cols+c;
+        const inB = c<bC || c>cols-1-bC || r<bR || r>rows-1-bR;
+        const t = inB ? maxT : _gToThk(gray[i], maxT, minT, inv);
+        fv[i*3]=c*dx-W/2; fv[i*3+1]=r*dy-H/2; fv[i*3+2]=t;
+        bv[i*3]=c*dx-W/2; bv[i*3+1]=r*dy-H/2; bv[i*3+2]=0;
+      }}
+      return _lithoGeom(fv, bv, cols, rows);
+    }
+
+    function _buildCurved(gray, cols, rows, W, H, maxT, minT, inv, border, arcDeg) {
+      const arcRad = arcDeg * Math.PI / 180;
+      const R = W / arcRad;   // radius so arc length == W
+      const bC = Math.round(border*(cols-1)/W), bR = Math.round(border*(rows-1)/H);
+      const dy = H/(rows-1), N = cols*rows;
+      const fv = new Float32Array(N*3), bv = new Float32Array(N*3);
+      for (let r = 0; r < rows; r++) { for (let c = 0; c < cols; c++) {
+        const i = r*cols+c;
+        const inB = c<bC || c>cols-1-bC || r<bR || r>rows-1-bR;
+        const t = inB ? maxT : _gToThk(gray[i], maxT, minT, inv);
+        const theta = (c/(cols-1) - 0.5) * arcRad;
+        const y = r*dy - H/2;
+        // Offset so centre of arc sits at z=0
+        fv[i*3]=(R+t)*Math.sin(theta); fv[i*3+1]=y; fv[i*3+2]=(R+t)*Math.cos(theta)-R;
+        bv[i*3]=R*Math.sin(theta);     bv[i*3+1]=y; bv[i*3+2]=R*Math.cos(theta)-R;
+      }}
+      return _lithoGeom(fv, bv, cols, rows);
+    }
+
+    function _buildCylinder(gray, cols, rows, diam, H, maxT, minT, inv) {
+      const R = diam/2, dy = H/(rows-1), N = cols*rows;
+      const fv = new Float32Array(N*3), bv = new Float32Array(N*3);
+      for (let r = 0; r < rows; r++) { for (let c = 0; c < cols; c++) {
+        const i = r*cols+c, t = _gToThk(gray[i], maxT, minT, inv);
+        const th = (c/cols)*Math.PI*2, y = r*dy - H/2;
+        fv[i*3]=(R+t)*Math.cos(th); fv[i*3+1]=y; fv[i*3+2]=(R+t)*Math.sin(th);
+        bv[i*3]=R*Math.cos(th);     bv[i*3+1]=y; bv[i*3+2]=R*Math.sin(th);
+      }}
+      const idx = [];
+      const F = (r,c) => r*cols+c, B = (r,c) => N+r*cols+c;
+      const pos = new Float32Array(N*6); pos.set(fv,0); pos.set(bv,N*3);
+      for (let r = 0; r < rows-1; r++) { for (let c = 0; c < cols; c++) {
+        const cn = (c+1)%cols;
+        idx.push(F(r,c),F(r,cn),F(r+1,cn),       F(r,c),F(r+1,cn),F(r+1,c));    // outer
+        idx.push(B(r,c),B(r+1,cn),B(r,cn),        B(r,c),B(r+1,c),B(r+1,cn));    // inner
+      }}
+      for (let c = 0; c < cols; c++) {   // annular top / bottom caps
+        const cn = (c+1)%cols;
+        idx.push(F(0,c),B(0,cn),B(0,c),           F(0,c),F(0,cn),B(0,cn));        // bottom
+        idx.push(F(rows-1,c),B(rows-1,c),B(rows-1,cn), F(rows-1,c),B(rows-1,cn),F(rows-1,cn)); // top
+      }
+      const g = new THREE.BufferGeometry();
+      g.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+      g.setIndex(idx); g.computeVertexNormals(); return g;
+    }
+
+    function _buildRound(gray, cols, W, maxT, minT, inv, border) {
+      const rows = cols, R = W/2, dx = W/(cols-1), N = cols*rows;
+      const bFrac = border / R;
+      const fv = new Float32Array(N*3), bv = new Float32Array(N*3), thick = new Float32Array(N);
+      for (let r = 0; r < rows; r++) { for (let c = 0; c < cols; c++) {
+        const i = r*cols+c;
+        const u = c/(cols-1)*2-1, v = r/(rows-1)*2-1, d = Math.sqrt(u*u+v*v);
+        if      (d > 1)          thick[i] = 0;
+        else if (d > 1-bFrac)    thick[i] = maxT;
+        else                     thick[i] = _gToThk(gray[i], maxT, minT, inv);
+        const x=c*dx-R, y=r*dx-R;
+        fv[i*3]=x; fv[i*3+1]=y; fv[i*3+2]=thick[i];
+        bv[i*3]=x; bv[i*3+1]=y; bv[i*3+2]=0;
+      }}
+      return _lithoMaskedGeom(fv, bv, thick, cols, rows);
+    }
+
+    function _buildHeart(gray, cols, rows, W, H, maxT, minT, inv, border) {
+      const N = cols*rows, dx = W/(cols-1), dy = H/(rows-1);
+      const fv = new Float32Array(N*3), bv = new Float32Array(N*3), thick = new Float32Array(N);
+      const inHeart = (u, v) => {
+        const x = u, y = v - 0.15;
+        return Math.pow(x*x + y*y - 1, 3) - x*x*y*y*y <= 0;
+      };
+      const bf = border / Math.min(W, H) * 1.2;
+      for (let r = 0; r < rows; r++) { for (let c = 0; c < cols; c++) {
+        const i = r*cols+c;
+        const u = c/(cols-1)*2.4-1.2, v = r/(rows-1)*2.4-1.2;
+        if      (!inHeart(u, v))                            thick[i] = 0;
+        else if (!inHeart(u*(1-bf*0.9), v*(1-bf*0.9)))     thick[i] = maxT;
+        else                                                thick[i] = _gToThk(gray[i], maxT, minT, inv);
+        const x=c*dx-W/2, y=r*dy-H/2;
+        fv[i*3]=x; fv[i*3+1]=y; fv[i*3+2]=thick[i];
+        bv[i*3]=x; bv[i*3+1]=y; bv[i*3+2]=0;
+      }}
+      return _lithoMaskedGeom(fv, bv, thick, cols, rows);
+    }
+
+    function _buildOrnament(gray, cols, W, maxT, minT, inv, border) {
+      const rows = cols, R = W/2, dx = W/(cols-1), N = cols*rows;
+      const bFrac = border / R;
+      const fv = new Float32Array(N*3), bv = new Float32Array(N*3), thick = new Float32Array(N);
+      for (let r = 0; r < rows; r++) { for (let c = 0; c < cols; c++) {
+        const i = r*cols+c;
+        const u = c/(cols-1)*2-1, v = r/(rows-1)*2-1, d = Math.sqrt(u*u+v*v);
+        const inSlot = Math.abs(u) < 0.09 && v > 0.80;   // hanging slot near top
+        if      (inSlot)         thick[i] = 0;
+        else if (d > 1)          thick[i] = 0;
+        else if (d > 1-bFrac)    thick[i] = maxT;
+        else                     thick[i] = _gToThk(gray[i], maxT, minT, inv);
+        const x=c*dx-R, y=r*dx-R;
+        fv[i*3]=x; fv[i*3+1]=y; fv[i*3+2]=thick[i];
+        bv[i*3]=x; bv[i*3+1]=y; bv[i*3+2]=0;
+      }}
+      return _lithoMaskedGeom(fv, bv, thick, cols, rows);
+    }
+
+    // ── Main generator ────────────────────────────────────────────────────────────
     function studioGenerateFromImage() {
       if (!_igImgEl) { showToast('Upload an image first.'); return; }
       const status = document.getElementById('imgStatus');
-      status.textContent = 'Generating mesh…'; status.style.display = 'block'; status.style.color = 'var(--text3)';
+      status.textContent = 'Generating\u2026'; status.style.display = 'block'; status.style.color = 'var(--text3)';
 
-      const res    = +document.getElementById('imgRes').value;
-      const hScale = +document.getElementById('imgHt').value;
-      const base   = +document.getElementById('imgBase').value;
-      const invert = document.getElementById('imgInvert').checked;
+      const W    = +document.getElementById('ltWid').value;
+      const H    = +document.getElementById('ltHt').value;
+      const maxT = +document.getElementById('ltMaxT').value;
+      const minT = Math.min(+document.getElementById('ltMinT').value, maxT - 0.1);
+      const res  = +document.getElementById('ltRes').value;
+      const bord = +document.getElementById('ltBord').value;
+      const inv  = document.getElementById('ltInvert').checked;
 
-      // Sample image pixels
-      const oc = document.createElement('canvas');
-      oc.width = res; oc.height = res;
-      const ctx = oc.getContext('2d');
-      ctx.drawImage(_igImgEl, 0, 0, res, res);
-      const px = ctx.getImageData(0, 0, res, res).data;
-
-      // Build heightmap mesh
-      const cols = res, rows = res;
-      const geom = new THREE.PlaneGeometry(100, 100, cols - 1, rows - 1);
-      geom.rotateX(-Math.PI / 2);
-      const posArr = geom.attributes.position.array;
-      for (let r = 0; r < rows; r++) {
-        for (let c = 0; c < cols; c++) {
-          const pi   = (r * cols + c) * 4;
-          const gray = (px[pi] * 0.299 + px[pi+1] * 0.587 + px[pi+2] * 0.114) / 255;
-          const h    = invert ? gray : (1 - gray);
-          posArr[(r * cols + c) * 3 + 1] = h * hScale + base;
+      let cols, rows, geom;
+      try {
+        if (_lithoType === 'cylinder') {
+          const diam = +(document.getElementById('ltDiam')?.value || 80);
+          cols = Math.min(360, Math.max(30, res));
+          rows = Math.min(300, Math.max(10, Math.round(H * cols / (Math.PI * diam))));
+          geom = _buildCylinder(_sampleGray(cols, rows), cols, rows, diam, H, maxT, minT, inv);
+        } else if (_lithoType === 'round') {
+          cols = rows = Math.min(300, Math.max(30, res));
+          geom = _buildRound(_sampleGray(cols, rows), cols, W, maxT, minT, inv, bord);
+        } else if (_lithoType === 'ornament') {
+          cols = rows = Math.min(300, Math.max(30, res));
+          geom = _buildOrnament(_sampleGray(cols, rows), cols, W, maxT, minT, inv, bord);
+        } else {
+          cols = Math.min(300, Math.max(20, res));
+          rows = Math.min(300, Math.max(20, Math.round(cols * H / W)));
+          const gray = _sampleGray(cols, rows);
+          if      (_lithoType === 'flat')    geom = _buildFlat(gray, cols, rows, W, H, maxT, minT, inv, bord);
+          else if (_lithoType === 'curved')  geom = _buildCurved(gray, cols, rows, W, H, maxT, minT, inv, bord, +(document.getElementById('ltArc')?.value||90));
+          else if (_lithoType === 'heart')   geom = _buildHeart(gray, cols, rows, W, H, maxT, minT, inv, bord);
         }
+      } catch (e) {
+        status.textContent = '\u274C Error: ' + e.message; status.style.color = 'red'; return;
       }
-      geom.computeVertexNormals();
 
-      // Remove old meshes
-      _igScene.children.filter(c => c.userData.isHM || c.userData.isBase)
-        .forEach(c => { _igScene.remove(c); c.geometry?.dispose(); });
+      if (_igMesh) { _igScene.remove(_igMesh); _igMesh.geometry?.dispose(); _igMesh = null; }
+      _igMesh = new THREE.Mesh(geom, new THREE.MeshStandardMaterial({
+        color: 0xd0c8e0, metalness: 0.0, roughness: 0.55, side: THREE.DoubleSide
+      }));
+      _igScene.add(_igMesh);
 
-      const surf = new THREE.Mesh(geom, new THREE.MeshStandardMaterial({ color: 0x7c6af7, metalness: 0.1, roughness: 0.55 }));
-      surf.userData.isHM = true; surf.position.y = base; surf.castShadow = true;
-
-      const baseMesh = new THREE.Mesh(
-        new THREE.BoxGeometry(100, Math.max(base, 0.01), 100),
-        new THREE.MeshStandardMaterial({ color: 0x5a4ac7, metalness: 0.1, roughness: 0.6 })
-      );
-      baseMesh.userData.isBase = true; baseMesh.position.y = base / 2;
-
-      _igScene.add(surf); _igScene.add(baseMesh);
-      _igOrbit.setTarget(new THREE.Vector3(0, (hScale + base) / 2, 0));
+      geom.computeBoundingBox();
+      const box = geom.boundingBox;
+      const cx = (box.min.x+box.max.x)/2, cy = (box.min.y+box.max.y)/2, cz = (box.min.z+box.max.z)/2;
+      _igOrbit.setTarget(new THREE.Vector3(cx, cy, cz));
+      const span = Math.max(box.max.x-box.min.x, box.max.y-box.min.y, box.max.z-box.min.z);
+      _igOrbit.setPreset({ theta: 0.4, phi: 1.05, r: span * 2.4 });
       _igStartRender();
 
       document.getElementById('imgExportBtn').style.display = '';
-      status.textContent = `✅ ${cols}×${rows} grid · ${(cols*rows*2).toLocaleString()} triangles`;
+      const tris = geom.index ? geom.index.count / 3 : 0;
+      status.textContent = '\u2705 ' + cols + '\xd7' + rows + ' grid \xb7 ' + tris.toLocaleString() + ' triangles';
       status.style.color = 'var(--green)';
     }
 
+    // ── STL export ────────────────────────────────────────────────────────────────
     function studioExportImageSTL() {
-      const meshes = _igScene.children.filter(c => c.isMesh && (c.userData.isHM || c.userData.isBase));
-      if (!meshes.length) { showToast('Generate a model first.'); return; }
-      _downloadSTL(_buildSTL(meshes), 'profab-relief.stl');
-      showToast('STL exported ✓');
+      if (!_igMesh) { showToast('Generate a lithophane first.'); return; }
+      const geom = _igMesh.geometry, posA = geom.attributes.position, idxArr = geom.index?.array;
+      const tris = idxArr ? idxArr.length / 3 : posA.count / 3;
+      const buf  = new ArrayBuffer(84 + tris * 50);
+      const view = new DataView(buf);
+      const hdr  = new TextEncoder().encode('ProFab 3D Lithophane');
+      for (let i = 0; i < Math.min(hdr.length, 80); i++) view.setUint8(i, hdr[i]);
+      view.setUint32(80, tris, true);
+      let off = 84;
+      for (let t = 0; t < tris; t++) {
+        const ia=idxArr?idxArr[t*3]:t*3, ib=idxArr?idxArr[t*3+1]:t*3+1, ic=idxArr?idxArr[t*3+2]:t*3+2;
+        const ax=posA.getX(ia),ay=posA.getY(ia),az=posA.getZ(ia);
+        const bx=posA.getX(ib),by=posA.getY(ib),bz=posA.getZ(ib);
+        const cx=posA.getX(ic),cy=posA.getY(ic),cz=posA.getZ(ic);
+        const ux=bx-ax,uy=by-ay,uz=bz-az, vx=cx-ax,vy=cy-ay,vz=cz-az;
+        let nx=uy*vz-uz*vy, ny=uz*vx-ux*vz, nz=ux*vy-uy*vx;
+        const nl = Math.sqrt(nx*nx+ny*ny+nz*nz) || 1; nx/=nl; ny/=nl; nz/=nl;
+        view.setFloat32(off,nx,true);off+=4; view.setFloat32(off,ny,true);off+=4; view.setFloat32(off,nz,true);off+=4;
+        view.setFloat32(off,ax,true);off+=4; view.setFloat32(off,ay,true);off+=4; view.setFloat32(off,az,true);off+=4;
+        view.setFloat32(off,bx,true);off+=4; view.setFloat32(off,by,true);off+=4; view.setFloat32(off,bz,true);off+=4;
+        view.setFloat32(off,cx,true);off+=4; view.setFloat32(off,cy,true);off+=4; view.setFloat32(off,cz,true);off+=4;
+        view.setUint16(off,0,true);off+=2;
+      }
+      _downloadSTL(buf, 'profab-litho-' + _lithoType + '.stl');
+      showToast('STL exported \u2713');
     }
     // ===== END 3D STUDIO ==========================================================
 
