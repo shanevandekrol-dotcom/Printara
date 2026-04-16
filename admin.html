@@ -72,6 +72,9 @@
       <button class="sidebar-item" id="sbi-litho" onclick="switchTab('litho')">
         <span class="sidebar-item-icon">🖼️</span> Lithophane
       </button>
+      <button class="sidebar-item" id="sbi-map" onclick="switchTab('map')">
+        <span class="sidebar-item-icon">🗺️</span> Map Generator
+      </button>
     </div>
     <div class="sidebar-group">
       <div class="sidebar-group-label">Orders</div>
@@ -133,6 +136,9 @@
     <button class="admin-bottom-nav-item" id="mni-litho" onclick="switchTab('litho')">
       <span class="admin-bottom-nav-icon">🖼️</span>Litho
     </button>
+    <button class="admin-bottom-nav-item" id="mni-map" onclick="switchTab('map')">
+      <span class="admin-bottom-nav-icon">🗺️</span>Map
+    </button>
     <button class="admin-bottom-nav-item" id="mni-orders" onclick="switchTab('orders')">
       <span class="admin-bottom-nav-icon">🛒</span>Orders
       <span class="admin-bottom-nav-badge" id="mobileOrderBadge" style="display:none;"></span>
@@ -171,6 +177,7 @@
       <button class="tab-btn" onclick="switchTab('studio')">🖨️ 3D Studio</button>
       <button class="tab-btn" onclick="switchTab('statue')">🗿 Statue Generator</button>
       <button class="tab-btn" onclick="switchTab('litho')">🖼️ Lithophane</button>
+      <button class="tab-btn" onclick="switchTab('map')">🗺️ Map Generator</button>
       <button class="tab-btn" onclick="switchTab('orders')">Orders <span id="orderBadge"></span></button>
       <button class="tab-btn" onclick="switchTab('custom')">Custom Requests <span id="customBadge"></span></button>
       <button class="tab-btn" onclick="switchTab('users')">Accounts <span id="usersBadge"></span></button>
@@ -440,6 +447,7 @@
               <label style="display:flex;align-items:center;gap:5px;font-size:13px;cursor:pointer;"><input type="checkbox" value="studio" /> 3D Studio</label>
               <label style="display:flex;align-items:center;gap:5px;font-size:13px;cursor:pointer;"><input type="checkbox" value="statue" /> Statue Generator</label>
               <label style="display:flex;align-items:center;gap:5px;font-size:13px;cursor:pointer;"><input type="checkbox" value="litho" /> Lithophane</label>
+              <label style="display:flex;align-items:center;gap:5px;font-size:13px;cursor:pointer;"><input type="checkbox" value="map" /> Map Generator</label>
               <label style="display:flex;align-items:center;gap:5px;font-size:13px;cursor:pointer;"><input type="checkbox" value="orders" checked /> Orders</label>
               <label style="display:flex;align-items:center;gap:5px;font-size:13px;cursor:pointer;"><input type="checkbox" value="custom" /> Custom Requests</label>
               <label style="display:flex;align-items:center;gap:5px;font-size:13px;cursor:pointer;"><input type="checkbox" value="users" /> Accounts</label>
@@ -665,6 +673,99 @@
       </div>
 
     </div><!-- /tab-studio -->
+
+    <!-- ===== MAP GENERATOR TAB ===== -->
+    <div class="tab-panel" id="tab-map">
+
+      <!-- Header -->
+      <div class="tool-header">
+        <div class="tool-header-icon">🗺️</div>
+        <div>
+          <h2 class="tool-header-title">3D Map Generator</h2>
+          <p class="tool-header-sub">Enter any address or location to generate a 3D printable terrain relief map and export as STL.</p>
+        </div>
+      </div>
+
+      <!-- Search bar -->
+      <div class="map-search-row">
+        <input type="text" id="mapAddressInput" class="map-search-input"
+          placeholder="Address, city, mountain, or landmark — e.g. Grand Canyon, AZ"
+          onkeydown="if(event.key==='Enter')mapSearch()" />
+        <button class="btn-primary" id="mapSearchBtn" onclick="mapSearch()" style="white-space:nowrap;padding:12px 20px;">Search →</button>
+      </div>
+      <div id="mapGeoResult" style="font-size:13px;color:var(--text2);margin-bottom:10px;min-height:18px;padding:0 2px;"></div>
+
+      <!-- Area scale selector -->
+      <div class="tool-toolbar">
+        <span class="tool-toolbar-label">Area</span>
+        <button id="mgBtn_property"     onclick="setMapScale('property')"     class="tab-btn"    style="font-size:12px;padding:5px 14px;">🏠 Property</button>
+        <button id="mgBtn_neighborhood" onclick="setMapScale('neighborhood')" class="btn-primary" style="font-size:12px;padding:5px 14px;">🏘️ Neighborhood</button>
+        <button id="mgBtn_city"         onclick="setMapScale('city')"         class="tab-btn"    style="font-size:12px;padding:5px 14px;">🏙️ City</button>
+        <button id="mgBtn_region"       onclick="setMapScale('region')"       class="tab-btn"    style="font-size:12px;padding:5px 14px;">🌄 Region</button>
+      </div>
+
+      <div style="display:flex;gap:14px;flex-wrap:wrap;">
+
+        <!-- Controls -->
+        <div style="flex:0 0 270px;min-width:220px;display:flex;flex-direction:column;gap:10px;">
+
+          <!-- Model settings -->
+          <div class="tool-card">
+            <div class="tool-card-label">Model Settings</div>
+            <div style="display:flex;flex-direction:column;gap:9px;font-size:12px;">
+              <div>
+                <div style="display:flex;justify-content:space-between;margin-bottom:3px;"><span style="color:var(--text2);">Model Width (mm)</span><span id="mgWidthVal" style="color:var(--accent);font-weight:700;">150</span></div>
+                <input type="range" id="mgWidth" min="60" max="300" value="150" oninput="document.getElementById('mgWidthVal').textContent=this.value" style="width:100%;accent-color:var(--accent);" />
+              </div>
+              <div>
+                <div style="display:flex;justify-content:space-between;margin-bottom:3px;"><span style="color:var(--text2);">Base Thickness (mm)</span><span id="mgBaseVal" style="color:var(--accent);font-weight:700;">4</span></div>
+                <input type="range" id="mgBase" min="2" max="15" value="4" oninput="document.getElementById('mgBaseVal').textContent=this.value" style="width:100%;accent-color:var(--accent);" />
+              </div>
+              <div>
+                <div style="display:flex;justify-content:space-between;margin-bottom:3px;"><span style="color:var(--text2);">Vertical Exaggeration</span><span id="mgExagVal" style="color:var(--accent);font-weight:700;">5×</span></div>
+                <input type="range" id="mgExag" min="1" max="50" value="5" oninput="document.getElementById('mgExagVal').textContent=this.value+'×'" style="width:100%;accent-color:var(--accent);" />
+              </div>
+              <div>
+                <div style="display:flex;justify-content:space-between;margin-bottom:3px;"><span style="color:var(--text2);">Mesh Resolution</span><span id="mgResVal" style="color:var(--accent);font-weight:700;">100</span></div>
+                <input type="range" id="mgRes" min="30" max="200" value="100" step="10" oninput="document.getElementById('mgResVal').textContent=this.value" style="width:100%;accent-color:var(--accent);" />
+              </div>
+              <div style="display:flex;align-items:center;gap:10px;">
+                <span style="color:var(--text2);flex:1;">Map Color</span>
+                <input type="color" id="mgColor" value="#c8b89a" title="Terrain color" style="width:38px;height:30px;border:none;border-radius:7px;cursor:pointer;padding:2px;background:none;" />
+              </div>
+            </div>
+          </div>
+
+          <!-- Actions -->
+          <button class="btn-primary" id="mgGenerateBtn" onclick="generateMap()" style="font-size:13px;padding:12px;">Generate Terrain Map →</button>
+          <div id="mgProgress" style="display:none;font-size:12px;color:var(--text3);text-align:center;padding:8px;background:var(--surface2);border-radius:8px;border:1px solid var(--border);">
+            <span id="mgProgressText">Loading terrain data…</span>
+          </div>
+          <button id="mgExportBtn" class="tab-btn" onclick="mapExportSTL()" style="font-size:12px;display:none;padding:11px;">↓ Export STL</button>
+          <div id="mgInfo" style="font-size:11px;color:var(--text3);min-height:14px;text-align:center;"></div>
+
+          <!-- How it works -->
+          <div class="tool-card" style="border-color:rgba(124,106,247,0.25);background:rgba(124,106,247,0.06);">
+            <div class="tool-card-label" style="color:var(--accent);">How it works</div>
+            <div style="font-size:11px;color:var(--text2);line-height:1.65;">
+              1. Search for any address or place<br>
+              2. Choose the area scale<br>
+              3. Adjust exaggeration &amp; thickness<br>
+              4. Click <b>Generate</b> to build the 3D terrain<br>
+              5. Export as STL and 3D print!
+            </div>
+          </div>
+        </div>
+
+        <!-- 3D Viewport -->
+        <div style="flex:1;min-width:260px;display:flex;flex-direction:column;gap:6px;">
+          <div class="tool-viewport-hint"><b>Left-drag</b> orbit · <b>Right-drag</b> pan · <b>Scroll</b> zoom</div>
+          <canvas id="mapCanvas" class="tool-viewport-canvas" style="touch-action:none;cursor:grab;"></canvas>
+          <div id="mgDimLabel" style="font-size:11px;color:var(--accent);min-height:16px;text-align:right;"></div>
+        </div>
+
+      </div>
+    </div><!-- /tab-map -->
 
     <!-- ===== LITHOPHANE GENERATOR TAB ===== -->
     <div class="tab-panel" id="tab-litho">
@@ -946,8 +1047,8 @@
     const LOCKOUT_LIMIT    = 5;
     const LOCKOUT_DURATION = 15 * 60 * 1000;
     const SESSION_TTL      = 8  * 60 * 60 * 1000;
-    const ALL_TABS = ['add','manage','studio','statue','litho','orders','custom','users','sales','revenue','clockin','settings'];
-    const TAB_LABELS = { add:'Add Product', manage:'Manage Products', studio:'3D Studio', statue:'Statue Generator', litho:'Lithophane', orders:'Orders', custom:'Custom Requests', users:'Accounts', sales:'Sales', revenue:'Revenue', clockin:'Hours', settings:'Settings' };
+    const ALL_TABS = ['add','manage','studio','statue','litho','map','orders','custom','users','sales','revenue','clockin','settings'];
+    const TAB_LABELS = { add:'Add Product', manage:'Manage Products', studio:'3D Studio', statue:'Statue Generator', litho:'Lithophane', map:'Map Generator', orders:'Orders', custom:'Custom Requests', users:'Accounts', sales:'Sales', revenue:'Revenue', clockin:'Hours', settings:'Settings' };
 
     async function hashPwd(salt, pwd) {
       const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(salt + pwd));
@@ -1222,7 +1323,7 @@
         if (fallback && fallback !== tab) { switchTab(fallback); return; }
       }
       document.querySelectorAll('.tab-btn').forEach((b, i) => {
-        const tabs = ['add', 'manage', 'studio', 'statue', 'litho', 'orders', 'custom', 'users', 'sales', 'revenue', 'clockin', 'settings'];
+        const tabs = ['add', 'manage', 'studio', 'statue', 'litho', 'map', 'orders', 'custom', 'users', 'sales', 'revenue', 'clockin', 'settings'];
         b.classList.toggle('active', tabs[i] === tab);
       });
       document.querySelectorAll('[id^="sbi-"]').forEach(el => {
@@ -1244,6 +1345,7 @@
       if (tab === 'settings') { initColorPickers(); renderAdminAccounts(); }
       if (tab === 'studio')   initStudio();
       if (tab === 'litho')    initLitho();
+      if (tab === 'map')      initMapGen();
       if (tab === 'statue')   initStatueGen();
     }
 
@@ -2090,7 +2192,7 @@
       if (badge && session) badge.textContent = session.username;
 
       // Hide tabs/nav items the user doesn't have permission for
-      const allTabNames = ['add','manage','studio','statue','litho','orders','custom','users','sales','revenue','clockin','settings'];
+      const allTabNames = ['add','manage','studio','statue','litho','map','orders','custom','users','sales','revenue','clockin','settings'];
       allTabNames.forEach(tab => {
         const visible = hasPermission(tab);
         // top tab bar button (index matches allTabNames order)
@@ -3613,8 +3715,400 @@
 
     // ===== END STATUE GENERATOR ===================================================
 
-    // Call after unlock
-    document.addEventListener('profab-unlocked', syncMobileBadges);
+    // ═══════════════════════════════════════════════════════════════════════════
+    // ===== MAP GENERATOR ======================================================
+    // ═══════════════════════════════════════════════════════════════════════════
+
+    let _mapScene, _mapCamera, _mapRenderer, _mapAnimId;
+    let _mapMesh = null, _mapBaseMesh = null;
+    let _mapInited = false;
+    let _mapScale = 'neighborhood';
+    let _mapCenterLat = null, _mapCenterLon = null;
+    let _mapHeights = null, _mapHeightCols = 0, _mapHeightRows = 0;
+    let _mapOrbit = { active: false, button: -1, lastX: 0, lastY: 0,
+                      theta: 0.5, phi: 0.35, dist: 320, panX: 0, panY: 0 };
+
+    const MAP_PRESETS = {
+      property:     { zoom: 16, tiles: 1, label: 'Property ~600 m',      areaM: 600   },
+      neighborhood: { zoom: 14, tiles: 1, label: 'Neighborhood ~2.5 km', areaM: 2500  },
+      city:         { zoom: 12, tiles: 3, label: 'City ~10 km',          areaM: 10000 },
+      region:       { zoom: 10, tiles: 3, label: 'Region ~40 km',        areaM: 40000 },
+    };
+
+    // ── Init ─────────────────────────────────────────────────────────────────
+    function initMapGen() {
+      const canvas = document.getElementById('mapCanvas');
+      if (!canvas) return;
+      if (_mapInited) { _mapResizeRenderer(); _mapStartRender(); return; }
+      _mapInited = true;
+
+      _mapScene = new THREE.Scene();
+      _mapScene.background = new THREE.Color(0x0b0b14);
+      _mapScene.add(new THREE.GridHelper(400, 20, 0x222244, 0x191930));
+      _mapScene.add(new THREE.AmbientLight(0xffffff, 0.55));
+      const sun = new THREE.DirectionalLight(0xffffff, 0.9); sun.position.set(1, 2, 1.5); _mapScene.add(sun);
+      const fill = new THREE.DirectionalLight(0x8899dd, 0.3); fill.position.set(-1, 1, -1); _mapScene.add(fill);
+
+      _mapCamera = new THREE.PerspectiveCamera(45, 1, 0.1, 8000);
+      _mapRenderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+      _mapRenderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+      _mapResizeRenderer();
+      new ResizeObserver(_mapResizeRenderer).observe(canvas.parentElement);
+
+      canvas.addEventListener('mousedown', e => {
+        _mapOrbit.active = true; _mapOrbit.button = e.button;
+        _mapOrbit.lastX = e.clientX; _mapOrbit.lastY = e.clientY;
+        canvas.style.cursor = 'grabbing'; e.preventDefault();
+      });
+      window.addEventListener('mouseup', () => { _mapOrbit.active = false; canvas.style.cursor = 'grab'; });
+      window.addEventListener('mousemove', e => {
+        if (!_mapOrbit.active) return;
+        const dx = e.clientX - _mapOrbit.lastX, dy = e.clientY - _mapOrbit.lastY;
+        _mapOrbit.lastX = e.clientX; _mapOrbit.lastY = e.clientY;
+        if (_mapOrbit.button === 0) {
+          _mapOrbit.theta -= dx * 0.005;
+          _mapOrbit.phi = Math.max(0.05, Math.min(Math.PI * 0.48, _mapOrbit.phi - dy * 0.005));
+        } else {
+          _mapOrbit.panX -= dx * 0.4; _mapOrbit.panY += dy * 0.4;
+        }
+        _mapUpdateCamera();
+      });
+      canvas.addEventListener('wheel', e => {
+        _mapOrbit.dist = Math.max(30, Math.min(3000, _mapOrbit.dist + e.deltaY * 0.5));
+        _mapUpdateCamera(); e.preventDefault();
+      }, { passive: false });
+      canvas.addEventListener('contextmenu', e => e.preventDefault());
+      let _mT = [];
+      canvas.addEventListener('touchstart', e => { _mT = [...e.touches]; e.preventDefault(); }, { passive: false });
+      canvas.addEventListener('touchmove', e => {
+        if (e.touches.length === 1 && _mT.length >= 1) {
+          _mapOrbit.theta -= (e.touches[0].clientX - _mT[0].clientX) * 0.005;
+          _mapOrbit.phi = Math.max(0.05, Math.min(Math.PI * 0.48,
+            _mapOrbit.phi - (e.touches[0].clientY - _mT[0].clientY) * 0.005));
+          _mapUpdateCamera();
+        } else if (e.touches.length === 2 && _mT.length >= 2) {
+          const d0 = Math.hypot(_mT[0].clientX - _mT[1].clientX, _mT[0].clientY - _mT[1].clientY);
+          const d1 = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
+          _mapOrbit.dist = Math.max(30, Math.min(3000, _mapOrbit.dist * d0 / d1));
+          _mapUpdateCamera();
+        }
+        _mT = [...e.touches]; e.preventDefault();
+      }, { passive: false });
+
+      _mapUpdateCamera();
+      _mapStartRender();
+    }
+
+    function _mapUpdateCamera() {
+      if (!_mapCamera) return;
+      const x = _mapOrbit.dist * Math.sin(_mapOrbit.phi) * Math.sin(_mapOrbit.theta);
+      const y = _mapOrbit.dist * Math.cos(_mapOrbit.phi);
+      const z = _mapOrbit.dist * Math.sin(_mapOrbit.phi) * Math.cos(_mapOrbit.theta);
+      _mapCamera.position.set(x + _mapOrbit.panX, y + _mapOrbit.panY, z);
+      _mapCamera.lookAt(_mapOrbit.panX, _mapOrbit.panY, 0);
+    }
+
+    function _mapResizeRenderer() {
+      const canvas = document.getElementById('mapCanvas');
+      if (!canvas || !_mapRenderer) return;
+      const w = canvas.parentElement.clientWidth;
+      const h = Math.max(320, Math.round(w * 0.62));
+      _mapRenderer.setSize(w, h);
+      if (_mapCamera) { _mapCamera.aspect = w / h; _mapCamera.updateProjectionMatrix(); }
+    }
+
+    function _mapStartRender() {
+      if (!_mapRenderer) return;
+      if (_mapAnimId) cancelAnimationFrame(_mapAnimId);
+      (function loop() { _mapAnimId = requestAnimationFrame(loop); _mapRenderer.render(_mapScene, _mapCamera); })();
+    }
+
+    // ── Scale selector ────────────────────────────────────────────────────────
+    function setMapScale(s) {
+      _mapScale = s;
+      Object.keys(MAP_PRESETS).forEach(k => {
+        const b = document.getElementById('mgBtn_' + k);
+        if (b) b.className = k === s ? 'btn-primary' : 'tab-btn';
+        if (b) b.style.fontSize = '12px'; if (b) b.style.padding = '5px 14px';
+      });
+    }
+
+    // ── Geocoding (Nominatim) ─────────────────────────────────────────────────
+    async function mapSearch() {
+      const input = document.getElementById('mapAddressInput');
+      const q = input?.value.trim();
+      if (!q) { showToast('Enter an address or place name.'); return; }
+
+      const btn = document.getElementById('mapSearchBtn');
+      if (btn) { btn.textContent = 'Searching…'; btn.disabled = true; }
+      const res = document.getElementById('mapGeoResult');
+      if (res) res.textContent = 'Geocoding…';
+
+      try {
+        const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=1`;
+        const data = await fetch(url, { headers: { 'Accept-Language': 'en' } }).then(r => r.json());
+        if (!data.length) {
+          if (res) res.innerHTML = '<span style="color:var(--accent3);">⚠️ Location not found — try a more specific address.</span>';
+          return;
+        }
+        _mapCenterLat = parseFloat(data[0].lat);
+        _mapCenterLon = parseFloat(data[0].lon);
+        const name = data[0].display_name.split(',').slice(0, 3).join(', ');
+        if (res) res.innerHTML = `📍 <b>${name}</b> &nbsp;<span style="color:var(--text3);font-size:11px;">${_mapCenterLat.toFixed(5)}°N, ${_mapCenterLon.toFixed(5)}°E</span>`;
+        showToast('Location found!');
+      } catch (err) {
+        if (res) res.innerHTML = '<span style="color:var(--accent3);">⚠️ Geocoding failed — check your connection.</span>';
+      } finally {
+        if (btn) { btn.textContent = 'Search →'; btn.disabled = false; }
+      }
+    }
+
+    // ── Tile math ─────────────────────────────────────────────────────────────
+    function _mapLatLonToTile(lat, lon, zoom) {
+      const n = Math.pow(2, zoom);
+      const x = Math.floor((lon + 180) / 360 * n);
+      const latR = lat * Math.PI / 180;
+      const y = Math.floor((1 - Math.log(Math.tan(latR) + 1 / Math.cos(latR)) / Math.PI) / 2 * n);
+      return { x: Math.max(0, Math.min(n - 1, x)), y: Math.max(0, Math.min(n - 1, y)) };
+    }
+
+    function _mapTileToLatLon(tx, ty, zoom) {
+      const n = Math.pow(2, zoom);
+      const lon = tx / n * 360 - 180;
+      const latR = Math.atan(Math.sinh(Math.PI * (1 - 2 * ty / n)));
+      return { lat: latR * 180 / Math.PI, lon };
+    }
+
+    // ── Tile fetching (AWS Terrarium — free, public, CORS-enabled) ─────────────
+    function _mapFetchTile(z, x, y) {
+      return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
+        img.onload = () => {
+          try {
+            const c = document.createElement('canvas');
+            c.width = img.width; c.height = img.height;
+            const ctx = c.getContext('2d');
+            ctx.drawImage(img, 0, 0);
+            const px = ctx.getImageData(0, 0, c.width, c.height).data;
+            const elev = new Float32Array(c.width * c.height);
+            // Terrarium encoding: elevation = R*256 + G + B/256 - 32768
+            for (let i = 0; i < elev.length; i++)
+              elev[i] = (px[i*4] * 256 + px[i*4+1] + px[i*4+2] / 256) - 32768;
+            resolve({ data: elev, w: c.width, h: c.height });
+          } catch (e) { reject(e); }
+        };
+        img.onerror = () => reject(new Error(`Tile ${z}/${x}/${y} failed`));
+        img.src = `https://s3.amazonaws.com/elevation-tiles-prod/terrarium/${z}/${x}/${y}.png`;
+      });
+    }
+
+    // ── Stitch tiles into a height grid ──────────────────────────────────────
+    async function _mapFetchRegion(lat, lon, zoom, tileCount, onProgress) {
+      const center = _mapLatLonToTile(lat, lon, zoom);
+      const half = Math.floor(tileCount / 2);
+      const txMin = center.x - half, txMax = center.x + half;
+      const tyMin = center.y - half, tyMax = center.y + half;
+      const tilesX = txMax - txMin + 1;
+      const tilesY = tyMax - tyMin + 1;
+
+      const total = tilesX * tilesY;
+      let loaded = 0;
+      const tileData = [];
+
+      const promises = [];
+      for (let ty = tyMin; ty <= tyMax; ty++) {
+        for (let tx = txMin; tx <= txMax; tx++) {
+          const n = Math.pow(2, zoom);
+          const txW = ((tx % n) + n) % n; // wrap
+          promises.push(
+            _mapFetchTile(zoom, txW, Math.max(0, Math.min(n-1, ty)))
+              .then(t => { loaded++; if(onProgress) onProgress(loaded, total); return { tx, ty, ...t }; })
+              .catch(() => ({ tx, ty, data: null, w: 256, h: 256 }))
+          );
+        }
+      }
+
+      const results = await Promise.all(promises);
+      const tileW = results[0]?.w || 256;
+      const tileH = results[0]?.h || 256;
+      const totalW = tilesX * tileW;
+      const totalH = tilesY * tileH;
+      const stitched = new Float32Array(totalW * totalH);
+
+      results.forEach(({ tx, ty, data }) => {
+        if (!data) return;
+        const offX = (tx - txMin) * tileW;
+        const offY = (ty - tyMin) * tileH;
+        for (let r = 0; r < tileH; r++)
+          for (let c = 0; c < tileW; c++)
+            stitched[(offY + r) * totalW + (offX + c)] = data[r * tileW + c];
+      });
+
+      return { data: stitched, width: totalW, height: totalH };
+    }
+
+    // ── Downsample elevation grid ─────────────────────────────────────────────
+    function _mapDownsample(src, sW, sH, dW, dH) {
+      const out = new Float32Array(dW * dH);
+      for (let r = 0; r < dH; r++) {
+        for (let c = 0; c < dW; c++) {
+          const sr = Math.min(sH - 1, Math.round(r / (dH - 1) * (sH - 1)));
+          const sc = Math.min(sW - 1, Math.round(c / (dW - 1) * (sW - 1)));
+          out[r * dW + c] = src[sr * sW + sc];
+        }
+      }
+      return out;
+    }
+
+    // ── Build terrain mesh (Y = up, slab with terrain top + flat bottom) ──────
+    function _mapBuildTerrainMesh(heights, cols, rows, W, D, baseH, vertScaleMm) {
+      const minH = Math.min(...heights);
+      const N = cols * rows;
+      const topV = new Float32Array(N * 3);
+      const botV = new Float32Array(N * 3);
+
+      for (let r = 0; r < rows; r++) {
+        for (let c = 0; c < cols; c++) {
+          const i = r * cols + c;
+          const x = (c / (cols - 1) - 0.5) * W;
+          const z = (r / (rows - 1) - 0.5) * D;
+          const yTop = baseH + (heights[i] - minH) * vertScaleMm;
+          topV[i*3] = x; topV[i*3+1] = yTop; topV[i*3+2] = z;
+          botV[i*3] = x; botV[i*3+1] = 0;    botV[i*3+2] = z;
+        }
+      }
+
+      // Build index buffer: top face + bottom face (reversed) + 4 walls
+      const idx = [];
+      const T = (r, c) => r * cols + c;
+      const B = (r, c) => N + r * cols + c;
+
+      for (let r = 0; r < rows - 1; r++) {
+        for (let c = 0; c < cols - 1; c++) {
+          const a = T(r,c), b = T(r,c+1), d = T(r+1,c), e = T(r+1,c+1);
+          idx.push(a, b, e,  a, e, d);                                   // top (CCW from above)
+          idx.push(B(r,c), B(r+1,c+1), B(r,c+1),  B(r,c), B(r+1,c), B(r+1,c+1)); // bottom
+        }
+      }
+      // Walls
+      for (let c = 0; c < cols - 1; c++) { // front (r=0)
+        idx.push(T(0,c), B(0,c), B(0,c+1),  T(0,c), B(0,c+1), T(0,c+1));
+      }
+      for (let c = 0; c < cols - 1; c++) { // back (r=rows-1)
+        idx.push(T(rows-1,c), T(rows-1,c+1), B(rows-1,c+1),  T(rows-1,c), B(rows-1,c+1), B(rows-1,c));
+      }
+      for (let r = 0; r < rows - 1; r++) { // left (c=0)
+        idx.push(T(r,0), T(r+1,0), B(r+1,0),  T(r,0), B(r+1,0), B(r,0));
+      }
+      for (let r = 0; r < rows - 1; r++) { // right (c=cols-1)
+        idx.push(T(r,cols-1), B(r,cols-1), B(r+1,cols-1),  T(r,cols-1), B(r+1,cols-1), T(r+1,cols-1));
+      }
+
+      const allV = new Float32Array([...topV, ...botV]);
+      const geo = new THREE.BufferGeometry();
+      geo.setAttribute('position', new THREE.BufferAttribute(allV, 3));
+      geo.setIndex(idx);
+      geo.computeVertexNormals();
+      return geo;
+    }
+
+    // ── Main pipeline ─────────────────────────────────────────────────────────
+    async function generateMap() {
+      if (_mapCenterLat === null) {
+        showToast('Search for a location first!'); return;
+      }
+      const preset  = MAP_PRESETS[_mapScale];
+      const modelW  = +document.getElementById('mgWidth').value;
+      const baseH   = +document.getElementById('mgBase').value;
+      const exag    = +document.getElementById('mgExag').value;
+      const res     = +document.getElementById('mgRes').value;
+      const col     = document.getElementById('mgColor')?.value || '#c8b89a';
+
+      const genBtn  = document.getElementById('mgGenerateBtn');
+      const expBtn  = document.getElementById('mgExportBtn');
+      const prog    = document.getElementById('mgProgress');
+      const progTxt = document.getElementById('mgProgressText');
+      const info    = document.getElementById('mgInfo');
+
+      if (genBtn) genBtn.disabled = true;
+      if (expBtn) expBtn.style.display = 'none';
+      if (prog)   prog.style.display = '';
+      if (info)   info.textContent = '';
+
+      try {
+        // 1. Fetch terrain tiles
+        const tileCount = preset.tiles;
+        if (progTxt) progTxt.textContent = `Fetching ${tileCount * tileCount} terrain tile(s)…`;
+        const region = await _mapFetchRegion(
+          _mapCenterLat, _mapCenterLon, preset.zoom, tileCount,
+          (done, total) => { if (progTxt) progTxt.textContent = `Tiles: ${done}/${total} loaded…`; }
+        );
+
+        // 2. Downsample to mesh resolution
+        if (progTxt) progTxt.textContent = 'Building mesh…';
+        const meshCols = res, meshRows = Math.round(res * region.height / region.width);
+        const heights  = _mapDownsample(region.data, region.width, region.height, meshCols, meshRows);
+
+        _mapHeights    = heights;
+        _mapHeightCols = meshCols;
+        _mapHeightRows = meshRows;
+
+        // 3. Calculate scale
+        const minH = Math.min(...heights), maxH = Math.max(...heights);
+        const range = maxH - minH || 1;
+        const modelD = modelW * (region.height / region.width);   // keep tile aspect ratio
+        // vertScaleMm: how many mm per meter of elevation (with exaggeration)
+        // Scale horizontally: modelW / areaM = mm per meter
+        const mmPerM    = modelW / preset.areaM;
+        const vertScale = mmPerM * exag;
+
+        // 4. Build and display mesh
+        const geo = _mapBuildTerrainMesh(heights, meshCols, meshRows, modelW, modelD, baseH, vertScale);
+        const mat = new THREE.MeshPhongMaterial({ color: new THREE.Color(col), shininess: 35, specular: new THREE.Color(0x222222) });
+
+        // Remove old mesh
+        if (_mapMesh) { _mapScene.remove(_mapMesh); _mapMesh.geometry.dispose(); _mapMesh.material.dispose(); }
+        _mapMesh = new THREE.Mesh(geo, mat);
+        _mapScene.add(_mapMesh);
+
+        // 5. Re-center camera
+        const totalH = baseH + range * vertScale;
+        _mapOrbit.dist = Math.max(modelW, modelD) * 2.2;
+        _mapOrbit.panY = totalH * 0.35;
+        _mapOrbit.phi  = 0.38;
+        _mapOrbit.theta = 0.5;
+        _mapUpdateCamera();
+
+        // 6. Update UI
+        if (expBtn) expBtn.style.display = '';
+        const areaKm = (preset.areaM / 1000).toFixed(1);
+        if (info) info.textContent = `${areaKm} km × ${(areaKm * modelD / modelW).toFixed(1)} km · ${range.toFixed(0)} m elevation range · model ${modelW}×${modelD.toFixed(0)} mm`;
+        document.getElementById('mgDimLabel').textContent =
+          `${modelW} × ${modelD.toFixed(0)} mm · vert. scale ${vertScale.toFixed(2)} mm/m · ${meshCols}×${meshRows} pts`;
+        showToast('Terrain generated ✓');
+
+      } catch (err) {
+        showToast('Error: ' + (err.message || 'Tile fetch failed. Check connection.'));
+        console.error(err);
+      } finally {
+        if (genBtn) genBtn.disabled = false;
+        if (prog)   prog.style.display = 'none';
+      }
+    }
+
+    // ── Export STL ────────────────────────────────────────────────────────────
+    function mapExportSTL() {
+      if (!_mapMesh) { showToast('Generate a map first.'); return; }
+      const buf = _buildSTL([_mapMesh]);
+      const loc = _mapCenterLat !== null
+        ? `${_mapCenterLat.toFixed(3)}_${_mapCenterLon.toFixed(3)}`
+        : 'terrain';
+      _downloadSTL(buf, `profab-map-${_mapScale}-${loc}.stl`);
+      showToast('STL exported ✓');
+    }
+
+    // ===== END MAP GENERATOR ==================================================
   </script>
 </body>
 </html>
