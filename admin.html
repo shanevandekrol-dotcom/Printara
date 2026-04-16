@@ -693,7 +693,7 @@
           onkeydown="if(event.key==='Enter')mapSearch()" />
         <button class="btn-primary" id="mapSearchBtn" onclick="mapSearch()" style="white-space:nowrap;padding:12px 20px;">Search →</button>
       </div>
-      <div id="mapGeoResult" style="font-size:13px;color:var(--text2);margin-bottom:10px;min-height:18px;padding:0 2px;"></div>
+      <div id="mapGeoResult" style="font-size:13px;color:var(--text2);margin-bottom:10px;min-height:18px;padding:0 2px;max-height:260px;overflow-y:auto;"></div>
 
       <!-- Area scale selector -->
       <div class="tool-toolbar">
@@ -730,8 +730,16 @@
                 <input type="range" id="mgRes" min="30" max="200" value="100" step="10" oninput="document.getElementById('mgResVal').textContent=this.value" style="width:100%;accent-color:var(--accent);" />
               </div>
               <div style="display:flex;align-items:center;gap:10px;">
-                <span style="color:var(--text2);flex:1;">Map Color</span>
+                <span style="color:var(--text2);flex:1;">Terrain Color</span>
                 <input type="color" id="mgColor" value="#c8b89a" title="Terrain color" style="width:38px;height:30px;border:none;border-radius:7px;cursor:pointer;padding:2px;background:none;" />
+              </div>
+              <div style="display:flex;align-items:center;gap:10px;">
+                <span style="color:var(--text2);flex:1;">Building Color</span>
+                <input type="color" id="mgBldColor" value="#a09898" title="Building color" style="width:38px;height:30px;border:none;border-radius:7px;cursor:pointer;padding:2px;background:none;" />
+              </div>
+              <div>
+                <div style="display:flex;justify-content:space-between;margin-bottom:3px;"><span style="color:var(--text2);">Building Height Scale</span><span id="mgBldScaleVal" style="color:var(--accent);font-weight:700;">8×</span></div>
+                <input type="range" id="mgBldScale" min="1" max="30" value="8" oninput="document.getElementById('mgBldScaleVal').textContent=this.value+'×'" style="width:100%;accent-color:var(--accent);" />
               </div>
             </div>
           </div>
@@ -741,6 +749,7 @@
           <div id="mgProgress" style="display:none;font-size:12px;color:var(--text3);text-align:center;padding:8px;background:var(--surface2);border-radius:8px;border:1px solid var(--border);">
             <span id="mgProgressText">Loading terrain data…</span>
           </div>
+          <button id="mgBuildingsBtn" class="tab-btn" onclick="addBuildings()" style="font-size:12px;display:none;padding:11px;">🏗️ Refresh Buildings</button>
           <button id="mgExportBtn" class="tab-btn" onclick="mapExportSTL()" style="font-size:12px;display:none;padding:11px;">↓ Export STL</button>
           <div id="mgInfo" style="font-size:11px;color:var(--text3);min-height:14px;text-align:center;"></div>
 
@@ -3725,6 +3734,9 @@
     let _mapScale = 'neighborhood';
     let _mapCenterLat = null, _mapCenterLon = null;
     let _mapHeights = null, _mapHeightCols = 0, _mapHeightRows = 0;
+    let _mapBuildingMeshes = [];
+    let _mapBbox       = null;  // { n, s, e, w } in degrees
+    let _mapCoordState = null;  // mapping params for lat/lon → model XZ
     let _mapOrbit = { active: false, button: -1, lastX: 0, lastY: 0,
                       theta: 0.5, phi: 0.35, dist: 320, panX: 0, panY: 0 };
 
@@ -3834,6 +3846,14 @@
     }
 
     // ── Geocoding (Nominatim) ─────────────────────────────────────────────────
+    function _mapSelectResult(lat, lon, displayName) {
+      _mapCenterLat = lat;
+      _mapCenterLon = lon;
+      const name = displayName.split(',').slice(0, 3).join(', ');
+      const res = document.getElementById('mapGeoResult');
+      if (res) res.innerHTML = `📍 <b>${name}</b> &nbsp;<span style="color:var(--text3);font-size:11px;">${lat.toFixed(5)}°, ${lon.toFixed(5)}°</span>`;
+    }
+
     async function mapSearch() {
       const input = document.getElementById('mapAddressInput');
       const q = input?.value.trim();
@@ -3842,22 +3862,39 @@
       const btn = document.getElementById('mapSearchBtn');
       if (btn) { btn.textContent = 'Searching…'; btn.disabled = true; }
       const res = document.getElementById('mapGeoResult');
-      if (res) res.textContent = 'Geocoding…';
+      if (res) res.textContent = 'Searching…';
 
       try {
-        const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=1`;
+        // Fetch up to 6 results for disambiguation
+        const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=6&addressdetails=1`;
         const data = await fetch(url, { headers: { 'Accept-Language': 'en' } }).then(r => r.json());
+
         if (!data.length) {
-          if (res) res.innerHTML = '<span style="color:var(--accent3);">⚠️ Location not found — try a more specific address.</span>';
+          if (res) res.innerHTML = '<span style="color:var(--accent3);">⚠️ Nothing found — try adding a city, state, or ZIP code.</span>';
           return;
         }
-        _mapCenterLat = parseFloat(data[0].lat);
-        _mapCenterLon = parseFloat(data[0].lon);
-        const name = data[0].display_name.split(',').slice(0, 3).join(', ');
-        if (res) res.innerHTML = `📍 <b>${name}</b> &nbsp;<span style="color:var(--text3);font-size:11px;">${_mapCenterLat.toFixed(5)}°N, ${_mapCenterLon.toFixed(5)}°E</span>`;
-        showToast('Location found!');
+
+        if (data.length === 1) {
+          // Single result — auto-select
+          _mapSelectResult(parseFloat(data[0].lat), parseFloat(data[0].lon), data[0].display_name);
+          showToast('Location found — click Generate!');
+        } else {
+          // Multiple results — show a pick list
+          const items = data.map((r, i) => {
+            const label = r.display_name.split(',').slice(0, 4).join(', ');
+            const type  = r.type || r.class || '';
+            return `<div onclick="_mapSelectResult(${r.lat},${r.lon},${JSON.stringify(r.display_name)})" style="padding:7px 10px;border-radius:8px;cursor:pointer;border-bottom:1px solid var(--border);font-size:12px;line-height:1.4;" onmouseover="this.style.background='var(--surface3)'" onmouseout="this.style.background=''">
+              <b>${label}</b>${type ? ` <span style="color:var(--text3);font-size:11px;">(${type})</span>` : ''}
+            </div>`;
+          }).join('');
+          if (res) res.innerHTML = `<div style="margin-top:6px;border:1px solid var(--border);border-radius:10px;overflow:hidden;background:var(--surface2);">
+            <div style="padding:6px 10px;font-size:11px;color:var(--text3);border-bottom:1px solid var(--border);">Pick a result:</div>
+            ${items}
+          </div>`;
+        }
       } catch (err) {
-        if (res) res.innerHTML = '<span style="color:var(--accent3);">⚠️ Geocoding failed — check your connection.</span>';
+        if (res) res.innerHTML = '<span style="color:var(--accent3);">⚠️ Search failed — check your connection.</span>';
+        console.error(err);
       } finally {
         if (btn) { btn.textContent = 'Search →'; btn.disabled = false; }
       }
@@ -4035,6 +4072,12 @@
       if (expBtn) expBtn.style.display = 'none';
       if (prog)   prog.style.display = '';
       if (info)   info.textContent = '';
+      // Clear old buildings
+      _mapBuildingMeshes.forEach(m => { _mapScene?.remove(m); m.geometry?.dispose(); m.material?.dispose(); });
+      _mapBuildingMeshes = [];
+      _mapBbox = null; _mapCoordState = null;
+      const bldBtn = document.getElementById('mgBuildingsBtn');
+      if (bldBtn) bldBtn.style.display = 'none';
 
       try {
         // 1. Fetch terrain tiles
@@ -4072,7 +4115,19 @@
         _mapMesh = new THREE.Mesh(geo, mat);
         _mapScene.add(_mapMesh);
 
-        // 5. Re-center camera
+        // 5. Save coord state for building generation
+        const zoom = preset.zoom;
+        const half = Math.floor(tileCount / 2);
+        const center = _mapLatLonToTile(_mapCenterLat, _mapCenterLon, zoom);
+        const txMin = center.x - half, txMax = center.x + half;
+        const tyMin = center.y - half, tyMax = center.y + half;
+        const nw = _mapTileToLatLon(txMin,     tyMin,     zoom);
+        const se = _mapTileToLatLon(txMax + 1, tyMax + 1, zoom);
+        _mapBbox       = { n: nw.lat, s: se.lat, w: nw.lon, e: se.lon };
+        _mapCoordState = { modelW, modelD, baseH, vertScaleMm: vertScale,
+                           heights, cols: meshCols, rows: meshRows, minElev: minH };
+
+        // 6. Re-center camera
         const totalH = baseH + range * vertScale;
         _mapOrbit.dist = Math.max(modelW, modelD) * 2.2;
         _mapOrbit.panY = totalH * 0.35;
@@ -4080,13 +4135,16 @@
         _mapOrbit.theta = 0.5;
         _mapUpdateCamera();
 
-        // 6. Update UI
+        // 7. Update UI
         if (expBtn) expBtn.style.display = '';
         const areaKm = (preset.areaM / 1000).toFixed(1);
         if (info) info.textContent = `${areaKm} km × ${(areaKm * modelD / modelW).toFixed(1)} km · ${range.toFixed(0)} m elevation range · model ${modelW}×${modelD.toFixed(0)} mm`;
         document.getElementById('mgDimLabel').textContent =
           `${modelW} × ${modelD.toFixed(0)} mm · vert. scale ${vertScale.toFixed(2)} mm/m · ${meshCols}×${meshRows} pts`;
-        showToast('Terrain generated ✓');
+        showToast('Terrain generated ✓ — loading buildings…');
+
+        // Auto-load buildings after terrain is ready
+        addBuildings();
 
       } catch (err) {
         showToast('Error: ' + (err.message || 'Tile fetch failed. Check connection.'));
@@ -4097,15 +4155,188 @@
       }
     }
 
-    // ── Export STL ────────────────────────────────────────────────────────────
+    // ── Export STL (terrain + all buildings) ─────────────────────────────────
     function mapExportSTL() {
       if (!_mapMesh) { showToast('Generate a map first.'); return; }
-      const buf = _buildSTL([_mapMesh]);
+      const meshes = [_mapMesh, ..._mapBuildingMeshes];
+      const buf = _buildSTL(meshes);
       const loc = _mapCenterLat !== null
         ? `${_mapCenterLat.toFixed(3)}_${_mapCenterLon.toFixed(3)}`
         : 'terrain';
       _downloadSTL(buf, `profab-map-${_mapScale}-${loc}.stl`);
-      showToast('STL exported ✓');
+      showToast(`STL exported ✓ (terrain + ${_mapBuildingMeshes.length} buildings)`);
+    }
+
+    // ── Coordinate helpers ────────────────────────────────────────────────────
+    function _mapLatLonToModel(lat, lon) {
+      if (!_mapBbox || !_mapCoordState) return null;
+      const { modelW, modelD } = _mapCoordState;
+      const { n, s, w, e } = _mapBbox;
+      // Web-Mercator Y for accurate north/south mapping
+      const mercY = φ => Math.log(Math.tan(Math.PI / 4 + φ * Math.PI / 360));
+      const mN = mercY(n), mS = mercY(s), mLat = mercY(lat);
+      const v = (mN - mLat) / (mN - mS);    // 0=north, 1=south
+      const u = (lon - w) / (e - w);         // 0=west,  1=east
+      if (u < -0.05 || u > 1.05 || v < -0.05 || v > 1.05) return null;  // outside extent
+      return { x: (u - 0.5) * modelW, z: (v - 0.5) * modelD };
+    }
+
+    function _mapSampleTerrain(mx, mz) {
+      if (!_mapCoordState) return 0;
+      const { modelW, modelD, baseH, heights, cols, rows, minElev, vertScaleMm } = _mapCoordState;
+      const c = Math.max(0, Math.min(cols - 1, Math.round((mx / modelW + 0.5) * (cols - 1))));
+      const r = Math.max(0, Math.min(rows - 1, Math.round((mz / modelD + 0.5) * (rows - 1))));
+      return baseH + (heights[r * cols + c] - minElev) * vertScaleMm;
+    }
+
+    // ── Building extruded geometry ────────────────────────────────────────────
+    function _mapBuildingGeo(polyXZ, yBot, yTop) {
+      // polyXZ = [{x, z}, ...] polygon vertices in model space
+      // Returns a closed THREE.BufferGeometry (walls + top + bottom caps)
+      const n = polyXZ.length;
+      if (n < 3) return null;
+
+      // Triangulate top/bottom caps using Three.js ShapeUtils
+      const pts2d = polyXZ.map(p => new THREE.Vector2(p.x, p.z));
+      let tris;
+      try { tris = THREE.ShapeUtils.triangulateShape(pts2d, []); }
+      catch (e) { return null; }
+      if (!tris || !tris.length) return null;
+
+      // Vertices: ring at yBot (0..n-1), ring at yTop (n..2n-1)
+      const pos = [];
+      for (const p of polyXZ) pos.push(p.x, yBot, p.z);
+      for (const p of polyXZ) pos.push(p.x, yTop, p.z);
+
+      const idx = [];
+      // Side walls
+      for (let i = 0; i < n; i++) {
+        const j = (i + 1) % n;
+        idx.push(i, j, n + j,   i, n + j, n + i);
+      }
+      // Top cap (CCW from above in XZ — ShapeUtils gives CCW for positive area)
+      for (const [a, b, c] of tris) idx.push(n + a, n + b, n + c);
+      // Bottom cap (reversed)
+      for (const [a, b, c] of tris) idx.push(a, c, b);
+
+      const geo = new THREE.BufferGeometry();
+      geo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(pos), 3));
+      geo.setIndex(idx);
+      geo.computeVertexNormals();
+      return geo;
+    }
+
+    // ── OSM building height from tags ─────────────────────────────────────────
+    function _mapBuildingHeight(tags) {
+      if (tags.height) {
+        const h = parseFloat(tags.height);
+        if (!isNaN(h) && h > 0) return h;
+      }
+      if (tags['building:levels']) {
+        const lvl = parseFloat(tags['building:levels']);
+        if (!isNaN(lvl) && lvl > 0) return lvl * 3.2;
+      }
+      // Default by building type
+      const t = tags.building || '';
+      if (t === 'apartments' || t === 'residential') return 9;
+      if (t === 'commercial' || t === 'retail')      return 6;
+      if (t === 'industrial' || t === 'warehouse')   return 8;
+      if (t === 'church' || t === 'cathedral')       return 15;
+      if (t === 'school' || t === 'university')      return 8;
+      return 7;  // generic default
+    }
+
+    // ── Main: fetch OSM buildings + build geometry ────────────────────────────
+    async function addBuildings() {
+      if (!_mapBbox || !_mapCoordState) {
+        showToast('Generate terrain first.'); return;
+      }
+
+      const bldBtn  = document.getElementById('mgBuildingsBtn');
+      const prog    = document.getElementById('mgProgress');
+      const progTxt = document.getElementById('mgProgressText');
+      const info    = document.getElementById('mgInfo');
+      const bldCol  = document.getElementById('mgBldColor')?.value || '#a09898';
+      const bldExag = +document.getElementById('mgBldScale').value;
+
+      // Clear existing buildings
+      _mapBuildingMeshes.forEach(m => { _mapScene.remove(m); m.geometry.dispose(); m.material.dispose(); });
+      _mapBuildingMeshes = [];
+
+      if (bldBtn) { bldBtn.disabled = true; bldBtn.textContent = '⏳ Loading…'; }
+      if (prog)   prog.style.display = '';
+
+      const { n, s, w, e } = _mapBbox;
+      const { modelW, modelD } = _mapCoordState;
+      const mmPerM = modelW / (e - w) * (Math.PI / 180) * 6378137 * Math.cos(_mapCenterLat * Math.PI / 180) / 1000;
+      // Simpler: use preset area to derive mm/m for building heights
+      const preset = MAP_PRESETS[_mapScale];
+      const horizScale = modelW / preset.areaM;   // mm per meter (horizontal)
+
+      try {
+        if (progTxt) progTxt.textContent = 'Fetching buildings from OpenStreetMap…';
+        const bbox = `${s.toFixed(6)},${w.toFixed(6)},${n.toFixed(6)},${e.toFixed(6)}`;
+        const query = `[out:json][timeout:30];(way["building"](${bbox}););out geom;`;
+        const url   = `https://overpass-api.de/api/interpreter?data=${encodeURIComponent(query)}`;
+
+        const resp = await fetch(url);
+        if (!resp.ok) throw new Error(`Overpass HTTP ${resp.status}`);
+        const data = await resp.json();
+        const ways = data.elements?.filter(el => el.type === 'way' && el.geometry?.length >= 3) || [];
+
+        if (!ways.length) {
+          showToast('No buildings found in this area — try a denser area or larger scale.');
+          return;
+        }
+
+        // Limit to 800 buildings to avoid lag
+        const MAX_BLDS = 800;
+        const limited  = ways.length > MAX_BLDS;
+        const toRender = limited ? ways.slice(0, MAX_BLDS) : ways;
+        if (progTxt) progTxt.textContent = `Building ${toRender.length} structures…${limited ? ' (capped at ' + MAX_BLDS + ')' : ''}`;
+
+        const mat = new THREE.MeshPhongMaterial({
+          color: new THREE.Color(bldCol),
+          shininess: 60,
+          specular: new THREE.Color(0x333333)
+        });
+
+        let built = 0;
+        for (const way of toRender) {
+          // Convert ring of lat/lon to model XZ
+          const ring = way.geometry.map(pt => _mapLatLonToModel(pt.lat, pt.lon)).filter(Boolean);
+          if (ring.length < 3) continue;
+
+          // Building height in model mm
+          const hMeters    = _mapBuildingHeight(way.tags || {});
+          const hModel     = Math.max(1.5, hMeters * horizScale * bldExag);
+
+          // Bottom = terrain height at centroid
+          const cx = ring.reduce((s, p) => s + p.x, 0) / ring.length;
+          const cz = ring.reduce((s, p) => s + p.z, 0) / ring.length;
+          const yBot = _mapSampleTerrain(cx, cz);
+          const yTop = yBot + hModel;
+
+          const geo = _mapBuildingGeo(ring, yBot, yTop);
+          if (!geo) continue;
+
+          const mesh = new THREE.Mesh(geo, mat);
+          _mapScene.add(mesh);
+          _mapBuildingMeshes.push(mesh);
+          built++;
+        }
+
+        const suffix = limited ? ` (first ${MAX_BLDS} of ${ways.length} total)` : '';
+        if (info) info.textContent += `  ·  🏗️ ${built} buildings${suffix}`;
+        showToast(`${built} buildings added ✓`);
+
+      } catch (err) {
+        showToast('Buildings failed: ' + (err.message || 'Check connection'));
+        console.error(err);
+      } finally {
+        if (bldBtn) { bldBtn.disabled = false; bldBtn.textContent = '🏗️ Refresh Buildings'; bldBtn.style.display = ''; }
+        if (prog)   prog.style.display = 'none';
+      }
     }
 
     // ===== END MAP GENERATOR ==================================================
