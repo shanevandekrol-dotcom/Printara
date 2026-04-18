@@ -3,10 +3,10 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Admin — Layer Forge</title>
+  <title>Admin — Printara</title>
   <link rel="icon" href="logo.png" />
   <link rel="apple-touch-icon" href="logo.png" />
-  <meta name="apple-mobile-web-app-title" content="Layer Forge" />
+  <meta name="apple-mobile-web-app-title" content="Printara" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="theme-color" content="#0a0a0f" />
@@ -20,8 +20,8 @@
   <!-- ===== LOGIN GATE ===== -->
   <div class="login-gate" id="loginGate">
     <div class="login-box">
-      <div class="login-logo"><img src="logo.png" alt="Layer Forge" class="logo-img logo-img--login" /></div>
-      <h2>Layer Forge</h2>
+      <div class="login-logo"><img src="logo.png" alt="Printara" class="logo-img logo-img--login" /></div>
+      <h2>Printara</h2>
 
       <!-- Tab switcher -->
       <div class="auth-tabs" style="display:flex;gap:0;margin:12px 0 20px;border:1px solid var(--border);border-radius:10px;overflow:hidden;">
@@ -89,7 +89,7 @@
   <header class="header admin-content" id="adminHeader">
     <div class="header-inner">
       <a href="index.html" class="logo">
-        <img src="logo.png" alt="Layer Forge" class="logo-img" />
+        <img src="logo.png" alt="Printara" class="logo-img" />
       </a>
       <nav class="nav">
         <a href="index.html" class="nav-link">← Home</a>
@@ -118,26 +118,8 @@
     </div>
     <div class="sidebar-group">
       <div class="sidebar-group-label">Admin</div>
-      <button class="sidebar-item" id="sbi-add" onclick="switchTab('add')">
-        <span class="sidebar-item-icon">📦</span> Add Product
-      </button>
-      <button class="sidebar-item" id="sbi-manage" onclick="switchTab('manage')">
-        <span class="sidebar-item-icon">🗂️</span> Manage Products
-      </button>
-      <button class="sidebar-item" id="sbi-orders" onclick="switchTab('orders')">
-        <span class="sidebar-item-icon">🛒</span> Orders
-      </button>
-      <button class="sidebar-item" id="sbi-custom" onclick="switchTab('custom')">
-        <span class="sidebar-item-icon">✏️</span> Custom Requests
-      </button>
       <button class="sidebar-item" id="sbi-users" onclick="switchTab('users')">
         <span class="sidebar-item-icon">👥</span> Accounts
-      </button>
-      <button class="sidebar-item" id="sbi-sales" onclick="switchTab('sales')">
-        <span class="sidebar-item-icon">🏷️</span> Sales
-      </button>
-      <button class="sidebar-item" id="sbi-revenue" onclick="switchTab('revenue')">
-        <span class="sidebar-item-icon">💰</span> Revenue
       </button>
       <button class="sidebar-item" id="sbi-clockin" onclick="switchTab('clockin')">
         <span class="sidebar-item-icon">⏱️</span> Hours
@@ -155,13 +137,7 @@
 
   <!-- ===== MOBILE BOTTOM NAV ===== -->
   <nav class="admin-bottom-nav admin-content" id="adminBottomNav">
-    <button class="admin-bottom-nav-item active" id="mni-add" onclick="switchTab('add')">
-      <span class="admin-bottom-nav-icon">➕</span>Add
-    </button>
-    <button class="admin-bottom-nav-item" id="mni-manage" onclick="switchTab('manage')">
-      <span class="admin-bottom-nav-icon">🗂️</span>Products
-    </button>
-    <button class="admin-bottom-nav-item" id="mni-studio" onclick="switchTab('studio')">
+    <button class="admin-bottom-nav-item active" id="mni-studio" onclick="switchTab('studio')">
       <span class="admin-bottom-nav-icon">🖨️</span>3D Studio
     </button>
     <button class="admin-bottom-nav-item" id="mni-statue" onclick="switchTab('statue')">
@@ -173,22 +149,8 @@
     <button class="admin-bottom-nav-item" id="mni-map" onclick="switchTab('map')">
       <span class="admin-bottom-nav-icon">🗺️</span>Map
     </button>
-    <button class="admin-bottom-nav-item" id="mni-orders" onclick="switchTab('orders')">
-      <span class="admin-bottom-nav-icon">🛒</span>Orders
-      <span class="admin-bottom-nav-badge" id="mobileOrderBadge" style="display:none;"></span>
-    </button>
-    <button class="admin-bottom-nav-item" id="mni-custom" onclick="switchTab('custom')">
-      <span class="admin-bottom-nav-icon">✏️</span>Custom
-      <span class="admin-bottom-nav-badge" id="mobileCustomBadge" style="display:none;"></span>
-    </button>
     <button class="admin-bottom-nav-item" id="mni-users" onclick="switchTab('users')">
       <span class="admin-bottom-nav-icon">👥</span>Accounts
-    </button>
-    <button class="admin-bottom-nav-item" id="mni-sales" onclick="switchTab('sales')">
-      <span class="admin-bottom-nav-icon">🏷️</span>Sales
-    </button>
-    <button class="admin-bottom-nav-item" id="mni-revenue" onclick="switchTab('revenue')">
-      <span class="admin-bottom-nav-icon">💰</span>Revenue
     </button>
     <button class="admin-bottom-nav-item" id="mni-clockin" onclick="switchTab('clockin')">
       <span class="admin-bottom-nav-icon">⏱️</span>Hours
@@ -210,13 +172,7 @@
       <button class="tab-btn" onclick="switchTab('statue')">🗿 Statue Generator</button>
       <button class="tab-btn" onclick="switchTab('litho')">🖼️ Lithophane</button>
       <button class="tab-btn" onclick="switchTab('map')">🗺️ Map Generator</button>
-      <button class="tab-btn" onclick="switchTab('add')">+ Add Product</button>
-      <button class="tab-btn" onclick="switchTab('manage')">Manage Products</button>
-      <button class="tab-btn" onclick="switchTab('orders')">Orders <span id="orderBadge"></span></button>
-      <button class="tab-btn" onclick="switchTab('custom')">Custom Requests <span id="customBadge"></span></button>
       <button class="tab-btn" onclick="switchTab('users')">Accounts <span id="usersBadge"></span></button>
-      <button class="tab-btn" onclick="switchTab('sales')">🏷️ Sales</button>
-      <button class="tab-btn" onclick="switchTab('revenue')">💰 Revenue</button>
       <button class="tab-btn" onclick="switchTab('clockin')">⏱️ Hours</button>
       <button class="tab-btn" onclick="switchTab('settings')">Settings</button>
     </div>
@@ -1090,8 +1046,8 @@
     const LOCKOUT_LIMIT    = 5;
     const LOCKOUT_DURATION = 15 * 60 * 1000;
     const SESSION_TTL      = 8  * 60 * 60 * 1000;
-    const ALL_TABS = ['add','manage','studio','statue','litho','map','orders','custom','users','sales','revenue','clockin','settings'];
-    const TAB_LABELS = { add:'Add Product', manage:'Manage Products', studio:'3D Studio', statue:'Statue Generator', litho:'Lithophane', map:'Map Generator', orders:'Orders', custom:'Custom Requests', users:'Accounts', sales:'Sales', revenue:'Revenue', clockin:'Hours', settings:'Settings' };
+    const ALL_TABS = ['studio','statue','litho','map','users','clockin','settings'];
+    const TAB_LABELS = { studio:'3D Studio', statue:'Statue Generator', litho:'Lithophane', map:'Map Generator', users:'Accounts', clockin:'Hours', settings:'Settings' };
 
     async function hashPwd(salt, pwd) {
       const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(salt + pwd));
@@ -1165,7 +1121,7 @@
     function showSetupMode() {
       document.getElementById('loginGate').innerHTML = `
         <div class="login-box">
-          <div class="login-logo"><img src="logo.png" alt="Layer Forge" class="logo-img logo-img--login" /></div>
+          <div class="login-logo"><img src="logo.png" alt="Printara" class="logo-img logo-img--login" /></div>
           <h2>Set Up Admin Access</h2>
           <p>Create the owner account for this admin panel.</p>
           <form onsubmit="setupOwner(event)">
@@ -1394,7 +1350,7 @@
       if (accounts.find(a => a.username.toLowerCase() === username.toLowerCase())) {
         err.textContent = 'That username already exists.'; err.classList.add('visible'); return;
       }
-      const perms = role === 'owner' ? [...ALL_TABS] :
+      const perms = role === 'owner' ? ['studio','statue','litho','map','users','clockin','settings'] :
         Array.from(document.querySelectorAll('#newAcctPerms input[type=checkbox]:checked')).map(cb => cb.value);
       const salt = Array.from(crypto.getRandomValues(new Uint8Array(16))).map(b=>b.toString(16).padStart(2,'0')).join('');
       const hash = await hashPwd(salt, pwd);
@@ -1423,7 +1379,7 @@
         if (fallback && fallback !== tab) { switchTab(fallback); return; }
       }
       document.querySelectorAll('.tab-btn').forEach((b, i) => {
-        const tabs = ['studio', 'statue', 'litho', 'map', 'add', 'manage', 'orders', 'custom', 'users', 'sales', 'revenue', 'clockin', 'settings'];
+        const tabs = ['studio', 'statue', 'litho', 'map', 'users', 'clockin', 'settings'];
         b.classList.toggle('active', tabs[i] === tab);
       });
       document.querySelectorAll('[id^="sbi-"]').forEach(el => {
@@ -2292,7 +2248,7 @@
       if (badge && session) badge.textContent = session.username;
 
       // Hide tabs/nav items the user doesn't have permission for
-      const allTabNames = ['studio','statue','litho','map','add','manage','orders','custom','users','sales','revenue','clockin','settings'];
+      const allTabNames = ['studio','statue','litho','map','users','clockin','settings'];
       allTabNames.forEach(tab => {
         const visible = hasPermission(tab);
         // top tab bar button (index matches allTabNames order)
@@ -2311,16 +2267,9 @@
       renderAdminAccounts();
 
       // Navigate to first permitted tab
-      const firstTab = allTabNames.find(t => hasPermission(t)) || 'add';
+      const firstTab = allTabNames.find(t => hasPermission(t)) || 'studio';
       switchTab(firstTab);
 
-      const all = getOrders();
-      const orders  = all.filter(o => o.type !== 'custom');
-      const customs = all.filter(o => o.type === 'custom');
-      const orderBadge  = document.getElementById('orderBadge');
-      const customBadge = document.getElementById('customBadge');
-      if (orderBadge  && orders.length  > 0) orderBadge.textContent  = `(${orders.length})`;
-      if (customBadge && customs.length > 0) customBadge.textContent = `(${customs.length})`;
       const usersBadge = document.getElementById('usersBadge');
       const users = getUsers();
       if (usersBadge && users.length > 0) usersBadge.textContent = `(${users.length})`;
@@ -2592,7 +2541,7 @@
       }
       const buf  = new ArrayBuffer(84 + tris.length * 50);
       const view = new DataView(buf);
-      const hdr  = 'Layer Forge STL';
+      const hdr  = 'Printara STL';
       for (let i = 0; i < 80; i++) view.setUint8(i, i < hdr.length ? hdr.charCodeAt(i) : 0);
       view.setUint32(80, tris.length, true);
       let off = 84;
