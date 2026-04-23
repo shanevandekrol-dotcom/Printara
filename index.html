@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Printara — 3D Design Tools</title>
+  <title>Printara — 3D Design Tools & Projects</title>
   <link rel="icon" href="logo.png" />
   <link rel="apple-touch-icon" href="logo.png" />
   <meta name="apple-mobile-web-app-title" content="Printara" />
@@ -14,230 +14,564 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
-    .home-hero {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      text-align: center;
-      padding: 72px 24px 48px;
-      gap: 16px;
-    }
-    .home-hero-logo {
-      width: 80px;
-      height: 80px;
-      border-radius: 22px;
-      object-fit: cover;
-      box-shadow: 0 8px 32px rgba(224,32,32,0.35);
-      margin-bottom: 8px;
-    }
-    .home-hero h1 {
-      font-size: clamp(28px, 6vw, 52px);
-      font-weight: 800;
-      line-height: 1.15;
-      background: linear-gradient(135deg, #fff 40%, var(--accent));
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-      margin: 0;
-    }
-    .home-hero p {
-      font-size: clamp(15px, 2vw, 18px);
-      color: var(--text2);
-      max-width: 480px;
-      margin: 0;
-    }
-    .home-cta {
-      display: flex;
-      gap: 12px;
-      flex-wrap: wrap;
-      justify-content: center;
-      margin-top: 8px;
-    }
-    .home-cta a {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      padding: 14px 28px;
-      border-radius: 14px;
-      font-size: 15px;
-      font-weight: 700;
-      text-decoration: none;
-      transition: transform .15s, box-shadow .15s;
-    }
-    .home-cta a:active { transform: scale(.97); }
-    .home-cta .cta-primary {
-      background: var(--accent);
-      color: #fff;
-      box-shadow: 0 4px 20px rgba(224,32,32,0.4);
-    }
-    .home-cta .cta-primary:hover { box-shadow: 0 8px 32px rgba(224,32,32,0.55); }
-    .home-cta .cta-secondary {
-      background: var(--surface2);
-      color: var(--text);
-      border: 1px solid var(--border);
-    }
-
-    .tools-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-      gap: 18px;
-      max-width: 960px;
-      margin: 0 auto;
-      padding: 0 24px 72px;
-    }
-    .tool-card-home {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 18px;
-      padding: 28px 24px;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      transition: border-color .2s, transform .2s;
-      text-decoration: none;
-      color: var(--text);
-    }
-    .tool-card-home:hover {
-      border-color: rgba(224,32,32,0.5);
-      transform: translateY(-3px);
-    }
-    .tool-card-home-icon {
-      font-size: 36px;
-      line-height: 1;
-    }
-    .tool-card-home h3 {
-      font-size: 17px;
-      font-weight: 700;
-      margin: 0;
-    }
-    .tool-card-home p {
-      font-size: 13px;
-      color: var(--text2);
-      margin: 0;
-      line-height: 1.5;
-    }
-    .tool-card-home-badge {
-      font-size: 10px;
-      font-weight: 700;
-      letter-spacing: .06em;
-      text-transform: uppercase;
-      color: var(--accent);
-      margin-top: auto;
-      padding-top: 8px;
-    }
-
+    /* ── Header ── */
     .home-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 0 24px;
-      height: 64px;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 24px; height: 64px;
       border-bottom: 1px solid var(--border);
-      background: var(--header-bg);
-      backdrop-filter: blur(12px);
-      position: sticky;
-      top: 0;
-      z-index: 100;
+      background: var(--header-bg); backdrop-filter: blur(12px);
+      position: sticky; top: 0; z-index: 200;
     }
     .home-header-logo {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      text-decoration: none;
-      color: var(--text);
-      font-weight: 700;
-      font-size: 16px;
+      display: flex; align-items: center; gap: 10px;
+      text-decoration: none; color: var(--text); font-weight: 700; font-size: 16px;
     }
-    .home-header-logo img {
-      width: 32px;
-      height: 32px;
-      border-radius: 8px;
-      object-fit: cover;
-    }
-    .home-header-actions {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-    .home-section-label {
-      text-align: center;
-      font-size: 11px;
-      font-weight: 700;
-      letter-spacing: .1em;
-      text-transform: uppercase;
-      color: var(--text3);
-      margin-bottom: 24px;
+    .home-header-logo img { width: 32px; height: 32px; border-radius: 8px; object-fit: cover; }
+    .home-header-actions { display: flex; align-items: center; gap: 10px; }
+    .home-user-badge {
+      font-size: 13px; font-weight: 600; color: var(--text2);
+      padding: 5px 12px; border: 1px solid var(--border); border-radius: 20px;
     }
 
-    @media (max-width: 480px) {
+    /* ── Login Modal ── */
+    .modal-overlay {
+      display: none; position: fixed; inset: 0; z-index: 999;
+      background: rgba(0,0,0,0.65); backdrop-filter: blur(6px);
+      align-items: center; justify-content: center;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal-box {
+      background: var(--surface); border: 1px solid var(--border); border-radius: 20px;
+      padding: 36px 32px; width: 100%; max-width: 380px; margin: 20px;
+    }
+    .modal-box h2 { margin: 0 0 4px; font-size: 22px; font-weight: 800; }
+    .modal-box p { margin: 0 0 20px; color: var(--text2); font-size: 14px; }
+    .auth-tabs {
+      display: flex; gap: 0; margin: 0 0 20px;
+      border: 1px solid var(--border); border-radius: 10px; overflow: hidden;
+    }
+    .auth-tab {
+      flex: 1; padding: 10px; border: none; font-size: 14px; font-weight: 700;
+      cursor: pointer; transition: background .15s;
+    }
+    .auth-tab.active { background: var(--accent); color: #fff; }
+    .auth-tab:not(.active) { background: var(--surface2); color: var(--text2); }
+    .modal-close {
+      position: absolute; top: 16px; right: 20px; background: none; border: none;
+      font-size: 22px; color: var(--text3); cursor: pointer;
+    }
+    .modal-box .form-group { margin-bottom: 14px; }
+    .modal-box .form-group label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; color: var(--text2); }
+    .modal-box .form-group input {
+      width: 100%; padding: 12px 14px; font-size: 15px; box-sizing: border-box;
+      background: var(--surface2); border: 1px solid var(--border); border-radius: 10px;
+      color: var(--text); font-family: inherit;
+    }
+    .login-error { font-size: 13px; color: #e02020; margin-bottom: 10px; display: none; }
+    .login-error.visible { display: block; }
+
+    /* ── Hero ── */
+    .home-hero {
+      display: flex; flex-direction: column; align-items: center;
+      justify-content: center; text-align: center;
+      padding: 72px 24px 56px; gap: 16px;
+    }
+    .home-hero-logo {
+      width: 90px; height: 90px; border-radius: 24px; object-fit: cover;
+      box-shadow: 0 8px 40px rgba(0,150,255,0.35); margin-bottom: 8px;
+    }
+    .home-hero h1 {
+      font-size: clamp(28px, 6vw, 56px); font-weight: 800; line-height: 1.1;
+      background: linear-gradient(135deg, #fff 40%, #00b4ff);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text; margin: 0;
+    }
+    .home-hero p { font-size: clamp(15px, 2vw, 18px); color: var(--text2); max-width: 500px; margin: 0; }
+    .home-cta { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; margin-top: 8px; }
+    .home-cta a, .home-cta button {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 14px 28px; border-radius: 14px; font-size: 15px; font-weight: 700;
+      text-decoration: none; border: none; cursor: pointer;
+      transition: transform .15s, box-shadow .15s; font-family: inherit;
+    }
+    .home-cta .cta-primary { background: #0099ff; color: #fff; box-shadow: 0 4px 20px rgba(0,150,255,0.4); }
+    .home-cta .cta-primary:hover { box-shadow: 0 8px 32px rgba(0,150,255,0.55); transform: translateY(-1px); }
+    .home-cta .cta-secondary { background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
+
+    /* ── Section labels ── */
+    .section-wrap { max-width: 1200px; margin: 0 auto; padding: 0 24px 80px; }
+    .section-label {
+      font-size: 11px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase;
+      color: var(--text3); margin-bottom: 24px; text-align: center;
+    }
+    .section-title {
+      font-size: clamp(22px, 4vw, 32px); font-weight: 800; text-align: center;
+      margin: 0 0 8px;
+    }
+    .section-sub { text-align: center; color: var(--text2); margin: 0 0 36px; font-size: 15px; }
+
+    /* ── Tools grid ── */
+    .tools-grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 16px; margin-bottom: 80px;
+    }
+    .tool-card {
+      background: var(--surface); border: 1px solid var(--border); border-radius: 16px;
+      padding: 24px 20px; display: flex; flex-direction: column; gap: 10px;
+      transition: border-color .2s, transform .2s; text-decoration: none; color: var(--text);
+      cursor: pointer;
+    }
+    .tool-card:hover { border-color: rgba(0,150,255,0.5); transform: translateY(-3px); }
+    .tool-card-icon { font-size: 34px; line-height: 1; }
+    .tool-card h3 { font-size: 16px; font-weight: 700; margin: 0; }
+    .tool-card p { font-size: 13px; color: var(--text2); margin: 0; line-height: 1.5; }
+    .tool-card-badge {
+      font-size: 10px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase;
+      color: #0099ff; margin-top: auto; padding-top: 8px;
+    }
+
+    /* ── Projects grid ── */
+    .projects-filters {
+      display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; margin-bottom: 28px;
+    }
+    .filter-btn {
+      padding: 7px 16px; border-radius: 20px; border: 1px solid var(--border);
+      background: var(--surface2); color: var(--text2); font-size: 13px; font-weight: 600;
+      cursor: pointer; transition: all .15s; font-family: inherit;
+    }
+    .filter-btn.active, .filter-btn:hover { background: #0099ff; color: #fff; border-color: #0099ff; }
+
+    .projects-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 16px;
+    }
+    .project-card {
+      background: var(--surface); border: 1px solid var(--border); border-radius: 16px;
+      overflow: hidden; transition: transform .2s, border-color .2s;
+      display: flex; flex-direction: column;
+    }
+    .project-card:hover { transform: translateY(-4px); border-color: rgba(0,150,255,0.4); }
+    .project-thumb {
+      height: 140px; display: flex; align-items: center; justify-content: center;
+      font-size: 52px; position: relative; overflow: hidden;
+    }
+    .project-cat-badge {
+      position: absolute; top: 10px; left: 10px; font-size: 10px; font-weight: 700;
+      letter-spacing: .05em; text-transform: uppercase; padding: 3px 9px;
+      border-radius: 20px; background: rgba(0,0,0,0.55); color: #fff; backdrop-filter: blur(4px);
+    }
+    .project-info { padding: 14px 16px; flex: 1; display: flex; flex-direction: column; gap: 6px; }
+    .project-info h4 { font-size: 14px; font-weight: 700; margin: 0; line-height: 1.3; }
+    .project-info p { font-size: 12px; color: var(--text2); margin: 0; line-height: 1.4; flex: 1; }
+    .project-dl {
+      display: flex; align-items: center; gap: 8px; padding: 12px 16px;
+      border-top: 1px solid var(--border);
+    }
+    .project-dl a {
+      flex: 1; text-align: center; padding: 8px; border-radius: 8px;
+      background: #0099ff; color: #fff; font-size: 12px; font-weight: 700;
+      text-decoration: none; transition: background .15s;
+    }
+    .project-dl a:hover { background: #007acc; }
+
+    /* ── Footer ── */
+    .home-footer {
+      border-top: 1px solid var(--border); padding: 28px 24px; text-align: center;
+      color: var(--text3); font-size: 13px;
+    }
+    .home-footer img { width: 24px; height: 24px; border-radius: 6px; vertical-align: middle; margin-right: 8px; }
+
+    @media (max-width: 600px) {
+      .tools-grid { grid-template-columns: 1fr 1fr; }
+      .projects-grid { grid-template-columns: 1fr 1fr; }
+      .modal-box { padding: 28px 20px; }
+    }
+    @media (max-width: 380px) {
       .tools-grid { grid-template-columns: 1fr; }
+      .projects-grid { grid-template-columns: 1fr; }
     }
   </style>
 </head>
 <body>
 
+  <!-- ===== LOGIN MODAL ===== -->
+  <div class="modal-overlay" id="loginModal" onclick="if(event.target===this)closeModal()">
+    <div class="modal-box" style="position:relative;">
+      <button class="modal-close" onclick="closeModal()">×</button>
+      <h2>Welcome to Printara</h2>
+      <p>Sign in to access the 3D building tools.</p>
+      <div class="auth-tabs">
+        <button class="auth-tab active" id="tabSignIn" onclick="switchModalTab('signin')">Sign In</button>
+        <button class="auth-tab" id="tabSignUp" onclick="switchModalTab('signup')">Sign Up</button>
+      </div>
+
+      <!-- SIGN IN -->
+      <div id="panelSignIn">
+        <form onsubmit="doSignIn(event)">
+          <div class="form-group"><label>Username</label>
+            <input type="text" id="siUsername" placeholder="Your username" autocomplete="username" required />
+          </div>
+          <div class="form-group"><label>Password</label>
+            <input type="password" id="siPassword" placeholder="Your password" autocomplete="current-password" required />
+          </div>
+          <div class="login-error" id="siError"></div>
+          <button type="submit" class="btn-primary" style="width:100%;justify-content:center;margin-top:4px;">Sign In →</button>
+        </form>
+      </div>
+
+      <!-- SIGN UP -->
+      <div id="panelSignUp" style="display:none;">
+        <form onsubmit="doSignUp(event)">
+          <div class="form-group"><label>Full Name</label>
+            <input type="text" id="suName" placeholder="Jane Smith" autocomplete="name" required />
+          </div>
+          <div class="form-group"><label>Username</label>
+            <input type="text" id="suUsername" placeholder="Choose a username" autocomplete="username" required />
+          </div>
+          <div class="form-group"><label>Password</label>
+            <input type="password" id="suPassword" placeholder="Min 6 characters" minlength="6" autocomplete="new-password" required />
+          </div>
+          <div class="form-group"><label>Confirm Password</label>
+            <input type="password" id="suConfirm" placeholder="Re-enter password" autocomplete="new-password" required />
+          </div>
+          <div class="login-error" id="suError"></div>
+          <button type="submit" class="btn-primary" style="width:100%;justify-content:center;margin-top:4px;">Create Account →</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== HEADER ===== -->
   <header class="home-header">
     <a href="index.html" class="home-header-logo">
       <img src="logo.png" alt="Printara" />
       Printara
     </a>
     <div class="home-header-actions">
-      <a href="admin.html" class="btn-primary" style="padding:9px 20px;font-size:13px;border-radius:10px;text-decoration:none;">
-        Launch Tools →
-      </a>
+      <div id="headerGuest" style="display:flex;gap:8px;">
+        <button onclick="openModal()" class="btn-primary" style="padding:9px 20px;font-size:13px;border-radius:10px;">Sign In</button>
+      </div>
+      <div id="headerUser" style="display:none;gap:8px;align-items:center;">
+        <span class="home-user-badge" id="headerUsername"></span>
+        <a href="admin.html" class="btn-primary" style="padding:9px 20px;font-size:13px;border-radius:10px;text-decoration:none;">Open Tools →</a>
+        <button onclick="doLogout()" style="padding:9px 14px;font-size:13px;border-radius:10px;border:1px solid var(--border);background:var(--surface2);color:var(--text2);cursor:pointer;font-family:inherit;">Out</button>
+      </div>
     </div>
   </header>
 
-  <main>
-    <!-- Hero -->
-    <section class="home-hero">
-      <img src="logo.png" alt="Printara" class="home-hero-logo" />
-      <h1>Design. Generate. Print.</h1>
-      <p>Printara gives you powerful 3D design tools — right in your browser. Log in and start creating.</p>
-      <div class="home-cta">
-        <a href="admin.html" class="cta-primary">Get Started →</a>
-      </div>
-    </section>
+  <!-- ===== HERO ===== -->
+  <section class="home-hero">
+    <img src="logo.png" alt="Printara" class="home-hero-logo" />
+    <h1>Design. Generate. Print.</h1>
+    <p>Powerful browser-based 3D design tools — plus hundreds of ready-to-print projects. Sign up free and start creating.</p>
+    <div class="home-cta">
+      <button class="cta-primary" id="heroBtn" onclick="handleHeroCta()">Get Started Free →</button>
+      <a href="#projects" class="cta-secondary">Browse Projects ↓</a>
+    </div>
+  </section>
 
-    <!-- Tools -->
-    <div class="home-section-label">What you can build</div>
+  <!-- ===== 3D TOOLS ===== -->
+  <div class="section-wrap">
+    <div class="section-label">Browser-Based 3D Tools</div>
+    <div class="section-title">Build anything in your browser</div>
+    <p class="section-sub">Sign in once — then design, generate, and export STL files ready for any 3D printer.</p>
     <div class="tools-grid">
-      <a href="admin.html" class="tool-card-home">
-        <div class="tool-card-home-icon">🖨️</div>
+      <div class="tool-card" onclick="goToTool('studio')">
+        <div class="tool-card-icon">🖨️</div>
         <h3>3D Shape Builder</h3>
-        <p>Combine boxes, spheres, cylinders, cones, and more into custom 3D models. Export to STL for printing.</p>
-        <div class="tool-card-home-badge">3D Studio →</div>
-      </a>
-      <a href="admin.html" class="tool-card-home">
-        <div class="tool-card-home-icon">🗿</div>
+        <p>Combine boxes, spheres, cylinders, cones, and more into custom 3D models. Export to STL.</p>
+        <div class="tool-card-badge">3D Studio →</div>
+      </div>
+      <div class="tool-card" onclick="goToTool('statue')">
+        <div class="tool-card-icon">🗿</div>
         <h3>Statue Generator</h3>
         <p>Upload a face photo and generate a 3D bas-relief portrait plaque or bust — ready to print.</p>
-        <div class="tool-card-home-badge">Statue Generator →</div>
-      </a>
-      <a href="admin.html" class="tool-card-home">
-        <div class="tool-card-home-icon">🖼️</div>
-        <h3>Lithophane</h3>
+        <div class="tool-card-badge">Statue Generator →</div>
+      </div>
+      <div class="tool-card" onclick="goToTool('litho')">
+        <div class="tool-card-icon">🖼️</div>
+        <h3>Lithophane Maker</h3>
         <p>Turn any photo into a 3D lithophane that glows when backlit. Perfect personalized gifts.</p>
-        <div class="tool-card-home-badge">Lithophane →</div>
-      </a>
-      <a href="admin.html" class="tool-card-home">
-        <div class="tool-card-home-icon">🗺️</div>
+        <div class="tool-card-badge">Lithophane →</div>
+      </div>
+      <div class="tool-card" onclick="goToTool('map')">
+        <div class="tool-card-icon">🗺️</div>
         <h3>Map Generator</h3>
         <p>Search any address and generate a 3D terrain relief map with real elevation data and buildings.</p>
-        <div class="tool-card-home-badge">Map Generator →</div>
-      </a>
-    </div>
-  </main>
-
-  <footer class="footer">
-    <div class="container">
-      <div class="footer-inner">
-        <div class="logo"><img src="logo.png" alt="Printara" class="logo-img" /></div>
-        <p class="footer-copy">© 2026 Printara. All rights reserved.</p>
+        <div class="tool-card-badge">Map Generator →</div>
       </div>
     </div>
+  </div>
+
+  <!-- ===== PROJECTS ===== -->
+  <div class="section-wrap" id="projects">
+    <div class="section-label">MakerWorld Projects</div>
+    <div class="section-title">Ready-to-print models</div>
+    <p class="section-sub">Browse popular 3D printable models. Click Download to open the file on MakerWorld.</p>
+
+    <div class="projects-filters">
+      <button class="filter-btn active" onclick="filterProjects('all', this)">All</button>
+      <button class="filter-btn" onclick="filterProjects('Organization', this)">Organization</button>
+      <button class="filter-btn" onclick="filterProjects('Toys', this)">Toys & Fun</button>
+      <button class="filter-btn" onclick="filterProjects('Home Decor', this)">Home Decor</button>
+      <button class="filter-btn" onclick="filterProjects('Maker', this)">Maker & Tech</button>
+      <button class="filter-btn" onclick="filterProjects('Tools', this)">Tools</button>
+      <button class="filter-btn" onclick="filterProjects('Miniatures', this)">Miniatures</button>
+    </div>
+
+    <div class="projects-grid" id="projectsGrid"></div>
+  </div>
+
+  <!-- ===== FOOTER ===== -->
+  <footer class="home-footer">
+    <img src="logo.png" alt="Printara" /> © 2026 Printara. All rights reserved.
   </footer>
 
+  <script>
+    // ── Auth (shared with admin.html) ──
+    const SESSION_TTL = 8 * 60 * 60 * 1000;
+
+    async function hashPwd(salt, pwd) {
+      const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(salt + pwd));
+      return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
+    }
+    function getAccounts() {
+      return JSON.parse(localStorage.getItem('profab_admin_accounts') || '[]');
+    }
+    function saveAccounts(a) { localStorage.setItem('profab_admin_accounts', JSON.stringify(a)); }
+    function getSession() {
+      const raw = sessionStorage.getItem('profab_admin_session');
+      if (!raw) return null;
+      const s = JSON.parse(raw);
+      if (Date.now() - s.ts > SESSION_TTL) { sessionStorage.removeItem('profab_admin_session'); return null; }
+      return s;
+    }
+    function startSession(a) {
+      sessionStorage.setItem('profab_admin_session', JSON.stringify({
+        id: a.id, username: a.username, role: a.role, permissions: a.permissions, ts: Date.now()
+      }));
+    }
+
+    function updateHeaderState() {
+      const s = getSession();
+      const guest = document.getElementById('headerGuest');
+      const user  = document.getElementById('headerUser');
+      const uname = document.getElementById('headerUsername');
+      const heroBtn = document.getElementById('heroBtn');
+      if (s) {
+        guest.style.display = 'none';
+        user.style.display  = 'flex';
+        uname.textContent   = '👤 ' + s.username;
+        heroBtn.textContent = 'Open Tools →';
+        heroBtn.onclick = () => window.location.href = 'admin.html';
+      } else {
+        guest.style.display = 'flex';
+        user.style.display  = 'none';
+        heroBtn.textContent = 'Get Started Free →';
+        heroBtn.onclick = openModal;
+      }
+    }
+
+    function handleHeroCta() {
+      if (getSession()) window.location.href = 'admin.html';
+      else openModal();
+    }
+    function goToTool(tab) {
+      if (getSession()) window.location.href = 'admin.html#' + tab;
+      else openModal();
+    }
+    function doLogout() {
+      sessionStorage.removeItem('profab_admin_session');
+      updateHeaderState();
+    }
+
+    // ── Modal ──
+    function openModal() {
+      document.getElementById('loginModal').classList.add('open');
+      document.getElementById('siUsername').focus();
+    }
+    function closeModal() {
+      document.getElementById('loginModal').classList.remove('open');
+      document.getElementById('siError').textContent = '';
+      document.getElementById('suError').textContent = '';
+    }
+    function switchModalTab(tab) {
+      const isIn = tab === 'signin';
+      document.getElementById('panelSignIn').style.display = isIn ? '' : 'none';
+      document.getElementById('panelSignUp').style.display = isIn ? 'none' : '';
+      document.getElementById('tabSignIn').className = 'auth-tab' + (isIn ? ' active' : '');
+      document.getElementById('tabSignUp').className = 'auth-tab' + (!isIn ? ' active' : '');
+    }
+
+    async function doSignIn(e) {
+      e.preventDefault();
+      const err  = document.getElementById('siError');
+      const user = document.getElementById('siUsername').value.trim().toLowerCase();
+      const pwd  = document.getElementById('siPassword').value;
+      const accounts = getAccounts();
+
+      // First-time setup: no accounts yet
+      if (accounts.length === 0) {
+        err.textContent = 'No accounts exist yet. Sign up first!';
+        err.classList.add('visible');
+        switchModalTab('signup'); return;
+      }
+      const acct = accounts.find(a => a.username.toLowerCase() === user);
+      if (acct) {
+        const h = await hashPwd(acct.salt, pwd);
+        if (h === acct.hash) {
+          startSession(acct);
+          closeModal();
+          updateHeaderState();
+          window.location.href = 'admin.html';
+          return;
+        }
+      }
+      err.textContent = 'Incorrect username or password.';
+      err.classList.add('visible');
+      document.getElementById('siPassword').value = '';
+      setTimeout(() => err.classList.remove('visible'), 3500);
+    }
+
+    async function doSignUp(e) {
+      e.preventDefault();
+      const err      = document.getElementById('suError');
+      const name     = document.getElementById('suName').value.trim();
+      const username = document.getElementById('suUsername').value.trim().toLowerCase();
+      const pwd      = document.getElementById('suPassword').value;
+      const confirm  = document.getElementById('suConfirm').value;
+
+      if (pwd !== confirm) { err.textContent = 'Passwords do not match.'; err.classList.add('visible'); return; }
+      if (pwd.length < 6)  { err.textContent = 'Password must be at least 6 characters.'; err.classList.add('visible'); return; }
+      if (!/^[a-z0-9_]+$/.test(username)) { err.textContent = 'Username: letters, numbers and _ only.'; err.classList.add('visible'); return; }
+
+      const accounts = getAccounts();
+      if (accounts.find(a => a.username.toLowerCase() === username)) {
+        err.textContent = 'That username is already taken.'; err.classList.add('visible'); return;
+      }
+
+      const isFirst = accounts.length === 0;
+      const salt = crypto.randomUUID();
+      const hash = await hashPwd(salt, pwd);
+      const newAcct = {
+        id: 'acct-' + Date.now().toString(36), username, name, salt, hash,
+        role: isFirst ? 'owner' : 'user',
+        permissions: isFirst
+          ? ['studio','statue','litho','map','users','clockin','settings']
+          : ['studio','statue','litho','map']
+      };
+      accounts.push(newAcct);
+      saveAccounts(accounts);
+      startSession(newAcct);
+      closeModal();
+      updateHeaderState();
+      window.location.href = 'admin.html';
+    }
+
+    // ── Projects ──
+    const PROJECTS = [
+      // Organization
+      { name:"Gridfinity Baseplate", cat:"Organization", emoji:"🗂️", bg:"#1a3a4a", desc:"Modular grid system for drawer and shelf organization.", url:"https://makerworld.com/en/search/models?keyword=gridfinity+baseplate" },
+      { name:"Gridfinity Bins Set", cat:"Organization", emoji:"📦", bg:"#1a3a4a", desc:"Stackable storage bins in various sizes for the Gridfinity system.", url:"https://makerworld.com/en/search/models?keyword=gridfinity+bin" },
+      { name:"Cable Clips", cat:"Organization", emoji:"🔌", bg:"#1a2a3a", desc:"Snap-on cable management clips for desks, walls, and cable runs.", url:"https://makerworld.com/en/search/models?keyword=cable+clip+organizer" },
+      { name:"Cable Management Box", cat:"Organization", emoji:"📁", bg:"#1a2a3a", desc:"Hide power bars and tangled cables in a clean printable box.", url:"https://makerworld.com/en/search/models?keyword=cable+management+box" },
+      { name:"Drawer Organizer", cat:"Organization", emoji:"🗃️", bg:"#1a3a4a", desc:"Customizable dividers for kitchen, office, or bathroom drawers.", url:"https://makerworld.com/en/search/models?keyword=drawer+organizer+divider" },
+      { name:"Headphone Stand", cat:"Organization", emoji:"🎧", bg:"#1a2a4a", desc:"Clean desk mount or freestanding stand for headphones.", url:"https://makerworld.com/en/search/models?keyword=headphone+stand" },
+      { name:"Phone Stand", cat:"Organization", emoji:"📱", bg:"#1a2a3a", desc:"Adjustable phone holder in landscape or portrait orientation.", url:"https://makerworld.com/en/search/models?keyword=phone+stand+holder" },
+      { name:"Key Holder Wall Mount", cat:"Organization", emoji:"🔑", bg:"#1a3a4a", desc:"Stylish entryway key rack with hooks that prints in one piece.", url:"https://makerworld.com/en/search/models?keyword=key+holder+wall+mount" },
+      { name:"SD Card Holder", cat:"Organization", emoji:"💾", bg:"#1a2a3a", desc:"Compact case for storing SD and micro-SD cards safely.", url:"https://makerworld.com/en/search/models?keyword=SD+card+holder" },
+      { name:"Wall Shelf Bracket", cat:"Organization", emoji:"📌", bg:"#1a3a4a", desc:"Strong printable bracket for floating wall shelves.", url:"https://makerworld.com/en/search/models?keyword=wall+shelf+bracket+3d+print" },
+
+      // Toys
+      { name:"Flexi Dragon", cat:"Toys", emoji:"🐉", bg:"#2a1a3a", desc:"Fully articulated print-in-place dragon — no supports needed.", url:"https://makerworld.com/en/search/models?keyword=flexi+articulated+dragon" },
+      { name:"Articulated Fish", cat:"Toys", emoji:"🐟", bg:"#1a2a4a", desc:"Wiggly print-in-place fish with movable body segments.", url:"https://makerworld.com/en/search/models?keyword=articulated+flexi+fish" },
+      { name:"Fidget Cube", cat:"Toys", emoji:"🎲", bg:"#2a1a2a", desc:"Multi-sided fidget toy with buttons, dials, and switches.", url:"https://makerworld.com/en/search/models?keyword=fidget+cube" },
+      { name:"Spinning Top", cat:"Toys", emoji:"🌀", bg:"#1a2a2a", desc:"High-performance gyroscopic spinning top, multiple designs.", url:"https://makerworld.com/en/search/models?keyword=spinning+top+gyroscope" },
+      { name:"Marble Run Track", cat:"Toys", emoji:"⚪", bg:"#2a1a1a", desc:"Modular marble run sections — build your own track layout.", url:"https://makerworld.com/en/search/models?keyword=marble+run+track" },
+      { name:"Mini Chess Set", cat:"Toys", emoji:"♟️", bg:"#1a1a2a", desc:"Compact printable chess set with board and all pieces.", url:"https://makerworld.com/en/search/models?keyword=mini+chess+set+3d+print" },
+      { name:"Fidget Spinner", cat:"Toys", emoji:"💫", bg:"#2a2a1a", desc:"Smooth-spinning EDC fidget spinner with bearing slots.", url:"https://makerworld.com/en/search/models?keyword=fidget+spinner" },
+      { name:"Flexi Axolotl", cat:"Toys", emoji:"🦎", bg:"#1a2a3a", desc:"Adorable print-in-place articulated axolotl figurine.", url:"https://makerworld.com/en/search/models?keyword=flexi+axolotl" },
+      { name:"Puzzle Box", cat:"Toys", emoji:"🎁", bg:"#2a1a1a", desc:"Sequential puzzle box that requires steps to open.", url:"https://makerworld.com/en/search/models?keyword=puzzle+box+3d+print" },
+      { name:"Mini Basketball Hoop", cat:"Toys", emoji:"🏀", bg:"#2a1a2a", desc:"Desk-mountable mini basketball hoop for office fun.", url:"https://makerworld.com/en/search/models?keyword=mini+basketball+hoop+desk" },
+
+      // Home Decor
+      { name:"Geometric Vase", cat:"Home Decor", emoji:"🏺", bg:"#2a2a1a", desc:"Elegant faceted vase in multiple sizes, vase mode recommended.", url:"https://makerworld.com/en/search/models?keyword=geometric+vase+spiral" },
+      { name:"Succulent Planter", cat:"Home Decor", emoji:"🌵", bg:"#1a2a1a", desc:"Cute geometric planter perfect for succulents and small plants.", url:"https://makerworld.com/en/search/models?keyword=succulent+planter+geometric" },
+      { name:"Hex Coaster Set", cat:"Home Decor", emoji:"🔷", bg:"#1a1a2a", desc:"Hexagonal coaster set with an interlocking holder.", url:"https://makerworld.com/en/search/models?keyword=hexagon+coaster+set" },
+      { name:"Wall Art Panel", cat:"Home Decor", emoji:"🎨", bg:"#2a1a2a", desc:"Geometric wall art panels that tessellate into larger designs.", url:"https://makerworld.com/en/search/models?keyword=wall+art+geometric+panel" },
+      { name:"Bookend Set", cat:"Home Decor", emoji:"📚", bg:"#2a1a1a", desc:"Stylish bookends in various designs — mountains, animals, abstract.", url:"https://makerworld.com/en/search/models?keyword=bookend+3d+print" },
+      { name:"Photo Frame", cat:"Home Decor", emoji:"🖼️", bg:"#1a2a2a", desc:"Modern 3D printed picture frame in multiple aspect ratios.", url:"https://makerworld.com/en/search/models?keyword=photo+frame+3d+print" },
+      { name:"Lamp Shade", cat:"Home Decor", emoji:"💡", bg:"#2a2a1a", desc:"Parametric lamp shade with geometric cutout patterns.", url:"https://makerworld.com/en/search/models?keyword=lamp+shade+3d+print" },
+      { name:"Wall Clock Frame", cat:"Home Decor", emoji:"🕐", bg:"#1a1a2a", desc:"Minimalist wall clock face, fits standard clock movements.", url:"https://makerworld.com/en/search/models?keyword=wall+clock+3d+print" },
+      { name:"Candle Holder", cat:"Home Decor", emoji:"🕯️", bg:"#2a1a1a", desc:"Elegant geometric candle holders for tealights or pillar candles.", url:"https://makerworld.com/en/search/models?keyword=candle+holder+geometric" },
+      { name:"Plant Propagation Station", cat:"Home Decor", emoji:"🌿", bg:"#1a2a1a", desc:"Multi-vial propagation stand for water-rooting plant cuttings.", url:"https://makerworld.com/en/search/models?keyword=plant+propagation+station" },
+
+      // Maker & Tech
+      { name:"Raspberry Pi 4 Case", cat:"Maker", emoji:"🍓", bg:"#1a2a1a", desc:"Protective case with ventilation and GPIO access for the Pi 4.", url:"https://makerworld.com/en/search/models?keyword=raspberry+pi+4+case" },
+      { name:"Arduino Uno Case", cat:"Maker", emoji:"⚡", bg:"#1a1a2a", desc:"Clean snap-fit enclosure for Arduino Uno and compatible boards.", url:"https://makerworld.com/en/search/models?keyword=arduino+uno+case+enclosure" },
+      { name:"Bambu AMS Spool Holder", cat:"Maker", emoji:"🧵", bg:"#1a2a2a", desc:"External spool holder compatible with Bambu Lab AMS systems.", url:"https://makerworld.com/en/search/models?keyword=bambu+AMS+spool+holder" },
+      { name:"Filament Spool Holder", cat:"Maker", emoji:"🎞️", bg:"#2a1a2a", desc:"Universal wall-mounted or desk filament spool roller.", url:"https://makerworld.com/en/search/models?keyword=filament+spool+holder+wall" },
+      { name:"Print Bed Scraper Handle", cat:"Maker", emoji:"🔧", bg:"#2a2a1a", desc:"Ergonomic handle for standard 100mm scraper blades.", url:"https://makerworld.com/en/search/models?keyword=bed+scraper+handle" },
+      { name:"Hex Key Set Holder", cat:"Maker", emoji:"🔩", bg:"#1a2a1a", desc:"Wall-mounted rack that holds a full hex key / allen wrench set.", url:"https://makerworld.com/en/search/models?keyword=hex+key+allen+wrench+holder" },
+      { name:"Electronics Enclosure", cat:"Maker", emoji:"📟", bg:"#1a1a2a", desc:"Generic parametric electronics project box with lid and mounts.", url:"https://makerworld.com/en/search/models?keyword=electronics+enclosure+project+box" },
+      { name:"Soldering Helping Hands", cat:"Maker", emoji:"🦾", bg:"#2a1a1a", desc:"Articulated helping hands jig for soldering small components.", url:"https://makerworld.com/en/search/models?keyword=soldering+helping+hands" },
+
+      // Tools
+      { name:"Pocket Knife Sharpener", cat:"Tools", emoji:"🔪", bg:"#2a1a1a", desc:"Fixed-angle knife sharpening guide with rod slots.", url:"https://makerworld.com/en/search/models?keyword=knife+sharpener+angle+guide" },
+      { name:"Mini F-Clamp", cat:"Tools", emoji:"🗜️", bg:"#1a2a1a", desc:"Fully functional print-in-place mini F-clamp for small workpieces.", url:"https://makerworld.com/en/search/models?keyword=f+clamp+3d+print" },
+      { name:"Drill Bit Organizer", cat:"Tools", emoji:"🌀", bg:"#2a2a1a", desc:"Sorted rack for twist drill bits in sizes from 1–13mm.", url:"https://makerworld.com/en/search/models?keyword=drill+bit+organizer+rack" },
+      { name:"Paint Brush Holder", cat:"Tools", emoji:"🖌️", bg:"#1a1a2a", desc:"Rotating carousel brush holder for hobby and art brushes.", url:"https://makerworld.com/en/search/models?keyword=paint+brush+holder+organizer" },
+      { name:"Mini Vise", cat:"Tools", emoji:"⚙️", bg:"#1a2a2a", desc:"Desktop printable mini vise with working screw mechanism.", url:"https://makerworld.com/en/search/models?keyword=mini+vise+3d+print" },
+      { name:"Wrench Set", cat:"Tools", emoji:"🔧", bg:"#2a1a2a", desc:"Printable open-end wrenches in common metric sizes.", url:"https://makerworld.com/en/search/models?keyword=3d+printed+wrench+functional" },
+
+      // Miniatures
+      { name:"D&D Dungeon Tiles", cat:"Miniatures", emoji:"🏰", bg:"#1a1a2a", desc:"Modular dungeon floor and wall tiles for tabletop RPGs.", url:"https://makerworld.com/en/search/models?keyword=DnD+dungeon+tiles+modular" },
+      { name:"Fantasy Dragon Miniature", cat:"Miniatures", emoji:"🐲", bg:"#2a1a1a", desc:"Detailed dragon miniature for tabletop gaming, 28mm scale.", url:"https://makerworld.com/en/search/models?keyword=dragon+miniature+tabletop+28mm" },
+      { name:"Terrain Tree Set", cat:"Miniatures", emoji:"🌲", bg:"#1a2a1a", desc:"Wargame terrain trees in multiple sizes and styles.", url:"https://makerworld.com/en/search/models?keyword=terrain+trees+wargame" },
+      { name:"Space Marine Figure", cat:"Miniatures", emoji:"🚀", bg:"#1a1a2a", desc:"Sci-fi armored soldier miniature, highly detailed 32mm scale.", url:"https://makerworld.com/en/search/models?keyword=sci-fi+space+marine+miniature" },
+      { name:"Castle Ruins Set", cat:"Miniatures", emoji:"🏯", bg:"#2a2a1a", desc:"Crumbling castle ruin terrain pieces for fantasy wargaming.", url:"https://makerworld.com/en/search/models?keyword=castle+ruins+terrain+miniature" },
+      { name:"Sci-Fi Crates & Barrels", cat:"Miniatures", emoji:"📦", bg:"#1a2a2a", desc:"Industrial scatter terrain — crates, barrels, and containers.", url:"https://makerworld.com/en/search/models?keyword=sci-fi+crates+barrels+terrain" },
+    ];
+
+    let currentFilter = 'all';
+
+    function filterProjects(cat, btn) {
+      currentFilter = cat;
+      document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      renderProjects();
+    }
+
+    function renderProjects() {
+      const grid = document.getElementById('projectsGrid');
+      const list = currentFilter === 'all' ? PROJECTS : PROJECTS.filter(p => p.cat === currentFilter);
+      grid.innerHTML = list.map(p => `
+        <div class="project-card">
+          <div class="project-thumb" style="background:${p.bg};">
+            ${p.emoji}
+            <span class="project-cat-badge">${p.cat}</span>
+          </div>
+          <div class="project-info">
+            <h4>${p.name}</h4>
+            <p>${p.desc}</p>
+          </div>
+          <div class="project-dl">
+            <a href="${p.url}" target="_blank" rel="noopener">⬇ Download on MakerWorld</a>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // ── Init ──
+    document.addEventListener('DOMContentLoaded', () => {
+      updateHeaderState();
+      renderProjects();
+      // Redirect to tool if hash present and already logged in
+      if (location.hash && getSession()) {
+        window.location.href = 'admin.html' + location.hash;
+      }
+    });
+  </script>
 </body>
 </html>
