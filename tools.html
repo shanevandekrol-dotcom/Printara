@@ -480,32 +480,75 @@
     </div><!-- /tab-statue -->
 
     <!-- ===== OPENSCAD TAB ===== -->
-    <div class="tab-panel" id="tab-openscad" style="padding:0;display:flex;flex-direction:column;height:calc(100vh - 130px);min-height:500px;">
-      <div class="tool-header" style="padding:16px 20px;border-bottom:1px solid var(--border);flex-shrink:0;">
+    <div class="tab-panel" id="tab-openscad">
+      <div class="tool-header">
         <div class="tool-header-icon">📐</div>
-        <div style="flex:1;">
-          <h2 class="tool-header-title">OpenSCAD</h2>
-          <p class="tool-header-sub">Script-based 3D CAD modelling — powered by OpenSCAD.cloud</p>
+        <div>
+          <h2 class="tool-header-title">OpenSCAD Code Generator</h2>
+          <p class="tool-header-sub">Build shapes visually — get ready-to-use OpenSCAD code.</p>
         </div>
-        <a href="https://openscad.cloud" target="_blank" rel="noopener"
-          style="padding:8px 16px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;font-size:13px;font-weight:600;color:var(--text2);text-decoration:none;white-space:nowrap;">
-          Open in new tab ↗
-        </a>
       </div>
-      <iframe
-        id="openscadFrame"
-        src=""
-        style="flex:1;width:100%;border:none;background:#1a1a1a;"
-        allow="cross-origin-isolated"
-        title="OpenSCAD.cloud">
-      </iframe>
-      <div id="openscadFallback" style="display:none;flex:1;align-items:center;justify-content:center;flex-direction:column;gap:16px;text-align:center;padding:40px;">
-        <div style="font-size:56px;">📐</div>
-        <h3 style="margin:0;font-size:20px;">OpenSCAD.cloud</h3>
-        <p style="color:var(--text2);max-width:400px;margin:0;">OpenSCAD.cloud doesn't allow embedding — click below to open it in a new tab.</p>
-        <a href="https://openscad.cloud" target="_blank" rel="noopener" class="btn-primary" style="padding:13px 28px;font-size:15px;text-decoration:none;">
-          Launch OpenSCAD.cloud ↗
-        </a>
+
+      <div style="display:flex;gap:14px;flex-wrap:wrap;">
+
+        <!-- LEFT: shape builder -->
+        <div style="flex:0 0 280px;min-width:220px;display:flex;flex-direction:column;gap:10px;">
+
+          <div class="tool-card">
+            <div class="tool-card-label">Add Shape</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:10px;">
+              <button class="tab-btn" onclick="oscAddShape('cube')"     style="font-size:12px;padding:8px;">⬜ Cube</button>
+              <button class="tab-btn" onclick="oscAddShape('sphere')"   style="font-size:12px;padding:8px;">⚪ Sphere</button>
+              <button class="tab-btn" onclick="oscAddShape('cylinder')" style="font-size:12px;padding:8px;">🥫 Cylinder</button>
+              <button class="tab-btn" onclick="oscAddShape('cone')"     style="font-size:12px;padding:8px;">🔺 Cone</button>
+              <button class="tab-btn" onclick="oscAddShape('torus')"    style="font-size:12px;padding:8px;">⭕ Torus</button>
+              <button class="tab-btn" onclick="oscAddShape('polygon')"  style="font-size:12px;padding:8px;">🔷 Polygon</button>
+            </div>
+            <div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:6px;">Operation for next shape</div>
+            <select id="oscOp" style="width:100%;padding:8px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;">
+              <option value="union">Union (add together)</option>
+              <option value="difference">Difference (subtract)</option>
+              <option value="intersection">Intersection (overlap only)</option>
+              <option value="standalone">Standalone</option>
+            </select>
+          </div>
+
+          <div class="tool-card">
+            <div class="tool-card-label">Global Settings</div>
+            <div style="display:flex;flex-direction:column;gap:8px;font-size:12px;">
+              <div>
+                <div style="display:flex;justify-content:space-between;margin-bottom:3px;"><span style="color:var(--text2);">$fn (smoothness)</span><span id="oscFnVal" style="color:var(--accent);font-weight:700;">32</span></div>
+                <input type="range" id="oscFn" min="8" max="128" step="8" value="32" oninput="document.getElementById('oscFnVal').textContent=this.value;oscGenerate()" style="width:100%;accent-color:var(--accent);" />
+              </div>
+            </div>
+          </div>
+
+          <div class="tool-card">
+            <div class="tool-card-label">Shapes <span id="oscCount" style="font-weight:400;text-transform:none;font-size:12px;">(0)</span></div>
+            <div id="oscShapeList" style="display:flex;flex-direction:column;gap:6px;max-height:320px;overflow-y:auto;">
+              <div style="color:var(--text3);font-size:12px;text-align:center;padding:12px 0;">No shapes yet — add one above</div>
+            </div>
+          </div>
+
+          <div style="display:flex;gap:6px;">
+            <button class="btn-primary" onclick="oscDownload()" style="flex:1;font-size:13px;padding:11px;">↓ Download .scad</button>
+            <button class="tab-btn" onclick="oscCopy()" style="padding:10px 14px;font-size:13px;" title="Copy code">⎘ Copy</button>
+            <button class="tab-btn" onclick="oscClear()" style="padding:10px 14px;font-size:13px;" title="Clear all">🗑</button>
+          </div>
+        </div>
+
+        <!-- RIGHT: code output -->
+        <div style="flex:1;min-width:260px;display:flex;flex-direction:column;gap:8px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;">
+            <span style="font-size:12px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.07em;">Generated OpenSCAD Code</span>
+            <button onclick="oscCopy()" class="tab-btn" style="font-size:12px;padding:5px 12px;">Copy ⎘</button>
+          </div>
+          <pre id="oscCode" style="flex:1;min-height:420px;margin:0;padding:16px;background:#0d1117;color:#e6edf3;border:1px solid var(--border);border-radius:12px;font-family:'Fira Code','Cascadia Code','Consolas',monospace;font-size:13px;line-height:1.6;overflow:auto;white-space:pre;tab-size:2;">// Add a shape to get started
+$fn = 32;
+</pre>
+          <div style="font-size:11px;color:var(--text3);">Paste into <a href="https://openscad.org" target="_blank" rel="noopener" style="color:var(--accent);">OpenSCAD</a> or <a href="https://openscad.cloud" target="_blank" rel="noopener" style="color:var(--accent);">OpenSCAD.cloud</a> to preview &amp; render.</div>
+        </div>
+
       </div>
     </div><!-- /tab-openscad -->
 
@@ -537,15 +580,194 @@
       if (tab==='openscad') initOpenSCAD();
     }
 
-    function initOpenSCAD() {
-      const frame = document.getElementById('openscadFrame');
-      if (frame && !frame.src) {
-        frame.src = 'https://openscad.cloud';
-        frame.addEventListener('error', () => {
-          frame.style.display = 'none';
-          document.getElementById('openscadFallback').style.display = 'flex';
-        });
+    // ===== OPENSCAD CODE GENERATOR ================================================
+    let _oscShapes = [];
+    let _oscIdSeq  = 0;
+
+    const OSC_DEF = {
+      cube:     { w:10, h:10, d:10, tx:0, ty:0, tz:0, rx:0, ry:0, rz:0 },
+      sphere:   { r:5,         tx:0, ty:0, tz:0, rx:0, ry:0, rz:0 },
+      cylinder: { r:5, h:10,   tx:0, ty:0, tz:0, rx:0, ry:0, rz:0 },
+      cone:     { r1:5, r2:0, h:10, tx:0, ty:0, tz:0, rx:0, ry:0, rz:0 },
+      torus:    { R:8, r:2,    tx:0, ty:0, tz:0, rx:0, ry:0, rz:0 },
+      polygon:  { sides:6, r:5, h:10, tx:0, ty:0, tz:0, rx:0, ry:0, rz:0 }
+    };
+
+    function oscAddShape(type) {
+      const id = ++_oscIdSeq;
+      _oscShapes.push({ id, type, op:'standalone', params: Object.assign({}, OSC_DEF[type]) });
+      oscRenderList();
+      oscGenerate();
+    }
+
+    function oscRemove(id) {
+      _oscShapes = _oscShapes.filter(s => s.id !== id);
+      oscRenderList();
+      oscGenerate();
+    }
+
+    function oscClear() {
+      _oscShapes = [];
+      oscRenderList();
+      oscGenerate();
+    }
+
+    function oscSetParam(id, key, val) {
+      const s = _oscShapes.find(s => s.id === id);
+      if (s) { s.params[key] = parseFloat(val); oscGenerate(); }
+    }
+
+    function oscSetOp(id, val) {
+      const s = _oscShapes.find(s => s.id === id);
+      if (s) { s.op = val; oscGenerate(); }
+    }
+
+    function oscRenderList() {
+      const container = document.getElementById('oscShapeList');
+      if (!container) return;
+      container.innerHTML = '';
+      if (_oscShapes.length === 0) {
+        container.innerHTML = '<p style="color:var(--clr-muted);font-size:0.85rem;text-align:center;padding:1rem;">Add shapes using the buttons above</p>';
+        return;
       }
+      _oscShapes.forEach(s => {
+        const card = document.createElement('div');
+        card.style.cssText = 'background:var(--clr-surface);border:1px solid var(--clr-border);border-radius:8px;padding:0.75rem;margin-bottom:0.5rem;';
+
+        const header = document.createElement('div');
+        header.style.cssText = 'display:flex;justify-content:space-between;align-items:center;margin-bottom:0.5rem;';
+        header.innerHTML = '<span style="font-weight:600;text-transform:capitalize;">' + s.type + ' #' + s.id + '</span>' +
+          '<button onclick="oscRemove(' + s.id + ')" style="background:var(--clr-danger,#e74c3c);color:#fff;border:none;border-radius:4px;padding:2px 8px;cursor:pointer;font-size:0.8rem;">✕</button>';
+        card.appendChild(header);
+
+        // Operation selector
+        const opRow = document.createElement('div');
+        opRow.style.cssText = 'margin-bottom:0.5rem;';
+        opRow.innerHTML = '<label style="font-size:0.8rem;color:var(--clr-muted);">Operation: </label>' +
+          '<select onchange="oscSetOp(' + s.id + ',this.value)" style="font-size:0.8rem;padding:2px 4px;border-radius:4px;border:1px solid var(--clr-border);background:var(--clr-bg);color:var(--clr-text);">' +
+          ['standalone','union','difference','intersection'].map(op =>
+            '<option value="' + op + '"' + (s.op === op ? ' selected' : '') + '>' + op + '</option>'
+          ).join('') + '</select>';
+        card.appendChild(opRow);
+
+        // Parameter sliders
+        const params = Object.keys(s.params).filter(k => !['tx','ty','tz','rx','ry','rz'].includes(k));
+        const transforms = ['tx','ty','tz','rx','ry','rz'];
+        const paramLabels = { w:'Width', h:'Height', d:'Depth', r:'Radius', r1:'Top Radius', r2:'Bottom Radius', R:'Major R', sides:'Sides' };
+
+        params.forEach(key => {
+          const max = ['sides'].includes(key) ? 32 : 50;
+          const min = ['sides'].includes(key) ? 3 : 0;
+          const step = ['sides'].includes(key) ? 1 : 0.5;
+          const row = document.createElement('div');
+          row.style.cssText = 'display:flex;align-items:center;gap:0.5rem;margin-bottom:0.25rem;font-size:0.8rem;';
+          row.innerHTML = '<span style="width:80px;color:var(--clr-muted);">' + (paramLabels[key]||key) + '</span>' +
+            '<input type="range" min="' + min + '" max="' + max + '" step="' + step + '" value="' + s.params[key] + '" ' +
+            'oninput="this.nextElementSibling.textContent=this.value;oscSetParam(' + s.id + ','' + key + '',this.value)" ' +
+            'style="flex:1;">' +
+            '<span style="width:30px;text-align:right;">' + s.params[key] + '</span>';
+          card.appendChild(row);
+        });
+
+        // Transform row toggle
+        const tBtn = document.createElement('button');
+        tBtn.textContent = '+ Transform';
+        tBtn.style.cssText = 'font-size:0.75rem;background:none;border:1px solid var(--clr-border);border-radius:4px;padding:2px 8px;cursor:pointer;color:var(--clr-muted);margin-top:0.25rem;';
+        const tPanel = document.createElement('div');
+        tPanel.style.display = 'none';
+        tBtn.onclick = () => { tPanel.style.display = tPanel.style.display === 'none' ? 'block' : 'none'; tBtn.textContent = tPanel.style.display === 'none' ? '+ Transform' : '– Transform'; };
+        transforms.forEach(key => {
+          const labels = { tx:'Translate X', ty:'Translate Y', tz:'Translate Z', rx:'Rotate X', ry:'Rotate Y', rz:'Rotate Z' };
+          const max = ['rx','ry','rz'].includes(key) ? 360 : 50;
+          const min = ['rx','ry','rz'].includes(key) ? 0 : -50;
+          const row = document.createElement('div');
+          row.style.cssText = 'display:flex;align-items:center;gap:0.5rem;margin-bottom:0.25rem;font-size:0.8rem;';
+          row.innerHTML = '<span style="width:90px;color:var(--clr-muted);">' + labels[key] + '</span>' +
+            '<input type="range" min="' + min + '" max="' + max + '" step="1" value="' + s.params[key] + '" ' +
+            'oninput="this.nextElementSibling.textContent=this.value;oscSetParam(' + s.id + ','' + key + '',this.value)" ' +
+            'style="flex:1;">' +
+            '<span style="width:30px;text-align:right;">' + s.params[key] + '</span>';
+          tPanel.appendChild(row);
+        });
+        card.appendChild(tBtn);
+        card.appendChild(tPanel);
+        container.appendChild(card);
+      });
+    }
+
+    function oscShapeCode(s, fn) {
+      const p = s.params;
+      let geo = '';
+      if (s.type === 'cube')     geo = 'cube([' + p.w + ',' + p.d + ',' + p.h + '], center=true)';
+      else if (s.type === 'sphere')   geo = 'sphere(r=' + p.r + ', $fn=' + fn + ')';
+      else if (s.type === 'cylinder') geo = 'cylinder(r=' + p.r + ', h=' + p.h + ', $fn=' + fn + ', center=true)';
+      else if (s.type === 'cone')     geo = 'cylinder(r1=' + p.r1 + ', r2=' + p.r2 + ', h=' + p.h + ', $fn=' + fn + ', center=true)';
+      else if (s.type === 'torus')    geo = 'rotate_extrude($fn=' + fn + ') translate([' + p.R + ',0]) circle(r=' + p.r + ', $fn=' + fn + ')';
+      else if (s.type === 'polygon')  geo = 'linear_extrude(height=' + p.h + ') circle(r=' + p.r + ', $fn=' + p.sides + ')';
+
+      const hasTx = p.tx || p.ty || p.tz;
+      const hasRx = p.rx || p.ry || p.rz;
+      if (hasTx) geo = 'translate([' + p.tx + ',' + p.ty + ',' + p.tz + ']) ' + geo;
+      if (hasRx) geo = 'rotate([' + p.rx + ',' + p.ry + ',' + p.rz + ']) ' + geo;
+      return '  ' + geo + ';';
+    }
+
+    function oscGenerate() {
+      const fn = parseInt(document.getElementById('oscFn') ? document.getElementById('oscFn').value : 32);
+      const pre = document.getElementById('oscCode');
+      if (!pre) return;
+      if (_oscShapes.length === 0) { pre.textContent = '// Add shapes to generate code'; return; }
+
+      const standalones = _oscShapes.filter(s => s.op === 'standalone');
+      const unions      = _oscShapes.filter(s => s.op === 'union');
+      const diffs       = _oscShapes.filter(s => s.op === 'difference');
+      const inters      = _oscShapes.filter(s => s.op === 'intersection');
+
+      let lines = ['// Generated by Printara OpenSCAD Builder', '$fn = ' + fn + ';', ''];
+
+      if (standalones.length) {
+        standalones.forEach(s => lines.push(oscShapeCode(s, fn).trim()));
+      }
+      if (unions.length) {
+        lines.push('union() {');
+        unions.forEach(s => lines.push(oscShapeCode(s, fn)));
+        lines.push('}');
+      }
+      if (diffs.length) {
+        lines.push('difference() {');
+        diffs.forEach(s => lines.push(oscShapeCode(s, fn)));
+        lines.push('}');
+      }
+      if (inters.length) {
+        lines.push('intersection() {');
+        inters.forEach(s => lines.push(oscShapeCode(s, fn)));
+        lines.push('}');
+      }
+
+      pre.textContent = lines.join('\n');
+    }
+
+    function oscCopy() {
+      const pre = document.getElementById('oscCode');
+      if (!pre) return;
+      navigator.clipboard.writeText(pre.textContent).then(() => {
+        if (typeof showToast === 'function') showToast('Code copied!');
+      });
+    }
+
+    function oscDownload() {
+      const pre = document.getElementById('oscCode');
+      if (!pre) return;
+      const blob = new Blob([pre.textContent], { type: 'text/plain' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'printara_model.scad';
+      a.click();
+    }
+
+    function initOpenSCAD() {
+      oscRenderList();
+      oscGenerate();
     }
 
     // ===== 3D STUDIO =================================================================
