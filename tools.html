@@ -1023,19 +1023,20 @@ $fn = 32;
         }
       });
 
-      _sbResize();
+      // Delay first resize so flex layout has fully painted
+      requestAnimationFrame(() => { _sbResize(); _sbStartRender(); });
       new ResizeObserver(_sbResize).observe(canvas.parentElement);
-      _sbStartRender();
     }
 
     // ── Resize & render loop ─────────────────────────────────────────────────────
     function _sbResize() {
       const canvas = document.getElementById('studioCanvas');
       if (!canvas || !_sbRenderer) return;
-      const w = canvas.parentElement.clientWidth;
+      const w = Math.max(canvas.parentElement.clientWidth, 300);
       const h = Math.max(320, Math.round(w * 0.56));
       _sbRenderer.setSize(w, h);
       if (_sbCamera) { _sbCamera.aspect = w / h; _sbCamera.updateProjectionMatrix(); }
+      if (_sbOrbit)  { _sbOrbit.apply(); }
     }
 
     function _sbStartRender() {
