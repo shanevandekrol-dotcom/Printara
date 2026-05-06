@@ -18,7 +18,7 @@
 <body>
 
 <!-- ===== PRINTER MODAL ===== -->
-<div id="printerModal" style="display:none;position:fixed;inset:0;z-index:1000;background:rgba(0,0,0,0.75);backdrop-filter:blur(6px);align-items:center;justify-content:center;padding:20px;box-sizing:border-box;" onclick="if(event.target===this)this.classList.remove('open'),this.style.display='none'">
+<div id="printerModal" style="display:none;position:fixed;inset:0;z-index:1000;background:rgba(0,0,0,0.75);backdrop-filter:blur(6px);align-items:center;justify-content:center;padding:20px;box-sizing:border-box;" onclick="if(event.target===this)this.style.display='none'">
   <div style="background:var(--clr-surface,#13131e);border:1px solid var(--clr-border,#2a2a3d);border-radius:20px;padding:28px;width:100%;max-width:480px;position:relative;">
     <button onclick="document.getElementById('printerModal').style.display='none'" style="position:absolute;top:14px;right:18px;background:none;border:none;font-size:22px;color:#888;cursor:pointer;">×</button>
     <h2 style="margin:0 0 4px;font-size:18px;font-weight:800;color:var(--clr-text,#e8e8f0);">Connect Printer</h2>
@@ -45,7 +45,7 @@
       <a href="index.html" class="logo"><img src="logo.png" alt="Printara" class="logo-img" /></a>
       <nav class="nav"><a href="index.html" class="nav-link">← Home</a></nav>
       <span id="toolsUserBadge" style="margin-left:auto;background:rgba(0,150,255,0.15);border:1px solid rgba(0,150,255,0.4);color:#0099ff;padding:5px 14px;border-radius:20px;font-size:13px;font-weight:600;"></span>
-      <button id="prHeaderBtn" onclick="document.getElementById('printerModal').classList.add('open')" title="Connect 3D Printer" style="display:flex;align-items:center;gap:6px;padding:8px 14px;font-size:13px;border-radius:10px;border:1px solid var(--clr-border,#2a2a3d);background:var(--clr-surface,#13131e);color:var(--clr-text,#e8e8f0);cursor:pointer;font-family:inherit;font-weight:600;transition:border-color .15s;">🖨️ <span id="prHeaderLabel">Connect Printer</span></button>
+      <button id="prHeaderBtn" onclick="document.getElementById('printerModal').style.display='flex'" title="Connect 3D Printer" style="display:flex;align-items:center;gap:6px;padding:8px 14px;font-size:13px;border-radius:10px;border:1px solid var(--clr-border,#2a2a3d);background:var(--clr-surface,#13131e);color:var(--clr-text,#e8e8f0);cursor:pointer;font-family:inherit;font-weight:600;transition:border-color .15s;">🖨️ <span id="prHeaderLabel">Connect Printer</span></button>
       <button class="theme-toggle" onclick="toggleTheme()" title="Toggle theme">🌙</button>
     </div>
   </header>
@@ -685,7 +685,13 @@ $fn = 32;
           const step = ['sides'].includes(key) ? 1 : 0.5;
           const row = document.createElement('div');
           row.style.cssText = 'display:flex;align-items:center;gap:0.5rem;margin-bottom:0.25rem;font-size:0.8rem;';
-*You seem to be using an outdated version of Cursor. Please upgrade to the latest version by [downloading Cursor again from our website](https://www.cursor.com/). All your settings will be preserved.*
+          row.innerHTML = '<span style="width:80px;color:var(--clr-muted);">' + (paramLabels[key]||key) + '</span>' +
+            '<input type="range" min="' + min + '" max="' + max + '" step="' + step + '" value="' + s.params[key] + '" ' +
+            'oninput="this.nextElementSibling.textContent=this.value;oscSetParam(' + s.id + ',\'' + key + '\',this.value)" ' +
+            'style="flex:1;">' +
+            '<span style="width:30px;text-align:right;">' + s.params[key] + '</span>';
+          card.appendChild(row);
+        });
 
         // Transform row toggle
         const tBtn = document.createElement('button');
@@ -702,7 +708,7 @@ $fn = 32;
           row.style.cssText = 'display:flex;align-items:center;gap:0.5rem;margin-bottom:0.25rem;font-size:0.8rem;';
           row.innerHTML = '<span style="width:90px;color:var(--clr-muted);">' + labels[key] + '</span>' +
             '<input type="range" min="' + min + '" max="' + max + '" step="1" value="' + s.params[key] + '" ' +
-            'oninput="this.nextElementSibling.textContent=this.value;oscSetParam(' + s.id + ','' + key + '',this.value)" ' +
+            'oninput="this.nextElementSibling.textContent=this.value;oscSetParam(' + s.id + ',\'' + key + '\',this.value)" ' +
             'style="flex:1;">' +
             '<span style="width:30px;text-align:right;">' + s.params[key] + '</span>';
           tPanel.appendChild(row);
