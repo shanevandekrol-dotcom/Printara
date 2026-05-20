@@ -1,0 +1,736 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Printara — Print Queue</title>
+  <link rel="icon" href="logo.png" />
+  <meta name="theme-color" content="#0a0a0a" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=Fira+Code:wght@400;600&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0a0a0a;
+      --surface: #111;
+      --surface2: #1a1a1a;
+      --surface3: #242424;
+      --border: #2a2a2a;
+      --accent: #0099ff;
+      --accent-dim: rgba(0,153,255,0.12);
+      --orange: #ff6b35;
+      --orange-dim: rgba(255,107,53,0.12);
+      --green: #22c55e;
+      --red: #ef4444;
+      --yellow: #eab308;
+      --text: #e8e8e8;
+      --text2: #888;
+      --text3: #444;
+      --radius: 10px;
+    }
+
+    html, body { height: 100%; background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; font-size: 13px; overflow: hidden; }
+
+    /* ── Layout ── */
+    #app { display: grid; grid-template-columns: 260px 1fr 280px; grid-template-rows: 52px 1fr 140px; height: 100vh; }
+
+    /* ── Top bar ── */
+    #topbar {
+      grid-column: 1/-1;
+      display: flex; align-items: center; gap: 12px;
+      padding: 0 18px;
+      background: var(--surface); border-bottom: 1px solid var(--border);
+    }
+
+    #topbar a { display: flex; align-items: center; gap: 8px; text-decoration: none; color: var(--text); font-weight: 700; font-size: 15px; }
+    #topbar a svg { color: var(--accent); }
+    #topbar .sep { color: var(--text3); margin: 0 4px; }
+    #topbar .page-title { color: var(--text2); font-weight: 600; font-size: 14px; }
+    #topbar .spacer { flex: 1; }
+
+    .status-pill {
+      display: flex; align-items: center; gap: 6px;
+      padding: 4px 12px; border-radius: 20px;
+      font-size: 11px; font-weight: 700;
+      background: var(--surface2); border: 1px solid var(--border);
+    }
+    .status-pill .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--text3); }
+    .status-pill.connected .dot { background: var(--green); box-shadow: 0 0 6px var(--green); }
+    .status-pill.printing .dot  { background: var(--accent); box-shadow: 0 0 6px var(--accent); animation: blink 1.2s infinite; }
+
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.3} }
+
+    /* ── Left panel ── */
+    #left {
+      background: var(--surface); border-right: 1px solid var(--border);
+      overflow-y: auto; display: flex; flex-direction: column;
+    }
+
+    .panel { padding: 16px; border-bottom: 1px solid var(--border); }
+    .panel-title { font-size: 10px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--text3); margin-bottom: 12px; }
+
+    label { display: block; font-size: 11px; color: var(--text2); margin-bottom: 4px; }
+    .field { margin-bottom: 10px; }
+
+    select, input[type="text"] {
+      width: 100%; padding: 7px 10px; font-size: 12px; font-family: inherit;
+      background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius);
+      color: var(--text); outline: none;
+    }
+    select:focus, input:focus { border-color: var(--accent); }
+
+    button {
+      cursor: pointer; border: none; border-radius: var(--radius);
+      font-family: inherit; font-size: 12px; font-weight: 700;
+      transition: all .15s;
+    }
+
+    .btn-primary { background: var(--accent); color: #fff; padding: 8px 14px; }
+    .btn-primary:hover { background: #0088ee; }
+    .btn-primary:disabled { opacity: .4; cursor: not-allowed; }
+
+    .btn-secondary { background: var(--surface2); color: var(--text); border: 1px solid var(--border); padding: 7px 12px; }
+    .btn-secondary:hover { background: var(--surface3); }
+    .btn-secondary:disabled { opacity: .4; cursor: not-allowed; }
+
+    .btn-danger { background: rgba(239,68,68,.12); color: var(--red); border: 1px solid rgba(239,68,68,.25); padding: 7px 12px; }
+    .btn-danger:hover { background: rgba(239,68,68,.22); }
+
+    .btn-icon { background: transparent; color: var(--text2); padding: 4px 6px; border-radius: 6px; font-size: 14px; line-height: 1; }
+    .btn-icon:hover { background: var(--surface3); color: var(--text); }
+
+    .btn-row { display: flex; gap: 8px; }
+    .btn-row button { flex: 1; }
+
+    .hidden { display: none !important; }
+
+    /* temperature */
+    .temp-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .temp-card { background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius); padding: 10px; text-align: center; }
+    .temp-card .lbl { font-size: 10px; color: var(--text3); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 4px; }
+    .temp-card .val { font-size: 20px; font-weight: 700; }
+    .temp-card .val.hot  { color: var(--orange); }
+    .temp-card .val.warm { color: var(--yellow); }
+    .temp-card .tgt { font-size: 10px; color: var(--text3); margin-top: 2px; }
+
+    /* jog grid */
+    .jog-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+
+    /* ── Main queue ── */
+    #main { display: flex; flex-direction: column; overflow: hidden; }
+
+    #queue-bar {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 14px; border-bottom: 1px solid var(--border);
+      background: var(--surface);
+    }
+    #queue-bar h2 { font-size: 14px; font-weight: 800; flex: 1; }
+    #q-count { font-size: 11px; background: var(--surface2); border: 1px solid var(--border); border-radius: 20px; padding: 2px 8px; color: var(--text2); }
+
+    #drop-zone {
+      flex: 1; overflow-y: auto; padding: 12px;
+      display: flex; flex-direction: column; gap: 8px;
+    }
+    #drop-zone.over { outline: 2px dashed var(--accent); outline-offset: -4px; background: var(--accent-dim); }
+
+    #empty-state {
+      flex: 1; display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      gap: 12px; padding: 40px; color: var(--text3); text-align: center;
+    }
+    #empty-state svg { opacity: .25; }
+    #empty-state p { font-size: 12px; }
+    #empty-state small { font-size: 11px; opacity: .6; }
+
+    .q-item {
+      background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+      padding: 12px 14px; display: flex; align-items: center; gap: 12px;
+      transition: border-color .15s;
+    }
+    .q-item:hover { border-color: #3a3a3a; }
+    .q-item.active { border-color: var(--accent); background: var(--accent-dim); }
+    .q-item.done   { opacity: .5; border-color: var(--green); }
+    .q-item.cancelled { opacity: .4; }
+
+    .q-icon { width: 34px; height: 34px; border-radius: 8px; background: var(--surface3); display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; }
+    .q-item.active .q-icon { background: var(--accent-dim); }
+
+    .q-info { flex: 1; overflow: hidden; }
+    .q-name { font-size: 13px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .q-meta { font-size: 11px; color: var(--text2); margin-top: 2px; }
+
+    .q-badge { font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 20px; text-transform: uppercase; letter-spacing: .5px; flex-shrink: 0; }
+    .badge-queued    { background: var(--surface3); color: var(--text2); }
+    .badge-printing  { background: var(--accent-dim); color: var(--accent); border: 1px solid rgba(0,153,255,.3); }
+    .badge-done      { background: rgba(34,197,94,.12); color: var(--green); border: 1px solid rgba(34,197,94,.3); }
+    .badge-cancelled { background: rgba(239,68,68,.1); color: var(--red); }
+    .badge-error     { background: rgba(239,68,68,.1); color: var(--red); }
+
+    .q-actions { display: flex; gap: 4px; flex-shrink: 0; }
+
+    /* ── Right console ── */
+    #right {
+      background: var(--surface); border-left: 1px solid var(--border);
+      display: flex; flex-direction: column; overflow: hidden;
+    }
+    #console-hdr { display: flex; align-items: center; gap: 8px; padding: 10px 14px; border-bottom: 1px solid var(--border); }
+    #console-hdr h3 { font-size: 12px; font-weight: 700; flex: 1; }
+    #console-out {
+      flex: 1; overflow-y: auto; padding: 10px;
+      font-family: 'Fira Code', monospace; font-size: 11px; line-height: 1.7;
+      background: #080808;
+    }
+    .cl { }
+    .cl.sent { color: #4ade80; }
+    .cl.recv { color: #94a3b8; }
+    .cl.info { color: var(--accent); }
+    .cl.err  { color: var(--red); }
+    #console-row { display: flex; border-top: 1px solid var(--border); }
+    #console-input {
+      flex: 1; background: var(--surface2); border: none; border-radius: 0;
+      padding: 8px 10px; font-family: 'Fira Code', monospace; font-size: 11px; color: var(--text); outline: none;
+    }
+    #console-send {
+      background: var(--surface3); color: var(--text2); border: none; border-left: 1px solid var(--border);
+      padding: 8px 14px; font-size: 11px; font-weight: 700; cursor: pointer;
+    }
+    #console-send:hover { background: var(--accent); color: #fff; }
+
+    /* ── Bottom progress bar ── */
+    #bottom {
+      grid-column: 1/-1;
+      background: var(--surface); border-top: 1px solid var(--border);
+      padding: 14px 20px; display: flex; flex-direction: column; gap: 10px;
+    }
+    #prog-row { display: flex; align-items: center; gap: 14px; }
+    #prog-file { flex: 1; font-size: 13px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    #prog-file.idle { color: var(--text3); font-weight: 400; }
+    #prog-pct { font-size: 14px; font-weight: 800; color: var(--accent); min-width: 42px; text-align: right; }
+    #prog-controls { display: flex; gap: 8px; }
+    #prog-track { width: 100%; height: 6px; background: var(--surface3); border-radius: 3px; overflow: hidden; }
+    #prog-fill { height: 100%; background: var(--accent); border-radius: 3px; width: 0%; transition: width .4s ease; box-shadow: 0 0 8px rgba(0,153,255,.4); }
+    #prog-gcode { font-size: 10px; font-family: 'Fira Code', monospace; color: var(--text3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+    /* ── Toasts ── */
+    #toasts { position: fixed; bottom: 160px; right: 16px; display: flex; flex-direction: column; gap: 8px; z-index: 1000; pointer-events: none; }
+    .toast { background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius); padding: 10px 14px; font-size: 12px; max-width: 280px; animation: slideIn .2s ease; }
+    .toast.success { border-color: rgba(34,197,94,.4); color: var(--green); }
+    .toast.error   { border-color: rgba(239,68,68,.4); color: var(--red); }
+    .toast.info    { border-color: rgba(0,153,255,.4); color: var(--accent); }
+    @keyframes slideIn { from{transform:translateX(20px);opacity:0} to{transform:translateX(0);opacity:1} }
+
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #333; border-radius: 2px; }
+
+    /* ── No Web Serial warning ── */
+    #no-serial-banner {
+      background: rgba(239,68,68,.1); border: 1px solid rgba(239,68,68,.3);
+      color: var(--red); padding: 10px 16px; font-size: 12px; text-align: center;
+      grid-column: 1/-1;
+    }
+  </style>
+</head>
+<body>
+<div id="app">
+
+  <!-- top bar -->
+  <header id="topbar">
+    <a href="index.html">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <polygon points="12 2 22 8.5 22 15.5 12 22 2 15.5 2 8.5 12 2"/>
+        <line x1="12" y1="22" x2="12" y2="15.5"/>
+        <polyline points="22 8.5 12 15.5 2 8.5"/>
+      </svg>
+      Printara
+    </a>
+    <span class="sep">/</span>
+    <span class="page-title">Print Queue</span>
+    <div class="spacer"></div>
+    <div id="status-pill" class="status-pill">
+      <div class="dot"></div>
+      <span id="status-txt">Disconnected</span>
+    </div>
+  </header>
+
+  <!-- no serial banner — hidden if supported -->
+  <div id="no-serial-banner" class="hidden">
+    ⚠ Web Serial requires Chrome or Edge on desktop. Other browsers are not supported.
+  </div>
+
+  <!-- left sidebar -->
+  <aside id="left">
+
+    <div class="panel">
+      <div class="panel-title">Connect Printer</div>
+      <div class="field">
+        <label>Baud Rate</label>
+        <select id="baud">
+          <option value="115200" selected>115200 — most printers</option>
+          <option value="250000">250000 — Marlin</option>
+          <option value="230400">230400</option>
+          <option value="57600">57600</option>
+          <option value="9600">9600</option>
+        </select>
+      </div>
+      <div class="btn-row">
+        <button class="btn-primary" id="connect-btn" onclick="connectPrinter()">🔌 Connect</button>
+        <button class="btn-secondary hidden" id="disconnect-btn" onclick="disconnectPrinter()">Disconnect</button>
+      </div>
+      <p style="font-size:11px;color:var(--text3);margin-top:10px;">Works with any USB 3D printer — Ender 3, Prusa, Voron, CR-10 and more. Requires Chrome or Edge.</p>
+    </div>
+
+    <div class="panel">
+      <div class="panel-title">Temperature</div>
+      <div class="temp-grid">
+        <div class="temp-card">
+          <div class="lbl">Hotend</div>
+          <div class="val" id="t-hotend">—</div>
+          <div class="tgt" id="t-hotend-tgt"></div>
+        </div>
+        <div class="temp-card">
+          <div class="lbl">Bed</div>
+          <div class="val" id="t-bed">—</div>
+          <div class="tgt" id="t-bed-tgt"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-title">Quick Commands</div>
+      <div class="jog-grid">
+        <button class="btn-secondary" onclick="cmd('G28')">Home All</button>
+        <button class="btn-secondary" onclick="cmd('G28 X Y')">Home XY</button>
+        <button class="btn-secondary" onclick="cmd('G28 Z')">Home Z</button>
+        <button class="btn-secondary" onclick="cmd('M84')">Motors Off</button>
+        <button class="btn-secondary" onclick="cmd('M104 S0')">Extruder Off</button>
+        <button class="btn-secondary" onclick="cmd('M140 S0')">Bed Off</button>
+        <button class="btn-secondary" onclick="cmd('M105')">Get Temp</button>
+        <button class="btn-secondary" onclick="cmd('M503')">Settings</button>
+      </div>
+    </div>
+
+  </aside>
+
+  <!-- main queue -->
+  <main id="main">
+    <div id="queue-bar">
+      <h2>Print Queue</h2>
+      <span id="q-count">0 items</span>
+      <button class="btn-secondary" id="add-btn" onclick="addFiles()">+ Add Files</button>
+      <button class="btn-secondary" onclick="clearDone()">Clear Done</button>
+      <button class="btn-primary" id="start-btn" disabled onclick="startQueue()">▶ Start Queue</button>
+    </div>
+
+    <div id="drop-zone">
+      <div id="empty-state">
+        <svg width="46" height="46" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
+          <polyline points="14 2 14 8 20 8"/>
+          <line x1="12" y1="18" x2="12" y2="12"/>
+          <line x1="9" y1="15" x2="15" y2="15"/>
+        </svg>
+        <p>Queue is empty</p>
+        <small>Click "Add Files" or drag &amp; drop .gcode files here</small>
+      </div>
+    </div>
+  </main>
+
+  <!-- right console -->
+  <aside id="right">
+    <div id="console-hdr">
+      <h3>Console</h3>
+      <button class="btn-icon" onclick="clearConsole()" title="Clear">✕</button>
+    </div>
+    <div id="console-out"></div>
+    <div id="console-row">
+      <input id="console-input" type="text" placeholder="G-code command…" autocomplete="off" spellcheck="false" />
+      <button id="console-send" onclick="sendConsole()">Send</button>
+    </div>
+  </aside>
+
+  <!-- bottom progress -->
+  <footer id="bottom">
+    <div id="prog-row">
+      <div id="prog-file" class="idle">No active print</div>
+      <div id="prog-controls">
+        <button class="btn-secondary" id="pause-btn" disabled onclick="pausePrint()">⏸ Pause</button>
+        <button class="btn-secondary hidden" id="resume-btn" onclick="resumePrint()">▶ Resume</button>
+        <button class="btn-danger" id="cancel-btn" disabled onclick="cancelPrint()">✕ Cancel</button>
+      </div>
+      <div id="prog-pct">—</div>
+    </div>
+    <div id="prog-track"><div id="prog-fill"></div></div>
+    <div id="prog-gcode">Connect a printer to begin</div>
+  </footer>
+
+</div>
+
+<div id="toasts"></div>
+
+<script>
+// ── State ──────────────────────────────────────────────────────────────────────
+let serialPort = null, reader = null, writer = null;
+let connected = false, printing = false, paused = false;
+let queue = [], currentItem = null;
+let gcodeLines = [], lineIndex = 0;
+let tempInterval = null;
+let readBuffer = '';
+
+// ── Web Serial check ───────────────────────────────────────────────────────────
+if (!('serial' in navigator)) {
+  document.getElementById('no-serial-banner').classList.remove('hidden');
+}
+
+// ── Connect / Disconnect ───────────────────────────────────────────────────────
+async function connectPrinter() {
+  if (!('serial' in navigator)) { toast('Web Serial not supported — use Chrome or Edge', 'error'); return; }
+  try {
+    serialPort = await navigator.serial.requestPort();
+    const baud = parseInt(document.getElementById('baud').value, 10);
+    await serialPort.open({ baudRate: baud });
+    connected = true;
+    startReading();
+    startTempPoll();
+    setConnected(true);
+    log('Connected @ ' + baud + ' baud', 'info');
+    toast('Printer connected', 'success');
+  } catch (e) {
+    if (e.name !== 'NotFoundError') { log('Connect failed: ' + e.message, 'err'); toast(e.message, 'error'); }
+  }
+}
+
+async function disconnectPrinter() {
+  stopTempPoll();
+  printing = false; paused = false; currentItem = null;
+  try {
+    if (reader) { await reader.cancel(); reader = null; }
+    if (writer) { writer.releaseLock(); writer = null; }
+    if (serialPort) { await serialPort.close(); serialPort = null; }
+  } catch (_) {}
+  connected = false;
+  setConnected(false);
+  resetProgress();
+  log('Disconnected', 'info');
+  toast('Disconnected', 'info');
+}
+
+function setConnected(on) {
+  document.getElementById('connect-btn').classList.toggle('hidden', on);
+  document.getElementById('disconnect-btn').classList.toggle('hidden', !on);
+  document.getElementById('baud').disabled = on;
+  document.getElementById('start-btn').disabled = !on || printing;
+  const pill = document.getElementById('status-pill');
+  pill.className = 'status-pill' + (on ? ' connected' : '');
+  document.getElementById('status-txt').textContent = on ? 'Ready' : 'Disconnected';
+}
+
+// ── Serial read loop ───────────────────────────────────────────────────────────
+async function startReading() {
+  const decoder = new TextDecoderStream();
+  serialPort.readable.pipeTo(decoder.writable).catch(() => {});
+  reader = decoder.readable.getReader();
+  try {
+    while (true) {
+      const { value, done } = await reader.read();
+      if (done) break;
+      readBuffer += value;
+      let nl;
+      while ((nl = readBuffer.indexOf('\n')) !== -1) {
+        const line = readBuffer.slice(0, nl).trim();
+        readBuffer = readBuffer.slice(nl + 1);
+        if (line) handleResponse(line);
+      }
+    }
+  } catch (_) {}
+}
+
+function handleResponse(line) {
+  if (!line.startsWith('ok') && !line.startsWith('wait')) log(line, 'recv');
+
+  if (line.startsWith('ok')) {
+    if (printing && !paused) sendNextLine();
+  }
+  if (/T:/.test(line) || /T0:/.test(line)) updateTemps(line);
+  if (/error/i.test(line)) toast('Printer error: ' + line, 'error');
+}
+
+// ── Write to serial ────────────────────────────────────────────────────────────
+async function write(cmd) {
+  if (!serialPort || !serialPort.writable) return;
+  if (!writer) {
+    const encoder = new TextEncoderStream();
+    encoder.readable.pipeTo(serialPort.writable).catch(() => {});
+    writer = encoder.writable.getWriter();
+  }
+  await writer.write(cmd + '\n');
+}
+
+async function cmd(command) {
+  if (!connected) { toast('Not connected', 'error'); return; }
+  log(command, 'sent');
+  await write(command);
+}
+
+// ── Temperature ────────────────────────────────────────────────────────────────
+function startTempPoll() {
+  tempInterval = setInterval(() => { if (connected && !printing) write('M105'); }, 4000);
+}
+function stopTempPoll() { if (tempInterval) { clearInterval(tempInterval); tempInterval = null; } }
+
+function updateTemps(line) {
+  const e = line.match(/T(?:0)?:([0-9.]+)\s*\/([0-9.]+)/);
+  const b = line.match(/B:([0-9.]+)\s*\/([0-9.]+)/);
+  if (e) {
+    const v = document.getElementById('t-hotend');
+    v.textContent = parseFloat(e[1]).toFixed(1) + '°';
+    v.className = 'val' + (e[1] > 60 ? ' hot' : e[1] > 35 ? ' warm' : '');
+    document.getElementById('t-hotend-tgt').textContent = e[2] > 0 ? '→ ' + e[2] + '°' : '';
+  }
+  if (b) {
+    const v = document.getElementById('t-bed');
+    v.textContent = parseFloat(b[1]).toFixed(1) + '°';
+    v.className = 'val' + (b[1] > 50 ? ' hot' : b[1] > 30 ? ' warm' : '');
+    document.getElementById('t-bed-tgt').textContent = b[2] > 0 ? '→ ' + b[2] + '°' : '';
+  }
+}
+
+// ── Queue management ───────────────────────────────────────────────────────────
+function addFiles() {
+  const input = document.createElement('input');
+  input.type = 'file'; input.multiple = true; input.accept = '.gcode,.g,.gc,.gco,.ngc';
+  input.onchange = async () => {
+    for (const file of input.files) {
+      const text = await file.text();
+      const lines = text.split('\n').filter(l => l.split(';')[0].trim());
+      queue.push({
+        id: Date.now() + '-' + Math.random().toString(36).slice(2),
+        name: file.name, text, totalLines: lines.length,
+        status: 'queued', addedAt: new Date().toISOString(),
+      });
+    }
+    renderQueue();
+    toast(`Added ${input.files.length} file(s)`, 'success');
+  };
+  input.click();
+}
+
+function clearDone() {
+  queue = queue.filter(i => i.status === 'printing' || i.status === 'queued');
+  renderQueue();
+}
+
+function renderQueue() {
+  const active = queue.filter(i => i.status === 'queued' || i.status === 'printing');
+  document.getElementById('q-count').textContent = active.length + ' item' + (active.length !== 1 ? 's' : '');
+  document.getElementById('empty-state').style.display = queue.length === 0 ? 'flex' : 'none';
+  document.querySelectorAll('.q-item').forEach(e => e.remove());
+
+  for (const item of queue) {
+    const cls = item.status === 'printing' ? 'active' : item.status === 'done' ? 'done' : item.status === 'cancelled' ? 'cancelled' : '';
+    const icon = item.status === 'done' ? '✓' : item.status === 'printing' ? '⚙' : '📄';
+    const label = { queued:'Queued', printing:'Printing…', done:'Done', cancelled:'Cancelled', error:'Error' }[item.status] || item.status;
+    const t = new Date(item.addedAt).toLocaleTimeString([], { hour:'2-digit', minute:'2-digit' });
+
+    const div = document.createElement('div');
+    div.className = 'q-item ' + cls;
+    div.innerHTML = `
+      <div class="q-icon">${icon}</div>
+      <div class="q-info">
+        <div class="q-name" title="${item.name}">${item.name}</div>
+        <div class="q-meta">${item.totalLines.toLocaleString()} lines · ${t}</div>
+      </div>
+      <div class="q-badge badge-${item.status}">${label}</div>
+      <div class="q-actions">
+        ${item.status === 'queued' ? `
+          <button class="btn-icon" onclick="moveItem('${item.id}','up')">↑</button>
+          <button class="btn-icon" onclick="moveItem('${item.id}','down')">↓</button>
+          <button class="btn-icon" onclick="removeItem('${item.id}')">✕</button>
+        ` : ''}
+      </div>`;
+    document.getElementById('drop-zone').appendChild(div);
+  }
+
+  document.getElementById('start-btn').disabled = !connected || printing || active.filter(i => i.status === 'queued').length === 0;
+}
+
+function moveItem(id, dir) {
+  const i = queue.findIndex(x => x.id === id);
+  if (dir === 'up'   && i > 0)              [queue[i-1], queue[i]] = [queue[i], queue[i-1]];
+  if (dir === 'down' && i < queue.length-1) [queue[i+1], queue[i]] = [queue[i], queue[i+1]];
+  renderQueue();
+}
+
+function removeItem(id) {
+  queue = queue.filter(x => x.id !== id);
+  renderQueue();
+}
+
+// drag & drop
+const dz = document.getElementById('drop-zone');
+dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('over'); });
+dz.addEventListener('dragleave', () => dz.classList.remove('over'));
+dz.addEventListener('drop', async e => {
+  e.preventDefault(); dz.classList.remove('over');
+  const files = Array.from(e.dataTransfer.files).filter(f => /\.(gcode|g|gc|gco|ngc)$/i.test(f.name));
+  if (!files.length) { toast('.gcode files only', 'error'); return; }
+  for (const file of files) {
+    const text = await file.text();
+    const lines = text.split('\n').filter(l => l.split(';')[0].trim());
+    queue.push({ id: Date.now()+'-'+Math.random().toString(36).slice(2), name:file.name, text, totalLines:lines.length, status:'queued', addedAt:new Date().toISOString() });
+  }
+  renderQueue();
+  toast(`Added ${files.length} file(s)`, 'success');
+});
+
+// ── Print execution ────────────────────────────────────────────────────────────
+function startQueue() {
+  const next = queue.find(i => i.status === 'queued');
+  if (!next || !connected) return;
+  startPrint(next);
+}
+
+function startPrint(item) {
+  currentItem = item;
+  item.status = 'printing';
+  printing = true; paused = false;
+  gcodeLines = item.text.split('\n').map(l => l.split(';')[0].trim()).filter(l => l);
+  lineIndex = 0;
+  item.totalLines = gcodeLines.length;
+  renderQueue();
+
+  document.getElementById('prog-file').classList.remove('idle');
+  document.getElementById('prog-file').textContent = item.name;
+  document.getElementById('pause-btn').disabled = false;
+  document.getElementById('cancel-btn').disabled = false;
+  document.getElementById('start-btn').disabled = true;
+  setPillPrinting(true);
+
+  log('Started: ' + item.name, 'info');
+  toast('Printing: ' + item.name, 'info');
+  sendNextLine();
+}
+
+function sendNextLine() {
+  if (!printing || paused || !connected) return;
+  if (lineIndex >= gcodeLines.length) { onPrintDone(); return; }
+  const line = gcodeLines[lineIndex++];
+  const pct = Math.round((lineIndex / gcodeLines.length) * 100);
+  document.getElementById('prog-fill').style.width = pct + '%';
+  document.getElementById('prog-pct').textContent = pct + '%';
+  document.getElementById('prog-gcode').textContent = 'Line ' + lineIndex + '/' + gcodeLines.length + ' — ' + line;
+  write(line);
+}
+
+function onPrintDone() {
+  if (!currentItem) return;
+  currentItem.status = 'done';
+  const done = currentItem;
+  currentItem = null; printing = false;
+  renderQueue();
+  log('Done: ' + done.name, 'info');
+  toast('Print complete: ' + done.name + ' ✓', 'success');
+  document.getElementById('prog-fill').style.width = '100%';
+  document.getElementById('prog-pct').textContent = '100%';
+  // auto-eject
+  runEject(() => setTimeout(() => {
+    const next = queue.find(i => i.status === 'queued');
+    if (next) startPrint(next);
+    else { resetProgress(); log('Queue complete!', 'info'); toast('All prints done!', 'success'); }
+  }, 2000));
+}
+
+function runEject(onDone) {
+  const seq = ['M104 S0','M140 S0','G91','G1 Z15 F3000','G90','G28 X Y','M84'];
+  log('Auto-eject running…', 'info');
+  let i = 0;
+  const step = () => {
+    if (i >= seq.length) { if (onDone) onDone(); return; }
+    write(seq[i++]);
+    setTimeout(step, 400);
+  };
+  step();
+}
+
+function pausePrint() {
+  paused = true; write('M25');
+  document.getElementById('pause-btn').classList.add('hidden');
+  document.getElementById('resume-btn').classList.remove('hidden');
+  log('Paused', 'info'); toast('Print paused', 'info');
+}
+
+function resumePrint() {
+  paused = false; write('M24');
+  document.getElementById('resume-btn').classList.add('hidden');
+  document.getElementById('pause-btn').classList.remove('hidden');
+  log('Resumed', 'info'); sendNextLine();
+}
+
+function cancelPrint() {
+  if (!confirm('Cancel the current print?')) return;
+  printing = false; paused = false;
+  write('M112');
+  if (currentItem) { currentItem.status = 'cancelled'; currentItem = null; }
+  renderQueue(); resetProgress();
+  log('Cancelled', 'err'); toast('Print cancelled', 'error');
+}
+
+function resetProgress() {
+  document.getElementById('prog-file').textContent = 'No active print';
+  document.getElementById('prog-file').classList.add('idle');
+  document.getElementById('prog-fill').style.width = '0%';
+  document.getElementById('prog-pct').textContent = '—';
+  document.getElementById('prog-gcode').textContent = 'Connect a printer to begin';
+  document.getElementById('pause-btn').disabled = true;
+  document.getElementById('resume-btn').classList.add('hidden');
+  document.getElementById('pause-btn').classList.remove('hidden');
+  document.getElementById('cancel-btn').disabled = true;
+  document.getElementById('start-btn').disabled = !connected;
+  setPillPrinting(false);
+}
+
+function setPillPrinting(on) {
+  const pill = document.getElementById('status-pill');
+  pill.className = 'status-pill' + (connected ? (on ? ' printing' : ' connected') : '');
+  document.getElementById('status-txt').textContent = !connected ? 'Disconnected' : on ? 'Printing' : 'Ready';
+}
+
+// ── Console ────────────────────────────────────────────────────────────────────
+function log(text, type) {
+  const out = document.getElementById('console-out');
+  const d = document.createElement('div');
+  d.className = 'cl ' + (type || '');
+  d.textContent = (type === 'sent' ? '→ ' : type === 'info' ? '◉ ' : type === 'err' ? '✗ ' : '← ') + text;
+  out.appendChild(d);
+  out.scrollTop = out.scrollHeight;
+  while (out.children.length > 500) out.removeChild(out.firstChild);
+}
+
+function clearConsole() { document.getElementById('console-out').innerHTML = ''; }
+
+async function sendConsole() {
+  const input = document.getElementById('console-input');
+  const v = input.value.trim();
+  if (!v) return;
+  await cmd(v);
+  input.value = '';
+}
+
+document.getElementById('console-input').addEventListener('keydown', e => { if (e.key === 'Enter') sendConsole(); });
+
+// ── Toasts ─────────────────────────────────────────────────────────────────────
+function toast(msg, type = 'info') {
+  const el = document.createElement('div');
+  el.className = 'toast ' + type; el.textContent = msg;
+  document.getElementById('toasts').appendChild(el);
+  setTimeout(() => { el.style.opacity='0'; el.style.transition='opacity .3s'; setTimeout(() => el.remove(), 300); }, 3500);
+}
+
+// ── Keyboard ───────────────────────────────────────────────────────────────────
+document.addEventListener('keydown', e => {
+  if ((e.ctrlKey||e.metaKey) && e.key==='o') { e.preventDefault(); addFiles(); }
+});
+</script>
+</body>
+</html>
