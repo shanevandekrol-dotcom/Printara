@@ -693,19 +693,18 @@
       <span class="platform-icon" style="font-size:28px">🪟</span>
       <div>
         <h3 style="margin:0 0 2px">Windows</h3>
-        <div class="dl-meta">Requires Node.js · Windows 10 / 11</div>
+        <div class="dl-meta">Windows 10 / 11 · just one file</div>
       </div>
     </div>
-    <ol style="font-size:13px;color:#888;line-height:2;padding-left:18px;margin-bottom:16px">
-      <li>Install <a href="https://nodejs.org" target="_blank" style="color:#ff6b35">Node.js</a> if you don't have it (free, one-time)</li>
-      <li>Download all three files below into the same folder</li>
-      <li>Double-click <strong style="color:#e8e8e8">Printara Queue.bat</strong> — browser opens automatically</li>
+    <ol style="font-size:13px;color:#888;line-height:2.2;padding-left:18px;margin-bottom:20px">
+      <li>Install <a href="https://nodejs.org" target="_blank" style="color:#ff6b35">Node.js</a> — free, one-time, takes 2 min</li>
+      <li>Download the file below</li>
+      <li>Double-click it — it downloads the rest automatically and opens your browser</li>
     </ol>
-    <div style="display:flex;flex-direction:column;gap:8px">
-      <a class="dl-btn" href="https://raw.githubusercontent.com/shanevandekrol-dotcom/printara/main/Printara%20Queue.bat" download>↓ Printara Queue.bat</a>
-      <a class="dl-btn secondary" href="https://raw.githubusercontent.com/shanevandekrol-dotcom/printara/main/serve.js" download>↓ serve.js</a>
-      <a class="dl-btn secondary" href="https://raw.githubusercontent.com/shanevandekrol-dotcom/printara/main/queue.html" download>↓ queue.html</a>
-    </div>
+    <a class="dl-btn" href="https://raw.githubusercontent.com/shanevandekrol-dotcom/printara/main/Printara%20Queue.bat" download="Printara Queue.bat" style="display:block;text-align:center;font-size:15px;padding:14px">
+      ↓ Download Printara Queue.bat
+    </a>
+    <p style="font-size:11px;color:#555;margin-top:10px;text-align:center">If Windows shows a warning, click "More info" → "Run anyway"</p>
   </div>
 
   <!-- Mac / Linux card -->
@@ -717,16 +716,11 @@
         <div class="dl-meta">Requires Node.js</div>
       </div>
     </div>
-    <ol style="font-size:13px;color:#888;line-height:2;padding-left:18px;margin-bottom:16px">
-      <li>Install <a href="https://nodejs.org" target="_blank" style="color:#ff6b35">Node.js</a> if you don't have it</li>
-      <li>Download <strong style="color:#e8e8e8">serve.js</strong> and <strong style="color:#e8e8e8">queue.html</strong> into the same folder</li>
-      <li>Open Terminal in that folder and run: <code style="background:#1a1a1a;padding:2px 8px;border-radius:4px;color:#e8e8e8">node serve.js</code></li>
-      <li>Browser opens at <code style="background:#1a1a1a;padding:2px 8px;border-radius:4px;color:#e8e8e8">http://localhost:3000</code></li>
-    </ol>
-    <div style="display:flex;flex-direction:column;gap:8px">
-      <a class="dl-btn secondary" href="https://raw.githubusercontent.com/shanevandekrol-dotcom/printara/main/serve.js" download>↓ serve.js</a>
-      <a class="dl-btn secondary" href="https://raw.githubusercontent.com/shanevandekrol-dotcom/printara/main/queue.html" download>↓ queue.html</a>
+    <p style="font-size:13px;color:#888;margin-bottom:12px">Open Terminal and run this one command — it downloads and starts everything:</p>
+    <div style="background:#0a0a0a;border:1px solid #252525;border-radius:8px;padding:12px 14px;font-family:monospace;font-size:12px;color:#e8e8e8;margin-bottom:16px;word-break:break-all">
+      curl -O https://raw.githubusercontent.com/shanevandekrol-dotcom/printara/main/queue.html &amp;&amp; curl -O https://raw.githubusercontent.com/shanevandekrol-dotcom/printara/main/serve.js &amp;&amp; node serve.js
     </div>
+    <p style="font-size:11px;color:#555">Browser will open at http://localhost:3000</p>
   </div>
 </div>
 
