@@ -80,6 +80,15 @@
     .type-tab.active { background:var(--accent); color:#fff; }
     .type-tab.bambu.active { background:var(--orange); }
 
+    /* Quick reconnect card */
+    #reconnect-card {
+      background:var(--surface2); border:1px solid var(--border); border-radius:var(--radius);
+      padding:10px 12px; margin-bottom:12px; display:flex; align-items:center; gap:10px;
+    }
+    #reconnect-card .rc-info { flex:1; }
+    #reconnect-card .rc-type { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.8px; color:var(--text3); }
+    #reconnect-card .rc-ip   { font-size:12px; font-weight:700; color:var(--text); margin-top:2px; font-family:'Fira Code',monospace; }
+
     /* Bambu FTP info box */
     #bambu-ftp-box {
       background:var(--orange-dim); border:1px solid rgba(255,107,53,.25);
@@ -185,16 +194,25 @@
     </div>
   </header>
 
-  <!-- HTTPS mixed-content warning -->
+  <!-- HTTPS mixed-content warning (shown only when a connection fails on HTTPS) -->
   <div id="https-banner" class="banner yellow hidden">
-    ⚠ Mixed content blocked? In Chrome click 🔒 → Site settings → Insecure content → Allow.
-    <button onclick="this.parentElement.classList.add('hidden')">Dismiss</button>
+    ⚠ Mixed content blocked — your printer is HTTP, this page is HTTPS. In Chrome: click 🔒 in the address bar → Site settings → Insecure content → Allow.
+    <button onclick="this.parentElement.classList.add('hidden')">✕</button>
   </div>
 
   <!-- left sidebar -->
   <aside id="left">
     <div class="panel">
       <div class="panel-title">Connect Printer</div>
+
+      <!-- Quick reconnect (shown when saved session exists) -->
+      <div id="reconnect-card" class="hidden">
+        <div class="rc-info">
+          <div class="rc-type" id="rc-type-label">OctoPrint</div>
+          <div class="rc-ip"   id="rc-ip-label">—</div>
+        </div>
+        <button class="btn-primary" id="rc-btn" onclick="quickReconnect()" style="white-space:nowrap">⚡ Reconnect</button>
+      </div>
 
       <div class="type-tabs">
         <button class="type-tab active"       data-type="octoprint" onclick="selectType('octoprint')">OctoPrint</button>
@@ -330,10 +348,41 @@ let bambuSerial = '';
 let bambuPin = '';
 let bambuLastState = '';
 
-// ── HTTPS banner ───────────────────────────────────────────────────────────────
-if (location.protocol === 'https:') {
-  document.getElementById('https-banner').classList.remove('hidden');
+// ── Credential persistence ─────────────────────────────────────────────────────
+const LS_KEY = 'printara_conn_v1';
+
+function saveCredentials() {
+  const data = {
+    type:   printerType,
+    ip:     document.getElementById('wifi-ip').value.trim(),
+    key:    document.getElementById('wifi-key').value.trim(),
+    pin:    document.getElementById('bambu-pin').value.trim(),
+  };
+  if (data.ip) localStorage.setItem(LS_KEY, JSON.stringify(data));
 }
+
+function loadCredentials() {
+  try {
+    const raw = localStorage.getItem(LS_KEY);
+    if (!raw) return;
+    const d = JSON.parse(raw);
+    if (!d.ip) return;
+    selectType(d.type || 'octoprint');
+    document.getElementById('wifi-ip').value  = d.ip  || '';
+    document.getElementById('wifi-key').value = d.key || '';
+    document.getElementById('bambu-pin').value = d.pin || '';
+    // Show quick reconnect card
+    const typeNames = { octoprint:'OctoPrint', moonraker:'Moonraker', bambu:'Bambu Lab' };
+    document.getElementById('rc-type-label').textContent = typeNames[d.type] || d.type;
+    document.getElementById('rc-ip-label').textContent   = d.ip;
+    if (d.type === 'bambu') document.getElementById('rc-btn').style.background = 'var(--orange)';
+    document.getElementById('reconnect-card').classList.remove('hidden');
+  } catch (_) {}
+}
+
+function quickReconnect() { connectWifi(); }
+
+loadCredentials();
 
 // ── Type tab selection ─────────────────────────────────────────────────────────
 const HINTS = {
@@ -365,6 +414,7 @@ async function connectWifi() {
   apiKey  = document.getElementById('wifi-key').value.trim();
 
   setBtn(true, 'Connecting…');
+  document.getElementById('https-banner').classList.add('hidden');
   log('Connecting to ' + baseUrl + ' via ' + printerType + '…', 'info');
 
   try {
@@ -380,11 +430,13 @@ async function connectWifi() {
     connected = true;
     setConnected(true);
     startPolling();
+    saveCredentials();
     toast('Connected!', 'success');
   } catch (e) {
-    setBtn(false, 'Connect');
+    setBtn(false, '📶 Connect');
     log('Failed: ' + e.message, 'err');
     toast('Could not connect: ' + e.message, 'error');
+    if (location.protocol === 'https:') document.getElementById('https-banner').classList.remove('hidden');
   }
 }
 
@@ -406,6 +458,7 @@ async function connectBambu() {
   bambuPin = pin;
   bambuSerial = '';
   setBtn(true, 'Connecting…');
+  document.getElementById('https-banner').classList.add('hidden');
   log('Connecting to Bambu Lab printer at ' + ip + '…', 'info');
 
   // Bambu MQTT: plain WebSocket on port 2883, TLS on 8884
@@ -449,6 +502,7 @@ async function connectBambu() {
       document.getElementById('bambu-ftp-host').textContent = ip;
       document.getElementById('bambu-ftp-pass').textContent = bambuPin;
       document.getElementById('bambu-ftp-box').classList.remove('hidden');
+      saveCredentials();
       toast('Bambu printer connected!', 'success');
     }
     try { handleBambuMessage(JSON.parse(raw.toString())); } catch (_) {}
@@ -457,8 +511,9 @@ async function connectBambu() {
   mqttClient.on('error', err => {
     log('MQTT error: ' + err.message, 'err');
     if (!connected) {
-      setBtn(false, 'Connect');
+      setBtn(false, '📶 Connect');
       toast('Connection failed: ' + err.message, 'error');
+      if (location.protocol === 'https:') document.getElementById('https-banner').classList.remove('hidden');
     }
   });
 
@@ -929,6 +984,12 @@ async function sendConsole() {
 
 document.getElementById('console-input').addEventListener('keydown', e => { if (e.key === 'Enter') sendConsole(); });
 document.addEventListener('keydown', e => { if ((e.ctrlKey||e.metaKey) && e.key==='o') { e.preventDefault(); addFiles(); } });
+
+// Enter on any connection field triggers connect
+['wifi-ip','wifi-key','bambu-pin'].forEach(id => {
+  const el = document.getElementById(id);
+  if (el) el.addEventListener('keydown', e => { if (e.key === 'Enter' && !connected) connectWifi(); });
+});
 
 // ── Toasts ─────────────────────────────────────────────────────────────────────
 function toast(msg, type = 'info') {
