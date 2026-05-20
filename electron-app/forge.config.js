@@ -12,6 +12,7 @@ module.exports = {
       name: '@electron-forge/maker-squirrel',
       config: {
         name: 'Printara',
+        setupExe: 'PrintaraSetup.exe',
         setupIcon: './assets/icon.ico',
       },
     },

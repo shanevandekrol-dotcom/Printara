@@ -631,6 +631,37 @@ button {
 ::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
 ::-webkit-scrollbar-thumb:hover { background: #444; }
 
+/* ── Mode tabs ────────────────────────────────────────────────────────────── */
+.mode-tabs {
+  display: flex;
+  gap: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  margin-top: 10px;
+  margin-bottom: -1px;
+}
+
+.mode-tab {
+  flex: 1;
+  padding: 8px 6px;
+  font-size: 12px;
+  font-weight: 600;
+  border: none;
+  border-radius: 0;
+  background: var(--surface2);
+  color: var(--text-dim);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.mode-tab.active {
+  background: var(--accent);
+  color: #fff;
+}
+
+.mode-tab:not(.active):hover { background: var(--surface3); color: var(--text); }
+
 /* ── Utility ──────────────────────────────────────────────────────────────── */
 .hidden { display: none !important; }
 .mt8 { margin-top: 8px; }
